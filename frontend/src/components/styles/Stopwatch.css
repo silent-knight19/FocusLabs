@@ -1,0 +1,201 @@
+.stopwatch-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(10, 10, 15, 0.6);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.3s ease-out;
+}
+
+.stopwatch-container {
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 0;
+    border: none;
+    box-shadow: none;
+    display: flex;
+    flex-direction: column;
+    padding: var(--spacing-xl);
+    position: relative;
+    overflow: hidden;
+}
+
+.stopwatch-header-actions {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    display: flex;
+    gap: 10px;
+    z-index: 10;
+}
+
+.collapse-btn,
+.close-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    color: white;
+    font-size: 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.collapse-btn:hover,
+.close-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.1);
+}
+
+.stopwatch-display {
+    font-size: 8vw;
+    /* Responsive font size */
+    font-weight: 200;
+    color: white;
+    text-align: center;
+    margin: auto;
+    /* Center vertically */
+    font-variant-numeric: tabular-nums;
+    display: flex;
+    justify-content: center;
+    align-items: baseline;
+    text-shadow: 0 0 30px rgba(255, 255, 255, 0.3);
+    padding: 40px 0;
+}
+
+.time-part.small {
+    font-size: 4vw;
+    color: var(--text-secondary);
+}
+
+.time-separator.small {
+    font-size: 4vw;
+    color: var(--text-secondary);
+}
+
+.stopwatch-controls {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 40px;
+    padding: 0 20px;
+}
+
+.control-btn {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    border: none;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+/* Double ring effect */
+.control-btn::after {
+    content: '';
+    position: absolute;
+    top: -4px;
+    left: -4px;
+    right: -4px;
+    bottom: -4px;
+    border-radius: 50%;
+    border: 2px solid currentColor;
+    opacity: 0.3;
+}
+
+.control-btn.primary.start {
+    background: rgba(52, 199, 89, 0.2);
+    color: #34c759;
+}
+
+.control-btn.primary.stop {
+    background: rgba(255, 59, 48, 0.2);
+    color: #ff3b30;
+}
+
+.control-btn.secondary {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+.control-btn:active {
+    transform: scale(0.95);
+}
+
+.laps-list {
+    flex: 1;
+    overflow-y: auto;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.lap-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    color: white;
+    font-size: 1.1rem;
+}
+
+.lap-label-container {
+    flex: 1;
+    cursor: text;
+}
+
+.lap-label {
+    color: var(--text-secondary);
+}
+
+.lap-input {
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid var(--neon-orange);
+    color: white;
+    font-size: 1.1rem;
+    width: 100%;
+    padding: 2px 0;
+}
+
+.lap-input:focus {
+    outline: none;
+}
+
+.lap-time {
+    font-variant-numeric: tabular-nums;
+    font-weight: 500;
+}
+
+/* Scrollbar styling */
+.laps-list::-webkit-scrollbar {
+    width: 4px;
+}
+
+.laps-list::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.laps-list::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 2px;
+}

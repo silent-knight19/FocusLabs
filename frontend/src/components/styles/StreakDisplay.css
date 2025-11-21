@@ -1,0 +1,86 @@
+.streak-display-container {
+    background-color: var(--bg-card);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-lg);
+    box-shadow: var(--shadow-sm);
+}
+
+.streak-display-container h3 {
+    font-size: var(--font-size-lg);
+    margin-bottom: var(--spacing-md);
+}
+
+.streak-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+}
+
+.streak-item {
+    display: flex;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm);
+    border-radius: var(--radius-md);
+    background-color: var(--bg-hover);
+    transition: background-color var(--transition-fast);
+}
+
+.streak-item:hover {
+    background-color: var(--bg-primary);
+}
+
+.streak-color-bar {
+    width: 4px;
+    border-radius: 2px;
+    flex-shrink: 0;
+}
+
+.streak-info {
+    flex: 1;
+}
+
+.streak-habit-name {
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-xs);
+    font-size: var(--font-size-sm);
+}
+
+.streak-stats {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    font-size: var(--font-size-xs);
+    color: var(--text-secondary);
+}
+
+.streak-stat {
+    display: flex;
+    gap: 4px;
+}
+
+.streak-label {
+    color: var(--text-tertiary);
+}
+
+.streak-value {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.streak-divider {
+    color: var(--border-color);
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .streak-stats {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 2px;
+    }
+
+    .streak-divider {
+        display: none;
+    }
+}

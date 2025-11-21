@@ -1,0 +1,96 @@
+.day-cell {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    background-color: var(--status-empty);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    padding: 0;
+    position: relative;
+    overflow: hidden;
+}
+
+.day-cell:hover {
+    border-color: var(--border-hover);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
+}
+
+.day-cell:active {
+    transform: translateY(0);
+}
+
+/* Completed State */
+.day-cell.completed {
+    background-color: var(--status-completed);
+    border-color: var(--status-completed);
+    color: #000;
+    font-weight: 700;
+    box-shadow: var(--glow-green);
+}
+
+.day-cell.completed:hover {
+    background-color: var(--status-completed);
+    border-color: var(--status-completed);
+    box-shadow: 0 0 15px rgba(0, 255, 159, 0.8), 0 0 30px rgba(0, 255, 159, 0.5);
+}
+
+/* Failed State */
+.day-cell.failed {
+    background-color: var(--status-failed);
+    border-color: var(--status-failed);
+    color: white;
+    box-shadow: var(--glow-red);
+}
+
+.day-cell.failed:hover {
+    background-color: var(--status-failed);
+    border-color: var(--status-failed);
+    box-shadow: 0 0 15px rgba(255, 0, 85, 0.8), 0 0 30px rgba(255, 0, 85, 0.5);
+}
+
+/* Icon */
+.cell-icon {
+    font-size: var(--font-size-lg);
+    font-weight: 600;
+    transition: transform var(--transition-fast);
+    display: inline-block;
+}
+
+.day-cell:active .cell-icon {
+    transform: scale(1.2);
+}
+
+/* Animation when state changes */
+@keyframes cellPop {
+    0% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.1);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+.day-cell.completed .cell-icon,
+.day-cell.failed .cell-icon {
+    animation: cellPop 0.3s ease;
+}
+
+/* Mobile - Larger touch targets */
+@media (max-width: 768px) {
+    .day-cell {
+        width: 44px;
+        height: 44px;
+        min-width: 44px;
+        min-height: 44px;
+    }
+}

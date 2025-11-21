@@ -1,0 +1,79 @@
+.grid-header {
+    display: grid;
+    grid-template-columns: 1fr 100px repeat(7, 56px) 100px;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-md);
+    background-color: var(--bg-card);
+    border-bottom: 2px solid var(--border-color);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    box-shadow: var(--shadow-sm);
+}
+
+.grid-header-cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-sm);
+    font-weight: 600;
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+}
+
+.grid-header-cell.habit-name-cell {
+    justify-content: flex-start;
+}
+
+.grid-header-cell.time-cell {
+    justify-content: center;
+}
+
+.day-header-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+}
+
+.day-name {
+    font-weight: 600;
+    font-size: var(--font-size-sm);
+    color: var(--text-primary);
+}
+
+.day-date {
+    font-size: var(--font-size-xs);
+    color: var(--text-tertiary);
+    font-weight: 400;
+}
+
+/* Highlight today's column */
+.grid-header-cell.today .day-header-content {
+    background-color: var(--accent-primary);
+    color: white;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--radius-sm);
+}
+
+.grid-header-cell.today .day-name,
+.grid-header-cell.today .day-date {
+    color: white;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .grid-header {
+        grid-template-columns: 1fr 80px repeat(7, 52px) 80px;
+        gap: var(--spacing-xs);
+        padding: var(--spacing-sm);
+    }
+
+    .day-name {
+        font-size: var(--font-size-xs);
+    }
+
+    .day-date {
+        font-size: 10px;
+    }
+}

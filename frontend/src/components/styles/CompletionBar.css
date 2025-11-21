@@ -1,0 +1,65 @@
+.completion-bar-container {
+    background-color: var(--bg-card);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-lg);
+    box-shadow: var(--shadow-sm);
+}
+
+.completion-bar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-md);
+}
+
+.completion-bar-header h3 {
+    font-size: var(--font-size-lg);
+    margin: 0;
+}
+
+.completion-stats {
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.progress-bar-wrapper {
+    width: 100%;
+}
+
+.progress-bar-background {
+    width: 100%;
+    height: 40px;
+    background-color: var(--status-empty);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    position: relative;
+}
+
+.progress-bar-fill {
+    height: 100%;
+    border-radius: var(--radius-md);
+    transition: width 0.5s ease, background-color var(--transition-base);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.progress-percentage {
+    color: white;
+    font-weight: 600;
+    font-size: var(--font-size-sm);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+/* Animation */
+@keyframes progressGrow {
+    from {
+        width: 0;
+    }
+}
+
+.progress-bar-fill {
+    animation: progressGrow 0.8s ease-out;
+}

@@ -1,0 +1,38 @@
+.add-habit-button {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-md) var(--spacing-lg);
+    background: linear-gradient(135deg, var(--neon-orange), var(--neon-orange-dark));
+    color: #fff;
+    border: 1px solid var(--neon-orange);
+    border-radius: var(--radius-md);
+    font-size: var(--font-size-base);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-base);
+    box-shadow: var(--glow-orange);
+}
+
+.add-habit-button:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 0 20px rgba(255, 107, 53, 0.8), 0 0 40px rgba(255, 107, 53, 0.6), 0 0 60px rgba(255, 107, 53, 0.4);
+}
+
+.add-habit-button:active {
+    transform: translateY(-1px);
+}
+
+.add-habit-icon {
+    font-size: var(--font-size-xl);
+    font-weight: bold;
+    line-height: 1;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .add-habit-button {
+        width: 100%;
+        padding: var(--spacing-md);
+    }
+}
