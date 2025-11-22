@@ -214,6 +214,7 @@ export function useHabits() {
         [habitId]: updatedHabitCompletions
       };
     });
+    window.dispatchEvent(new Event('habit-data-updated'));
   };
 
   /**

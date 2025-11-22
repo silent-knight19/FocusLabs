@@ -5,7 +5,7 @@ import './styles/ProductivityHeatmap.css';
  * GitHub-style contribution heatmap showing Productive & Self Growth hours
  * Combines 'prod' and 'self' categories
  */
-export function ProductivityHeatmap() {
+export function ProductivityHeatmap({ habits = [], completions = {}, dataVersion = 0 }) {
   // Get lap history from localStorage (where categories are stored)
   const getLapHistory = () => {
     try {
@@ -55,19 +55,30 @@ export function ProductivityHeatmap() {
         
         const dateKey = currentDate.toISOString().split('T')[0];
         
-        // Filter laps for this date and relevant categories
+        // 1. Calculate Stopwatch Hours
         const dayLaps = history.filter(lap => {
           const lapDate = new Date(lap.date).toISOString().split('T')[0];
           return lapDate === dateKey && (lap.category === 'prod' || lap.category === 'self' || lap.category === 'self growth');
         });
+        const stopwatchMs = dayLaps.reduce((sum, lap) => sum + (lap.time || 0), 0);
+        let totalHours = stopwatchMs / (1000 * 60 * 60);
 
-        const totalMs = dayLaps.reduce((sum, lap) => sum + (lap.time || 0), 0);
-        const hours = totalMs / (1000 * 60 * 60);
+        // 2. Calculate Habit Completion Hours (1 completion = 1 hour equivalent for visualization)
+        // Filter for productive categories
+        const productiveHabits = habits.filter(h => 
+          ['work', 'study', 'self growth', 'fitness', 'health'].includes(h.category?.toLowerCase())
+        );
+
+        productiveHabits.forEach(habit => {
+          if (completions[habit.id]?.[dateKey] === 'completed') {
+            totalHours += 1; // Add 1 hour equivalent per completed habit
+          }
+        });
         
         weekData.push({
           date: currentDate,
           dateKey,
-          hours: parseFloat(hours.toFixed(2)),
+          hours: parseFloat(totalHours.toFixed(2)),
           dayOfWeek: currentDate.getDay()
         });
       }
@@ -76,7 +87,7 @@ export function ProductivityHeatmap() {
     }
     
     return weeks;
-  }, []);
+  }, [dataVersion, habits, completions]);
 
   // Calculate intensity level based on hours (same logic as StudyHeatmap)
   const getIntensityLevel = (hours) => {
@@ -112,9 +123,26 @@ export function ProductivityHeatmap() {
 
     // Group by date to calculate daily totals
     const dailyTotals = {};
+    
+    // 1. Add Stopwatch times
     relevantLaps.forEach(lap => {
       const dateKey = new Date(lap.date).toISOString().split('T')[0];
       dailyTotals[dateKey] = (dailyTotals[dateKey] || 0) + (lap.time || 0);
+    });
+
+    // 2. Add Habit Completions (1 hour per completion)
+    const productiveHabits = habits.filter(h => 
+      ['work', 'study', 'self growth', 'fitness', 'health'].includes(h.category?.toLowerCase())
+    );
+
+    productiveHabits.forEach(habit => {
+      const habitCompletions = completions[habit.id] || {};
+      Object.entries(habitCompletions).forEach(([dateKey, status]) => {
+        if (status === 'completed') {
+          // Add 1 hour (3600000 ms)
+          dailyTotals[dateKey] = (dailyTotals[dateKey] || 0) + 3600000;
+        }
+      });
     });
 
     const allHours = Object.values(dailyTotals).map(ms => ms / (1000 * 60 * 60));
@@ -128,7 +156,7 @@ export function ProductivityHeatmap() {
       max: maxHours.toFixed(1),
       average: daysWithActivity > 0 ? (totalHours / daysWithActivity).toFixed(1) : 0
     };
-  }, []);
+  }, [dataVersion, habits, completions]);
 
   const monthLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   const dayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];

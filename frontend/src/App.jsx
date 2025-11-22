@@ -209,6 +209,15 @@ function App() {
     }
   };
 
+  // Force re-render of heatmaps when data changes
+  const [dataVersion, setDataVersion] = useState(0);
+
+  useEffect(() => {
+    const handleDataUpdate = () => setDataVersion(v => v + 1);
+    window.addEventListener('habit-data-updated', handleDataUpdate);
+    return () => window.removeEventListener('habit-data-updated', handleDataUpdate);
+  }, []);
+
   return (
     <div className="app">
       <TopNav
@@ -326,10 +335,14 @@ function App() {
 
           <div className="heatmaps-container">
             {/* Study Activity Heatmap */}
-            <StudyHeatmap />
+            <StudyHeatmap dataVersion={dataVersion} />
 
             {/* Productivity & Growth Heatmap */}
-            <ProductivityHeatmap />
+            <ProductivityHeatmap 
+              habits={habits}
+              completions={completions}
+              dataVersion={dataVersion}
+            />
           </div>
         </div>
       </main>

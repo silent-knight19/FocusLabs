@@ -5,7 +5,7 @@ import './styles/StudyHeatmap.css';
  * GitHub-style contribution heatmap showing daily study hours
  * Minimum 2 hours to show color intensity effect
  */
-export function StudyHeatmap() {
+export function StudyHeatmap({ dataVersion = 0 }) {
   // Get stopwatch history from localStorage
   const getStopwatchHistory = () => {
     try {
@@ -91,7 +91,7 @@ export function StudyHeatmap() {
     }
     
     return weeks;
-  }, []);
+  }, [dataVersion]);
 
   // Calculate intensity level based on hours (minimum 2 hours for effect)
   const getIntensityLevel = (hours) => {
@@ -131,7 +131,7 @@ export function StudyHeatmap() {
       max: maxHours.toFixed(1),
       average: daysWithActivity > 0 ? (totalHours / daysWithActivity).toFixed(1) : 0
     };
-  }, []);
+  }, [dataVersion]);
 
   const monthLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   const dayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];

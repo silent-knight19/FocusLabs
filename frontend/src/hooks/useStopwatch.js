@@ -69,6 +69,7 @@ export function useStopwatch() {
         history[todayKey] = (history[todayKey] || 0) + 1000;
         
         localStorage.setItem('habitgrid_stopwatch_history', JSON.stringify(history));
+        window.dispatchEvent(new Event('habit-data-updated'));
       }, 1000);
       
       return () => clearInterval(historyInterval);
@@ -124,8 +125,8 @@ export function useStopwatch() {
     
     // Save to permanent history
     const history = JSON.parse(localStorage.getItem('habitgrid_lap_history') || '[]');
-    history.push(newLap);
     localStorage.setItem('habitgrid_lap_history', JSON.stringify(history));
+    window.dispatchEvent(new Event('habit-data-updated'));
   };
 
   const updateLapCategory = (id, newCategory) => {
@@ -136,6 +137,7 @@ export function useStopwatch() {
     const history = JSON.parse(localStorage.getItem('habitgrid_lap_history') || '[]');
     const updatedHistory = history.map(l => l.id === id ? { ...l, category: newCategory } : l);
     localStorage.setItem('habitgrid_lap_history', JSON.stringify(updatedHistory));
+    window.dispatchEvent(new Event('habit-data-updated'));
   };
 
   const updateLapLabel = (id, newLabel) => {
@@ -146,6 +148,7 @@ export function useStopwatch() {
     const history = JSON.parse(localStorage.getItem('habitgrid_lap_history') || '[]');
     const updatedHistory = history.map(l => l.id === id ? { ...l, label: newLabel } : l);
     localStorage.setItem('habitgrid_lap_history', JSON.stringify(updatedHistory));
+    window.dispatchEvent(new Event('habit-data-updated'));
   };
 
   const formatTime = (ms) => {
