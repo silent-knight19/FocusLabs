@@ -102,9 +102,10 @@ export function CalendarView({ habits, completions, subtasks = [], subtaskComple
     });
 
     // 2. Search Subtask History (Completed Subtasks)
-    const matchingSubtasks = subtasks.filter(st => 
-      st.title.toLowerCase().includes(searchLower)
-    );
+    const matchingSubtasks = subtasks.filter(st => {
+      const parentHabitExists = habits.some(h => h.id === st.habitId);
+      return parentHabitExists && st.title.toLowerCase().includes(searchLower);
+    });
 
     matchingSubtasks.forEach(subtask => {
       const habitId = subtask.habitId;
@@ -120,9 +121,10 @@ export function CalendarView({ habits, completions, subtasks = [], subtaskComple
 
     // 3. Search Daily Tasks (All tasks, regardless of completion)
     // User requested: "item am searching for can be of past present or futore dates"
-    const matchingDailyTasks = dailyTasks.filter(task => 
-      task.title.toLowerCase().includes(searchLower)
-    );
+    const matchingDailyTasks = dailyTasks.filter(task => {
+      const parentHabitExists = habits.some(h => h.id === task.habitId);
+      return parentHabitExists && task.title.toLowerCase().includes(searchLower);
+    });
 
     matchingDailyTasks.forEach(task => {
       // task.date is already in YYYY-MM-DD format
