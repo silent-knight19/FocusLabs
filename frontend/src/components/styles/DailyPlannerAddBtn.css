@@ -1,0 +1,36 @@
+.add-habit-btn-small {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: linear-gradient(135deg, var(--neon-orange), var(--neon-orange-dark));
+    color: white;
+    border: none;
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    box-shadow: var(--glow-orange);
+    font-size: var(--font-size-sm);
+}
+
+.add-habit-btn-small:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 15px rgba(255, 107, 53, 0.6);
+}
+
+.planner-header-left {
+    position: absolute;
+    left: var(--spacing-lg);
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+/* Ensure planner header handles the absolute positioning */
+.planner-header {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: var(--spacing-xl);
+}

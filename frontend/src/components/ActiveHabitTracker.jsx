@@ -1,14 +1,10 @@
 import React from 'react';
-import { SubtaskList } from './SubtaskList';
-import { getToday, formatTime12 } from '../utils/dateHelpers';
+import { getToday, formatTime12, formatDateKey } from '../utils/dateHelpers';
 import './styles/ActiveHabitTracker.css';
+import './styles/DailyTasksActive.css';
 import './styles/TimesUp.css';
 import { useState, useEffect, useRef } from 'react';
-
-// Simple bell sound (base64)
-const ALARM_SOUND = 'data:audio/wav;base64,UklGRl9vT1BXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU'; // Shortened for brevity, I will use a real one in the actual file or a useEffect to generate one.
-// Actually, I'll use a real base64 string for a chime in the next step or generate a beep.
-// For now, let's use a function to play a generated sound to avoid huge base64 strings.
+import { CheckCircle, Circle, Plus } from 'lucide-react';
 
 const playAlarmSound = () => {
   const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -48,26 +44,25 @@ const playAlarmSound = () => {
 };
 
 /**
- * Displays the currently active habit with countdown timer and subtasks
+ * Displays the currently active habit with countdown timer and daily tasks
  */
 export function ActiveHabitTracker({ 
   activeData, 
-  subtasksData,
-  onToggleSubtask,
-  onAddSubtask,
-  onDeleteSubtask,
-  getSubtaskStatus,
+  dailyTasks = [],
+  onToggleDailyTask,
+  onAddDailyTask,
+  onDeleteDailyTask,
   onToggleCompletion,
   getCompletionStatus
 }) {
   const { activeHabit, formattedTimeRemaining, progress } = activeData;
   
   const [finishedHabit, setFinishedHabit] = useState(null);
+  const [newTaskTitle, setNewTaskTitle] = useState('');
   const prevHabitRef = useRef(null);
 
   // Check for habit completion (Time's Up)
   useEffect(() => {
-    // If we had a habit, and now we don't (or it changed), check if it finished naturally
     if (prevHabitRef.current && (!activeHabit || activeHabit.id !== prevHabitRef.current.id)) {
       const prev = prevHabitRef.current;
       const now = new Date();
@@ -76,16 +71,10 @@ export function ActiveHabitTracker({
       const [endHours, endMinutes] = prev.endTime.split(':').map(Number);
       const endTimeMinutes = endHours * 60 + endMinutes;
       
-      // If current time is at or past the end time (within a small margin of error, e.g. 1 min)
-      // We check if we are "just past" the end time.
-      // Since this runs every second, we should catch it.
-      
-      // Simple check: if we are currently AT the minute of end time, it's a finish.
       if (currentMinutes === endTimeMinutes || currentMinutes === endTimeMinutes + 1) {
         setFinishedHabit(prev);
         playAlarmSound();
         
-        // Auto-dismiss after 10 seconds
         const timer = setTimeout(() => setFinishedHabit(null), 10000);
         return () => clearTimeout(timer);
       }
@@ -125,13 +114,26 @@ export function ActiveHabitTracker({
   }
 
   const today = getToday();
+  const dateKey = formatDateKey(today);
   const completionStatus = getCompletionStatus(activeHabit.id, today);
-  const habitSubtasks = subtasksData.getSubtasks(activeHabit.id);
+  
+  // Get daily tasks for this habit on today's date
+  const todayTasks = dailyTasks.filter(task => 
+    task.habitId === activeHabit.id && task.date === dateKey
+  );
+
+  const handleAddTask = (e) => {
+    e.preventDefault();
+    if (newTaskTitle.trim() && onAddDailyTask) {
+      onAddDailyTask(activeHabit.id, today, newTaskTitle.trim());
+      setNewTaskTitle('');
+    }
+  };
 
   // Calculate the stroke dashoffset for the ring (inverted so it empties)
   const radius = 100;
   const circumference = 2 * Math.PI * radius;
-  const progressOffset = circumference * (progress / 100); // Ring empties as progress increases
+  const progressOffset = circumference * (progress / 100);
 
   return (
     <div className="active-habit-tracker active">
@@ -193,18 +195,55 @@ export function ActiveHabitTracker({
         </div>
       </div>
 
-      {/* Subtasks Section */}
+      {/* Daily Tasks Section */}
       <div className="subtasks-section">
-        <h4>Subtasks</h4>
-        <SubtaskList
-          habitId={activeHabit.id}
-          subtasks={habitSubtasks}
-          onAddSubtask={onAddSubtask}
-          onDeleteSubtask={onDeleteSubtask}
-          onToggleSubtask={onToggleSubtask}
-          date={today}
-          getSubtaskStatus={getSubtaskStatus}
-        />
+        <h4>Today's Tasks</h4>
+        <div className="daily-tasks-list">
+          {todayTasks.length === 0 ? (
+            <p className="no-tasks-message">No tasks planned for today. Add one below!</p>
+          ) : (
+            todayTasks.map(task => (
+              <div key={task.id} className="daily-task-item-active">
+                <button
+                  type="button"
+                  className={`task-checkbox ${task.completed ? 'checked' : ''}`}
+                  onClick={() => onToggleDailyTask && onToggleDailyTask(task.id)}
+                >
+                  {task.completed ? <CheckCircle size={20} /> : <Circle size={20} />}
+                </button>
+                <span className={`task-title ${task.completed ? 'completed' : ''}`}>
+                  {task.title}
+                </span>
+                <button
+                  type="button"
+                  className="task-delete-btn"
+                  onClick={() => onDeleteDailyTask && onDeleteDailyTask(task.id)}
+                  title="Delete task"
+                >
+                  ✕
+                </button>
+              </div>
+            ))
+          )}
+        </div>
+        
+        {/* Add Task Form */}
+        <form onSubmit={handleAddTask} className="add-task-form">
+          <input
+            type="text"
+            value={newTaskTitle}
+            onChange={(e) => setNewTaskTitle(e.target.value)}
+            placeholder="Add a task for today..."
+            className="add-task-input"
+          />
+          <button
+            type="submit"
+            className="add-task-btn"
+            disabled={!newTaskTitle.trim()}
+          >
+            <Plus size={20} />
+          </button>
+        </form>
       </div>
 
       {/* Completion Button */}

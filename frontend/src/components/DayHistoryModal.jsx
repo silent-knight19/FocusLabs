@@ -1,21 +1,29 @@
 import React, { useMemo } from 'react';
-import { X, CheckCircle, Circle, Clock, TrendingUp, Target } from 'lucide-react';
+import { X, CheckCircle, Circle, Clock, TrendingUp, Target, ListTodo } from 'lucide-react';
+import { formatDateKey } from '../utils/dateHelpers';
 import './styles/DayHistoryModal.css';
 
 /**
  * Detailed history view for a specific date
- * Shows habits, subtasks, time spent by category, and statistics
+ * Shows habits, subtasks, daily tasks, time spent by category, and statistics
  */
-export function DayHistoryModal({ date, habits, completions, onClose }) {
-  const dateStr = date.toISOString().split('T')[0];
-  const dayCompletions = completions[dateStr] || {};
+export function DayHistoryModal({ 
+  date, 
+  habits, 
+  completions, 
+  subtasks = [], 
+  subtaskCompletions = {},
+  dailyTasks = [],
+  onClose 
+}) {
+  const dateStr = formatDateKey(date);
 
   // Get all lap data for this day
   const dayData = useMemo(() => {
     try {
       const lapHistory = JSON.parse(localStorage.getItem('habitgrid_lap_history') || '[]');
       const dayLaps = lapHistory.filter(lap => {
-        const lapDateKey = lap.date ? lap.date.split('T')[0] : null;
+        const lapDateKey = lap.date ? formatDateKey(new Date(lap.date)) : null;
         return lapDateKey === dateStr;
       });
 
@@ -49,19 +57,36 @@ export function DayHistoryModal({ date, habits, completions, onClose }) {
   // Filter habits that were active on this date
   const activeHabits = useMemo(() => {
     return habits.filter(h => {
-      const created = new Date(h.createdAt);
-      return created <= date;
+      const createdStr = formatDateKey(new Date(h.createdAt));
+      return createdStr <= dateStr;
     });
-  }, [habits, date]);
+  }, [habits, dateStr]);
+
+  // Get daily tasks for this date
+  const dayTasks = useMemo(() => {
+    return dailyTasks.filter(task => task.date === dateStr);
+  }, [dailyTasks, dateStr]);
 
   // Calculate completion stats
   const stats = useMemo(() => {
-    const completed = activeHabits.filter(h => dayCompletions[h.id]).length;
+    const completed = activeHabits.filter(h => 
+      completions[h.id]?.[dateStr] === 'completed'
+    ).length;
     const total = activeHabits.length;
     const percentage = total > 0 ? (completed / total) * 100 : 0;
 
-    return { completed, total, percentage };
-  }, [activeHabits, dayCompletions]);
+    // Daily tasks stats
+    const totalTasks = dayTasks.length;
+    const completedTasks = dayTasks.filter(t => t.completed).length;
+
+    return { 
+      completed, 
+      total, 
+      percentage,
+      totalTasks,
+      completedTasks
+    };
+  }, [activeHabits, completions, dateStr, dayTasks]);
 
   // Format time
   const formatTime = (ms) => {
@@ -106,7 +131,7 @@ export function DayHistoryModal({ date, habits, completions, onClose }) {
             </p>
           </div>
           <button className="close-btn-icon" onClick={onClose}>
-            <X size={24} />
+            <X size={32} />
           </button>
         </div>
 
@@ -134,11 +159,11 @@ export function DayHistoryModal({ date, habits, completions, onClose }) {
 
           <div className="summary-card">
             <div className="summary-icon" style={{ backgroundColor: 'rgba(16, 185, 129, 0.1)' }}>
-              <TrendingUp size={24} color="#10b981" />
+              <ListTodo size={24} color="#10b981" />
             </div>
             <div className="summary-content">
-              <div className="summary-value">{dayData.lapCount}</div>
-              <div className="summary-label">Sessions</div>
+              <div className="summary-value">{stats.completedTasks}/{stats.totalTasks}</div>
+              <div className="summary-label">Daily Tasks</div>
             </div>
           </div>
         </div>
@@ -153,8 +178,9 @@ export function DayHistoryModal({ date, habits, completions, onClose }) {
             ) : (
               <div className="habits-list">
                 {activeHabits.map(habit => {
-                  const isCompleted = dayCompletions[habit.id];
-                  const habitData = isCompleted ? dayCompletions[habit.id] : null;
+                  const isCompleted = completions[habit.id]?.[dateStr] === 'completed';
+                  const habitSubtasks = subtasks.filter(st => st.habitId === habit.id);
+                  const habitDailyTasks = dayTasks.filter(t => t.habitId === habit.id);
 
                   return (
                     <div key={habit.id} className="habit-item">
@@ -173,29 +199,54 @@ export function DayHistoryModal({ date, habits, completions, onClose }) {
                             {habit.name}
                           </span>
                         </div>
-                        {habit.timeAllocation && (
-                          <span className="habit-time">{habit.timeAllocation}</span>
-                        )}
+                        <div className="habit-meta">
+                          {habit.category && (
+                            <span className="habit-category">{habit.category}</span>
+                          )}
+                          {habit.timeAllocation && (
+                            <span className="habit-time">{habit.timeAllocation}</span>
+                          )}
+                        </div>
                       </div>
 
-                      {/* Subtasks */}
-                      {habit.subtasks && habit.subtasks.length > 0 && (
+                      {/* Static Subtasks */}
+                      {habitSubtasks.length > 0 && (
                         <div className="subtasks-container">
-                          {habit.subtasks.map((subtask, idx) => {
-                            const subtaskCompleted = habitData?.subtasks?.[idx];
+                          <div className="subtasks-header">Static Subtasks</div>
+                          {habitSubtasks.map((subtask) => {
+                            const subtaskCompleted = subtaskCompletions[habit.id]?.[dateStr]?.[subtask.id] === true;
                             return (
-                              <div key={idx} className="subtask-item">
+                              <div key={subtask.id} className="subtask-item">
                                 {subtaskCompleted ? (
-                                  <CheckCircle size={16} color="var(--neon-orange)" />
+                                  <CheckCircle size={16} color="var(--accent-green)" />
                                 ) : (
                                   <Circle size={16} color="var(--text-secondary)" />
                                 )}
                                 <span className={`subtask-text ${subtaskCompleted ? 'completed' : ''}`}>
-                                  {subtask}
+                                  {subtask.title}
                                 </span>
                               </div>
                             );
                           })}
+                        </div>
+                      )}
+
+                      {/* Daily Tasks */}
+                      {habitDailyTasks.length > 0 && (
+                        <div className="subtasks-container">
+                          <div className="subtasks-header">Daily Tasks</div>
+                          {habitDailyTasks.map((task) => (
+                            <div key={task.id} className="subtask-item">
+                              {task.completed ? (
+                                <CheckCircle size={16} color="var(--accent-green)" />
+                              ) : (
+                                <Circle size={16} color="var(--text-secondary)" />
+                              )}
+                              <span className={`subtask-text ${task.completed ? 'completed' : ''}`}>
+                                {task.title}
+                              </span>
+                            </div>
+                          ))}
                         </div>
                       )}
                     </div>
@@ -205,39 +256,108 @@ export function DayHistoryModal({ date, habits, completions, onClose }) {
             )}
           </div>
 
-          {/* Time by Category */}
+          {/* Time by Category with Pie Chart */}
           {Object.keys(dayData.categoryTime).length > 0 && (
             <div className="history-section">
-              <h3 className="section-title">Time by Category</h3>
-              <div className="category-breakdown">
-                {Object.entries(dayData.categoryTime)
-                  .sort((a, b) => b[1] - a[1])
-                  .map(([category, time]) => {
-                    const percentage = (time / dayData.totalTime) * 100;
-                    return (
-                      <div key={category} className="category-item">
-                        <div className="category-header">
-                          <div className="category-info">
-                            <span 
-                              className="category-dot" 
-                              style={{ backgroundColor: categoryColors[category] || '#6b7280' }}
+              <h3 className="section-title">Time Distribution</h3>
+              
+              <div className="distribution-container" style={{ display: 'flex', gap: '2rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                {/* Pie Chart */}
+                <div className="pie-chart-container" style={{ position: 'relative', width: '200px', height: '200px' }}>
+                  <svg width="200" height="200" viewBox="0 0 100 100" style={{ transform: 'rotate(-90deg)' }}>
+                    {(() => {
+                      let cumulativePercent = 0;
+                      const total = dayData.totalTime;
+                      return Object.entries(dayData.categoryTime)
+                        .sort((a, b) => b[1] - a[1])
+                        .map(([category, time], i) => {
+                          const percent = time / total;
+                          const startX = Math.cos(2 * Math.PI * cumulativePercent) * 50 + 50;
+                          const startY = Math.sin(2 * Math.PI * cumulativePercent) * 50 + 50;
+                          cumulativePercent += percent;
+                          const endX = Math.cos(2 * Math.PI * cumulativePercent) * 50 + 50;
+                          const endY = Math.sin(2 * Math.PI * cumulativePercent) * 50 + 50;
+                          const largeArcFlag = percent > 0.5 ? 1 : 0;
+                          
+                          // Handle single category case (100%)
+                          if (percent === 1) {
+                            return (
+                              <circle
+                                key={category}
+                                cx="50"
+                                cy="50"
+                                r="50"
+                                fill={categoryColors[category] || '#6b7280'}
+                              />
+                            );
+                          }
+
+                          const pathData = [
+                            `M 50 50`,
+                            `L ${startX} ${startY}`,
+                            `A 50 50 0 ${largeArcFlag} 1 ${endX} ${endY}`,
+                            `Z`
+                          ].join(' ');
+
+                          return (
+                            <path
+                              key={category}
+                              d={pathData}
+                              fill={categoryColors[category] || '#6b7280'}
+                              stroke="var(--bg-card)"
+                              strokeWidth="1"
                             />
-                            <span className="category-name">{category}</span>
+                          );
+                        });
+                    })()}
+                    {/* Center hole for donut chart look */}
+                    <circle cx="50" cy="50" r="35" fill="var(--bg-card)" />
+                  </svg>
+                  <div className="pie-center-text" style={{
+                    position: 'absolute',
+                    top: '50%',
+                    left: '50%',
+                    transform: 'translate(-50%, -50%)',
+                    textAlign: 'center'
+                  }}>
+                    <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: 'var(--text-primary)' }}>
+                      {formatTime(dayData.totalTime)}
+                    </div>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Total</div>
+                  </div>
+                </div>
+
+                {/* Legend / Breakdown */}
+                <div className="category-breakdown" style={{ flex: 1, minWidth: '200px' }}>
+                  {Object.entries(dayData.categoryTime)
+                    .sort((a, b) => b[1] - a[1])
+                    .map(([category, time]) => {
+                      const percentage = (time / dayData.totalTime) * 100;
+                      return (
+                        <div key={category} className="category-item">
+                          <div className="category-header">
+                            <div className="category-info">
+                              <span 
+                                className="category-dot" 
+                                style={{ backgroundColor: categoryColors[category] || '#6b7280' }}
+                              />
+                              <span className="category-name">{category}</span>
+                            </div>
+                            <span className="category-time">{formatTime(time)} ({Math.round(percentage)}%)</span>
                           </div>
-                          <span className="category-time">{formatTime(time)}</span>
+                          <div className="category-bar-container">
+                            <div 
+                              className="category-bar" 
+                              style={{ 
+                                width: `${percentage}%`,
+                                backgroundColor: categoryColors[category] || '#6b7280'
+                              }}
+                            />
+                          </div>
                         </div>
-                        <div className="category-bar-container">
-                          <div 
-                            className="category-bar" 
-                            style={{ 
-                              width: `${percentage}%`,
-                              backgroundColor: categoryColors[category] || '#6b7280'
-                            }}
-                          />
-                        </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
+                </div>
               </div>
             </div>
           )}
@@ -267,7 +387,7 @@ export function DayHistoryModal({ date, habits, completions, onClose }) {
           )}
 
           {/* Empty State */}
-          {activeHabits.length === 0 && dayData.laps.length === 0 && (
+          {activeHabits.length === 0 && dayData.laps.length === 0 && dayTasks.length === 0 && (
             <div className="empty-state">
               <p>No activity recorded for this day</p>
             </div>

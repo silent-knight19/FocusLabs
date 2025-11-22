@@ -18,10 +18,19 @@ import { AnalyticsModal } from './components/AnalyticsModal';
 import { StudyHeatmap } from './components/StudyHeatmap';
 import { ProductivityHeatmap } from './components/ProductivityHeatmap';
 import { DayHistoryModal } from './components/DayHistoryModal';
+import { DailyPlanner } from './components/DailyPlanner';
 import { useHabits } from './hooks/useHabits.jsx';
+import { useDailyTasks } from './hooks/useDailyTasks.jsx';
 import { useSettings } from './hooks/useSettings';
 import { useActiveHabit } from './hooks/useActiveHabit';
-import { getWeekDates, getToday } from './utils/dateHelpers';
+import { 
+  getWeekStart, 
+  getWeekDates, 
+  formatDateKey, 
+  isSameDay, 
+  getToday,
+  getCurrentMonthDates 
+} from './utils/dateHelpers';
 
 import './App.css';
 import './components/styles/CalendarOverlay.css';
@@ -40,7 +49,8 @@ function App() {
   const [searchTerm, setSearchTerm] = useState('');
 
   const [selectedCategory, setSelectedCategory] = useState('all');
-  const [currentView, setCurrentView] = useState('week'); // 'week' view only
+  const [currentView, setCurrentView] = useState('week'); // 'week' or 'daily'
+  const [selectedPlannerDate, setSelectedPlannerDate] = useState(getToday());
 
   const {
     habits,
@@ -65,6 +75,19 @@ function App() {
     getSubtaskCompletionPercentage,
     reorderHabits
   } = useHabits();
+
+  // Daily tasks hook
+  const {
+    dailyTasks,
+    getDailyTasks,
+    getAllDailyTasks,
+    addDailyTask,
+    toggleDailyTask,
+    updateDailyTask,
+    deleteDailyTask,
+    getDailyCompletion,
+    getDateCompletion
+  } = useDailyTasks();
 
   const { settings, updateSettings } = useSettings();
 
@@ -203,11 +226,10 @@ function App() {
           {/* Active Habit Tracker */}
           <ActiveHabitTracker
             activeData={activeData}
-            subtasksData={{ getSubtasks }}
-            onToggleSubtask={toggleSubtaskCompletion}
-            onAddSubtask={addSubtask}
-            onDeleteSubtask={deleteSubtask}
-            getSubtaskStatus={getSubtaskStatus}
+            dailyTasks={dailyTasks}
+            onToggleDailyTask={toggleDailyTask}
+            onAddDailyTask={addDailyTask}
+            onDeleteDailyTask={deleteDailyTask}
             onToggleCompletion={toggleCompletion}
             getCompletionStatus={getCompletionStatus}
           />
@@ -226,15 +248,32 @@ function App() {
                 fontSize: '1.2rem', 
                 padding: '1rem 3rem', 
                 fontWeight: '700',
-                background: 'linear-gradient(135deg, var(--neon-orange), var(--neon-orange-dark))',
-                color: '#fff',
+                background: currentView === 'week' ? 'linear-gradient(135deg, var(--neon-orange), var(--neon-orange-dark))' : 'var(--bg-secondary)',
+                color: currentView === 'week' ? '#fff' : 'var(--text-secondary)',
                 border: '1px solid var(--neon-orange)',
                 borderRadius: 'var(--radius-md)',
-                boxShadow: 'var(--glow-orange)',
+                boxShadow: currentView === 'week' ? 'var(--glow-orange)' : 'none',
                 cursor: 'pointer'
               }}
             >
-              Week View
+              Month View
+            </button>
+            <button 
+              className={`view-toggle-btn ${currentView === 'daily' ? 'active' : ''}`}
+              onClick={() => setCurrentView('daily')}
+              style={{ 
+                fontSize: '1.2rem', 
+                padding: '1rem 3rem', 
+                fontWeight: '700',
+                background: currentView === 'daily' ? 'linear-gradient(135deg, var(--neon-orange), var(--neon-orange-dark))' : 'var(--bg-secondary)',
+                color: currentView === 'daily' ? '#fff' : 'var(--text-secondary)',
+                border: '1px solid var(--neon-orange)',
+                borderRadius: 'var(--radius-md)',
+                boxShadow: currentView === 'daily' ? 'var(--glow-orange)' : 'none',
+                cursor: 'pointer'
+              }}
+            >
+              Daily Planner
             </button>
           </div>
 
@@ -244,7 +283,7 @@ function App() {
             <>
               <HabitGrid
                 habits={filteredHabits}
-                weekDates={weekDates}
+                weekDates={getCurrentMonthDates(currentDate)}
                 onToggle={handleToggle}
                 onEditHabit={handleEditHabit}
                 onDeleteHabit={handleDeleteHabit}
@@ -252,6 +291,22 @@ function App() {
                 reorderHabits={reorderHabits}
               />
             </>
+          )}
+
+          {currentView === 'daily' && (
+            <DailyPlanner
+              habits={filteredHabits}
+              selectedDate={selectedPlannerDate}
+              onDateChange={setSelectedPlannerDate}
+              getDailyTasks={getDailyTasks}
+              onAddTask={addDailyTask}
+              onToggleTask={toggleDailyTask}
+              onUpdateTask={updateDailyTask}
+              onDeleteTask={deleteDailyTask}
+              getDailyCompletion={getDailyCompletion}
+              getDateCompletion={getDateCompletion}
+              onAddHabit={handleAddHabit}
+            />
           )}
 
           {currentView === 'study' && (
@@ -312,6 +367,7 @@ function App() {
               completions={completions}
               subtasks={subtasks}
               subtaskCompletions={subtaskCompletions}
+              dailyTasks={dailyTasks}
               onDateClick={(date) => {
                 setSelectedDate(date);
                 // Don't close calendar - let day history modal overlay on top
@@ -327,6 +383,9 @@ function App() {
           date={selectedDate}
           habits={habits}
           completions={completions}
+          subtasks={subtasks}
+          subtaskCompletions={subtaskCompletions}
+          dailyTasks={dailyTasks}
           onClose={() => setSelectedDate(null)}
         />
       )}

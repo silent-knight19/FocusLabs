@@ -75,7 +75,7 @@
 
 .habit-badge {
     background: rgba(255, 107, 53, 0.1);
-    color: var(--neon-orange);
+    color: #ffffff;
     padding: 4px 12px;
     border-radius: 20px;
     font-size: 0.9rem;

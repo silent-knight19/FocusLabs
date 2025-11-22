@@ -83,8 +83,8 @@
     background: transparent;
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
-    width: 40px;
-    height: 40px;
+    width: 48px;
+    height: 48px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -98,6 +98,11 @@
     color: var(--text-primary);
     border-color: var(--neon-orange);
     transform: rotate(90deg);
+}
+
+.close-btn-icon svg {
+    width: 32px;
+    height: 32px;
 }
 
 /* Summary Cards */
@@ -237,6 +242,21 @@
     color: var(--neon-orange);
 }
 
+.habit-meta {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.habit-category {
+    font-size: var(--font-size-xs);
+    color: var(--text-tertiary);
+    background: rgba(139, 92, 246, 0.1);
+    padding: 4px 8px;
+    border-radius: var(--radius-sm);
+    text-transform: capitalize;
+}
+
 .habit-time {
     font-size: var(--font-size-sm);
     color: var(--text-secondary);
@@ -252,6 +272,15 @@
     display: flex;
     flex-direction: column;
     gap: var(--spacing-sm);
+}
+
+.subtasks-header {
+    font-size: var(--font-size-xs);
+    font-weight: 600;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: var(--spacing-xs);
 }
 
 .subtask-item {

@@ -5,7 +5,7 @@ import './styles/DayCell.css';
  * Interactive cell component for habit completion tracking
  * Cycles through three states: empty -> completed -> failed -> empty
  */
-export function DayCell({ status, onClick, date }) {
+export function DayCell({ status, onClick, date, showNumber }) {
   const getIcon = () => {
     if (status === 'completed') return '✓';
     if (status === 'failed') return '✕';
@@ -16,6 +16,7 @@ export function DayCell({ status, onClick, date }) {
     let classes = 'day-cell';
     if (status === 'completed') classes += ' completed';
     if (status === 'failed') classes += ' failed';
+    if (showNumber) classes += ' numbered';
     return classes;
   };
 
@@ -27,7 +28,11 @@ export function DayCell({ status, onClick, date }) {
       aria-label={`Mark habit as ${!status ? 'completed' : status === 'completed' ? 'failed' : 'incomplete'}`}
       title={date ? date.toLocaleDateString() : ''}
     >
-      <span className="cell-icon">{getIcon()}</span>
+      {showNumber && !status ? (
+        <span className="day-number">{date ? date.getDate() : ''}</span>
+      ) : (
+        <span className="cell-icon">{getIcon()}</span>
+      )}
     </button>
   );
 }

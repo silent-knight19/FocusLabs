@@ -1,0 +1,202 @@
+/* Daily Task Panel - Individual habit panel */
+.daily-task-panel {
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+    transition: all var(--transition-fast);
+}
+
+.daily-task-panel:hover {
+    box-shadow: var(--shadow-md);
+    border-color: var(--neon-orange);
+}
+
+/* Panel header */
+.panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-md) var(--spacing-lg);
+    background: var(--bg-hover);
+    cursor: pointer;
+    transition: background var(--transition-fast);
+    user-select: none;
+}
+
+.panel-header:hover {
+    background: var(--bg-secondary);
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    flex: 1;
+}
+
+.habit-color-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    box-shadow: 0 0 8px currentColor;
+}
+
+.habit-name {
+    font-size: var(--font-size-lg);
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.habit-time {
+    font-size: var(--font-size-sm);
+    color: var(--neon-orange);
+    font-weight: 600;
+    padding: 4px 8px;
+    background: rgba(255, 107, 53, 0.1);
+    border-radius: var(--radius-sm);
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+}
+
+.task-count {
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    font-weight: 600;
+}
+
+.expand-icon {
+    color: var(--text-tertiary);
+    transition: transform var(--transition-fast);
+    font-size: var(--font-size-sm);
+}
+
+.expand-icon.expanded {
+    transform: rotate(180deg);
+}
+
+/* Panel content */
+.panel-content {
+    padding: var(--spacing-lg);
+    animation: slideDown 0.2s ease-in-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        max-height: 0;
+    }
+
+    to {
+        opacity: 1;
+        max-height: 1000px;
+    }
+}
+
+/* Progress bar */
+.task-progress-bar {
+    height: 6px;
+    background: var(--bg-secondary);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: var(--spacing-lg);
+}
+
+.progress-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width var(--transition-smooth);
+    box-shadow: 0 0 8px currentColor;
+}
+
+/* Task list */
+.task-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
+}
+
+/* Add task section */
+.add-task-section {
+    display: flex;
+    gap: var(--spacing-sm);
+    margin-top: var(--spacing-md);
+}
+
+.task-input {
+    flex: 1;
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    color: var(--text-primary);
+    font-size: var(--font-size-md);
+    transition: all var(--transition-fast);
+}
+
+.task-input:focus {
+    outline: none;
+    border-color: var(--neon-orange);
+    box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
+}
+
+.task-input::placeholder {
+    color: var(--text-tertiary);
+}
+
+.add-task-btn {
+    padding: var(--spacing-sm) var(--spacing-lg);
+    background: linear-gradient(135deg, var(--neon-orange), var(--neon-orange-dark));
+    color: white;
+    border: none;
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    box-shadow: var(--glow-orange);
+}
+
+.add-task-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 0 20px rgba(255, 107, 53, 0.6);
+}
+
+.add-task-btn:active {
+    transform: translateY(0);
+}
+
+.add-task-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .panel-header {
+        padding: var(--spacing-sm) var(--spacing-md);
+    }
+
+    .panel-content {
+        padding: var(--spacing-md);
+    }
+
+    .habit-name {
+        font-size: var(--font-size-md);
+    }
+
+    .add-task-section {
+        flex-direction: column;
+    }
+
+    .add-task-btn {
+        width: 100%;
+    }
+}

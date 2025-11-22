@@ -109,6 +109,24 @@ export const getMonthDates = (year, month) => {
   return dates;
 };
 
+/**
+ * Get all days in the current month (1st to last day)
+ * @param {Date} date - Reference date
+ * @returns {Date[]} - Array of dates for the month
+ */
+export function getCurrentMonthDates(date = new Date()) {
+  const year = date.getFullYear();
+  const month = date.getMonth();
+  const lastDay = new Date(year, month + 1, 0);
+  const dates = [];
+  
+  for (let i = 1; i <= lastDay.getDate(); i++) {
+    dates.push(new Date(year, month, i));
+  }
+  
+  return dates;
+}
+
 export const getMonthName = (monthIndex) => {
   const months = [
     'January', 'February', 'March', 'April', 'May', 'June',

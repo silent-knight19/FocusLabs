@@ -9,6 +9,20 @@ import { CSS } from '@dnd-kit/utilities';
  */
 export function HabitRow({ habit, weekDates, onToggle, onEdit, onDelete, getStatus }) {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: habit.id });
+  
+  const CATEGORY_COLORS = {
+    'Health': '#10B981',      // Green
+    'Work': '#3B82F6',        // Blue
+    'Learning': '#8B5CF6',    // Purple
+    'Fitness': '#F59E0B',     // Amber
+    'Personal': '#EC4899',    // Pink
+    'Mindfulness': '#06B6D4', // Cyan
+    'Finance': '#14B8A6',     // Teal
+    'Social': '#F43F5E',      // Rose
+  };
+
+  const barColor = CATEGORY_COLORS[habit.category] || habit.color || '#FF6B35';
+
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
@@ -20,7 +34,8 @@ export function HabitRow({ habit, weekDates, onToggle, onEdit, onDelete, getStat
         <div className="habit-name-section" {...listeners}>
           <div 
             className="habit-color-indicator" 
-            style={{ backgroundColor: habit.color }}
+            style={{ backgroundColor: barColor }}
+            title={habit.category || 'Category'}
           />
           <button
             type="button"
@@ -30,18 +45,43 @@ export function HabitRow({ habit, weekDates, onToggle, onEdit, onDelete, getStat
           >
             {habit.name}
           </button>
+          
+          <div className="habit-inline-actions">
+            <button
+              type="button"
+              className="action-button edit-button"
+              onClick={(e) => { 
+                e.stopPropagation(); 
+                onEdit(habit); 
+              }}
+              onPointerDown={(e) => e.stopPropagation()}
+              title="Edit habit"
+            >
+              ✎
+            </button>
+            <button
+              type="button"
+              className="action-button delete-button"
+              onClick={(e) => { 
+                e.stopPropagation(); 
+                onDelete(habit.id); 
+              }}
+              onPointerDown={(e) => e.stopPropagation()}
+              title="Delete habit"
+            >
+              🗑
+            </button>
+          </div>
         </div>
-        {habit.category && (
-          <span className="habit-category">{habit.category}</span>
-        )}
+        
+        <div className="habit-meta">
+          <span className="habit-time">
+            {habit.startTime && habit.endTime 
+              ? `${habit.startTime} - ${habit.endTime}`
+              : habit.startTime || habit.time || 'Any time'}
+          </span>
+        </div>
       </div>
-      
-      <div className="habit-time">
-        {habit.startTime && habit.endTime 
-          ? `${habit.startTime} - ${habit.endTime}`
-          : habit.startTime || habit.time || '—'}
-      </div>
-
       
       <div className="habit-days">
         {weekDates.map((date, index) => (
@@ -50,27 +90,9 @@ export function HabitRow({ habit, weekDates, onToggle, onEdit, onDelete, getStat
             date={date}
             status={getStatus(habit.id, date)}
             onClick={() => onToggle(habit.id, date)}
+            showNumber={true}
           />
         ))}
-      </div>
-      
-      <div className="habit-actions">
-        <button
-          type="button"
-          className="action-button edit-button"
-          onClick={() => onEdit(habit)}
-          title="Edit habit"
-        >
-          ✎
-        </button>
-        <button
-          type="button"
-          className="action-button delete-button"
-          onClick={() => onDelete(habit.id)}
-          title="Delete habit"
-        >
-          🗑
-        </button>
       </div>
     </div>
   );

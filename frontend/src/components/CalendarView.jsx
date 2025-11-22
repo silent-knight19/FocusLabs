@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Search, X } from 'lucide-react';
-import { getMonthDates, getMonthName, isSameDay, getTwoYearsAgo, isWithinTwoYears } from '../utils/dateHelpers';
+import { getMonthDates, getMonthName, isSameDay, getTwoYearsAgo, isWithinTwoYears, formatDateKey } from '../utils/dateHelpers';
 import './styles/CalendarView.css';
 
-export function CalendarView({ habits, completions, subtasks = [], subtaskCompletions = {}, onDateClick }) {
+export function CalendarView({ habits, completions, subtasks = [], subtaskCompletions = {}, dailyTasks = [], onDateClick }) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [calendarDays, setCalendarDays] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -34,7 +34,7 @@ export function CalendarView({ habits, completions, subtasks = [], subtaskComple
       }
     });
 
-    // 2. Collect matching Subtasks
+    // 2. Collect matching Subtasks (Static)
     if (subtasks && subtasks.length > 0) {
       subtasks.forEach(subtask => {
         if (subtask.title.toLowerCase().includes(searchLower)) {
@@ -51,13 +51,30 @@ export function CalendarView({ habits, completions, subtasks = [], subtaskComple
       });
     }
 
+    // 3. Collect matching Daily Tasks
+    if (dailyTasks && dailyTasks.length > 0) {
+      dailyTasks.forEach(task => {
+        if (task.title.toLowerCase().includes(searchLower)) {
+          const parentHabit = habits.find(h => h.id === task.habitId);
+          if (parentHabit) {
+            suggestions.add(JSON.stringify({ 
+              type: 'daily_task', 
+              text: task.title, 
+              habitName: parentHabit.name, 
+              color: parentHabit.color 
+            }));
+          }
+        }
+      });
+    }
+
     // Parse back to objects and limit
     const uniqueSuggestions = Array.from(suggestions).map(s => JSON.parse(s));
     setSearchSuggestions(uniqueSuggestions.slice(0, 10));
     setShowSuggestions(uniqueSuggestions.length > 0);
-  }, [searchTerm, habits, subtasks]);
+  }, [searchTerm, habits, subtasks, dailyTasks]);
 
-  // Search for habits and subtasks
+  // Search for habits, subtasks, and daily tasks
   useEffect(() => {
     if (!searchTerm.trim()) {
       setMatchingDates(new Set());
@@ -68,22 +85,23 @@ export function CalendarView({ habits, completions, subtasks = [], subtaskComple
     const searchLower = searchTerm.toLowerCase();
 
     // 1. Search Habit History (Completed Habits)
-    Object.entries(completions).forEach(([dateStr, dayCompletions]) => {
-      Object.keys(dayCompletions).forEach(habitId => {
-        // Check if habit was completed on this day
-        if (dayCompletions[habitId] !== 'completed') return;
+    // Structure: { habitId: { dateKey: status } }
+    Object.keys(completions).forEach(habitId => {
+      const habit = habits.find(h => h.id === habitId);
+      if (!habit) return;
 
-        const habit = habits.find(h => h.id === habitId);
-        if (!habit) return;
-
-        if (habit.name.toLowerCase().includes(searchLower)) {
-          matches.add(dateStr);
-        }
-      });
+      // If habit name matches, find all completed dates
+      if (habit.name.toLowerCase().includes(searchLower)) {
+        const habitDates = completions[habitId] || {};
+        Object.entries(habitDates).forEach(([dateKey, status]) => {
+          if (status === 'completed') {
+            matches.add(dateKey);
+          }
+        });
+      }
     });
 
     // 2. Search Subtask History (Completed Subtasks)
-    // Iterate through all subtasks to find matches
     const matchingSubtasks = subtasks.filter(st => 
       st.title.toLowerCase().includes(searchLower)
     );
@@ -94,16 +112,25 @@ export function CalendarView({ habits, completions, subtasks = [], subtaskComple
 
       // Check all dates for this habit
       Object.entries(habitCompletions).forEach(([dateKey, dateData]) => {
-        // dateKey is YYYY-MM-DD
-        // dateData is { subtaskId: boolean }
         if (dateData[subtask.id] === true) {
           matches.add(dateKey);
         }
       });
     });
 
+    // 3. Search Daily Tasks (All tasks, regardless of completion)
+    // User requested: "item am searching for can be of past present or futore dates"
+    const matchingDailyTasks = dailyTasks.filter(task => 
+      task.title.toLowerCase().includes(searchLower)
+    );
+
+    matchingDailyTasks.forEach(task => {
+      // task.date is already in YYYY-MM-DD format
+      matches.add(task.date);
+    });
+
     setMatchingDates(matches);
-  }, [searchTerm, completions, habits, subtasks, subtaskCompletions]);
+  }, [searchTerm, completions, habits, subtasks, subtaskCompletions, dailyTasks]);
 
   const handlePrevMonth = () => {
     const newDate = new Date(currentDate);
@@ -125,8 +152,7 @@ export function CalendarView({ habits, completions, subtasks = [], subtaskComple
   };
 
   const getDayCompletionStats = (date) => {
-    const dateStr = date.toISOString().split('T')[0];
-    const dayCompletions = completions[dateStr] || {};
+    const dateStr = formatDateKey(date);
     
     // Filter habits active on this day (simplified check)
     const activeHabits = habits.filter(h => {
@@ -136,7 +162,11 @@ export function CalendarView({ habits, completions, subtasks = [], subtaskComple
 
     if (activeHabits.length === 0) return { count: 0, total: 0, percentage: 0 };
 
-    const completedCount = activeHabits.filter(h => dayCompletions[h.id]).length;
+    // Check completion using correct structure: completions[habitId][dateStr]
+    const completedCount = activeHabits.filter(h => 
+      completions[h.id]?.[dateStr] === 'completed'
+    ).length;
+
     return {
       count: completedCount,
       total: activeHabits.length,
@@ -213,7 +243,7 @@ export function CalendarView({ habits, completions, subtasks = [], subtaskComple
                       )}
                     </div>
                     <span className="suggestion-type">
-                      {suggestion.type === 'habit' ? 'Habit' : 'Subtask'}
+                      {suggestion.type === 'habit' ? 'Habit' : suggestion.type === 'subtask' ? 'Subtask' : 'Daily Task'}
                     </span>
                   </div>
                 ))}
@@ -236,14 +266,14 @@ export function CalendarView({ habits, completions, subtasks = [], subtaskComple
           const stats = getDayCompletionStats(date);
           const isToday = isSameDay(date, new Date());
           const isCurrentMonth = date.getMonth() === currentDate.getMonth();
-          const dateStr = date.toISOString().split('T')[0];
+          const dateStr = formatDateKey(date);
           const isMatching = matchingDates.has(dateStr);
           
           // Get stopwatch time for this day
           let totalHours = 0;
           try {
             const lapHistory = JSON.parse(localStorage.getItem('habitgrid_lap_history') || '[]');
-            const dayKey = date.toISOString().split('T')[0];
+            const dayKey = formatDateKey(date);
             const dayLaps = lapHistory.filter(lap => {
               const lapDateKey = lap.date ? lap.date.split('T')[0] : null;
               return lapDateKey === dayKey;
@@ -266,8 +296,7 @@ export function CalendarView({ habits, completions, subtasks = [], subtaskComple
                 <div className="day-stats">
                   <div className="completion-dots">
                     {habits.slice(0, 5).map(habit => {
-                      const dateStr = date.toISOString().split('T')[0];
-                      const isCompleted = completions[dateStr]?.[habit.id];
+                      const isCompleted = completions[habit.id]?.[dateStr] === 'completed';
                       if (!isCompleted) return null;
                       return (
                         <div 

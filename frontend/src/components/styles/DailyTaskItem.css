@@ -1,0 +1,162 @@
+/* Daily Task Item */
+.daily-task-item {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: var(--bg-secondary);
+    border-radius: var(--radius-md);
+    border: 1px solid transparent;
+    transition: all var(--transition-fast);
+}
+
+.daily-task-item:hover {
+    background: var(--bg-hover);
+    border-color: var(--border-color);
+}
+
+.daily-task-item.completed {
+    opacity: 0.7;
+}
+
+/* Checkbox */
+.task-checkbox {
+    width: 24px;
+    height: 24px;
+    min-width: 24px;
+    min-height: 24px;
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    background: var(--bg-card);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition-fast);
+    padding: 0;
+}
+
+.task-checkbox:hover {
+    border-color: var(--neon-orange);
+    transform: scale(1.05);
+}
+
+.task-checkbox.checked {
+    background: var(--accent-green);
+    border-color: var(--accent-green);
+    box-shadow: 0 0 10px rgba(0, 255, 159, 0.4);
+}
+
+.check-mark {
+    color: white;
+    font-weight: bold;
+    font-size: var(--font-size-sm);
+}
+
+/* Task title */
+.task-title {
+    flex: 1;
+    font-size: var(--font-size-md);
+    color: var(--text-primary);
+    cursor: text;
+    padding: var(--spacing-xs);
+    border-radius: var(--radius-sm);
+    transition: all var(--transition-fast);
+}
+
+.task-title:hover {
+    background: var(--bg-hover);
+}
+
+.task-title.completed {
+    text-decoration: line-through;
+    color: var(--text-tertiary);
+}
+
+/* Edit input */
+.task-edit-input {
+    flex: 1;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    background: var(--bg-card);
+    border: 1px solid var(--neon-orange);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    font-size: var(--font-size-md);
+    box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
+}
+
+.task-edit-input:focus {
+    outline: none;
+}
+
+/* Delete button */
+.task-delete {
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    min-height: 28px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    background: var(--bg-card);
+    color: var(--text-tertiary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition-fast);
+    font-size: var(--font-size-md);
+    padding: 0;
+    opacity: 0;
+}
+
+.daily-task-item:hover .task-delete {
+    opacity: 1;
+}
+
+.task-delete:hover {
+    background: var(--status-failed);
+    border-color: var(--status-failed);
+    color: white;
+    transform: scale(1.1);
+    box-shadow: 0 0 8px rgba(255, 0, 85, 0.4);
+}
+
+.task-delete:active {
+    transform: scale(1);
+}
+
+/* Animation when adding new task */
+@keyframes taskAppear {
+    from {
+        opacity: 0;
+        transform: translateX(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.daily-task-item {
+    animation: taskAppear 0.2s ease-in-out;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .daily-task-item {
+        padding: var(--spacing-xs) var(--spacing-sm);
+    }
+
+    .task-checkbox {
+        width: 20px;
+        height: 20px;
+        min-width: 20px;
+        min-height: 20px;
+    }
+
+    .task-delete {
+        opacity: 1;
+        /* Always visible on mobile */
+    }
+}

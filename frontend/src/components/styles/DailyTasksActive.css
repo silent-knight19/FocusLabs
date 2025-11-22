@@ -1,0 +1,170 @@
+/* Daily Tasks List */
+.daily-tasks-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
+}
+
+.no-tasks-message {
+    text-align: center;
+    color: var(--text-tertiary);
+    font-size: var(--font-size-sm);
+    padding: var(--spacing-lg);
+    font-style: italic;
+}
+
+/* Daily Task Item in Active Tracker */
+.daily-task-item-active {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    padding: var(--spacing-md);
+    background: var(--bg-secondary);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+    transition: all var(--transition-fast);
+}
+
+.daily-task-item-active:hover {
+    background: var(--bg-hover);
+    border-color: var(--neon-orange);
+    transform: translateX(4px);
+}
+
+.daily-task-item-active .task-checkbox {
+    width: 24px;
+    height: 24px;
+    min-width: 24px;
+    min-height: 24px;
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    background: transparent;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition-fast);
+    color: var(--text-tertiary);
+}
+
+.daily-task-item-active .task-checkbox:hover {
+    border-color: var(--neon-orange);
+    transform: scale(1.1);
+}
+
+.daily-task-item-active .task-checkbox.checked {
+    background: var(--accent-green);
+    border-color: var(--accent-green);
+    color: white;
+    box-shadow: 0 0 10px rgba(0, 255, 159, 0.4);
+}
+
+.daily-task-item-active .task-title {
+    flex: 1;
+    font-size: var(--font-size-md);
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+.daily-task-item-active .task-title.completed {
+    text-decoration: line-through;
+    color: var(--text-tertiary);
+    opacity: 0.7;
+}
+
+.daily-task-item-active .task-delete-btn {
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    min-height: 28px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--text-tertiary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition-fast);
+    font-size: var(--font-size-md);
+    opacity: 0;
+}
+
+.daily-task-item-active:hover .task-delete-btn {
+    opacity: 1;
+}
+
+.daily-task-item-active .task-delete-btn:hover {
+    background: var(--status-failed);
+    border-color: var(--status-failed);
+    color: white;
+    transform: scale(1.1);
+}
+
+/* Add Task Form */
+.add-task-form {
+    display: flex;
+    gap: var(--spacing-sm);
+    margin-top: var(--spacing-md);
+}
+
+.add-task-input {
+    flex: 1;
+    padding: var(--spacing-md);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    color: var(--text-primary);
+    font-size: var(--font-size-md);
+    transition: all var(--transition-fast);
+}
+
+.add-task-input:focus {
+    outline: none;
+    border-color: var(--neon-orange);
+    box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
+}
+
+.add-task-input::placeholder {
+    color: var(--text-tertiary);
+}
+
+.add-task-btn {
+    padding: var(--spacing-md);
+    background: linear-gradient(135deg, var(--neon-orange), var(--neon-orange-dark));
+    color: white;
+    border: none;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    box-shadow: var(--glow-orange);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+}
+
+.add-task-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 0 20px rgba(255, 107, 53, 0.6);
+}
+
+.add-task-btn:active {
+    transform: translateY(0);
+}
+
+.add-task-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .daily-task-item-active .task-delete-btn {
+        opacity: 1;
+        /* Always visible on mobile */
+    }
+}

@@ -1,112 +1,47 @@
 .grid-header {
     display: grid;
-    grid-template-columns: 1fr 100px repeat(7, 56px) 100px;
-    gap: var(--spacing-sm);
-    padding: var(--spacing-md);
+    grid-template-columns: 350px 1fr;
+    gap: var(--spacing-md);
+    /* Match HabitRow gap */
+    padding: var(--spacing-md) var(--spacing-lg);
+    /* Match HabitRow padding */
     background-color: var(--bg-card);
     border-bottom: 2px solid var(--border-color);
     position: sticky;
     top: 0;
-    z-index: 10;
-    box-shadow: var(--shadow-sm);
+    z-index: 20;
 }
 
 .grid-header-cell {
     display: flex;
     align-items: center;
-    justify-content: center;
     padding: var(--spacing-sm);
     font-weight: 600;
-    font-size: var(--font-size-sm);
-    color: var(--text-secondary);
-}
-
-.grid-header-cell.day-cell {
-    border: none;
-    background-color: transparent;
-    box-shadow: none;
+    font-size: var(--font-size-lg);
+    color: var(--text-primary);
 }
 
 .grid-header-cell.habit-name-cell {
     justify-content: flex-start;
-}
-
-.grid-header-cell.time-cell {
-    justify-content: center;
-}
-
-.day-header-content {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 2px;
-}
-
-.day-name {
-    font-weight: 600;
+    color: var(--text-secondary);
     font-size: var(--font-size-sm);
-    color: var(--text-primary);
 }
 
-.day-date {
-    font-size: var(--font-size-xs);
-    color: var(--text-tertiary);
-    font-weight: 400;
-}
-
-/* Highlight today's column */
-.grid-header-cell.today .day-header-content {
-    background-color: var(--accent-primary);
-    color: white;
-    padding: var(--spacing-xs) var(--spacing-sm);
-    border-radius: var(--radius-sm);
-}
-
-.grid-header-cell.today .day-name,
-.grid-header-cell.today .day-date {
-    color: white;
+.grid-header-cell.month-label-cell {
+    justify-content: center;
+    color: var(--neon-orange);
+    text-transform: uppercase;
+    letter-spacing: 1px;
 }
 
 /* Mobile responsive */
 @media (max-width: 768px) {
     .grid-header {
-        /* Name, Days, Actions placeholder - All scrollable */
-        grid-template-columns: 160px repeat(7, 64px) 100px;
-        /* Increased from 40px */
-        gap: 0;
-        padding: var(--spacing-sm) 0;
-        width: max-content;
-        /* Remove vertical sticky for mobile to avoid complexity with overflow-x */
+        grid-template-columns: 1fr;
         position: static;
     }
 
-    .grid-header-cell {
-        padding: 2px;
-        /* Reduced padding */
-        font-size: 10px;
-    }
-
-    /* Remove Sticky Name Header */
     .grid-header-cell.habit-name-cell {
-        position: static;
-        background-color: transparent;
-        box-shadow: none;
-        border-right: none;
-        padding-left: var(--spacing-md);
-    }
-
-    /* Hide Time Header */
-    .grid-header-cell.time-cell {
         display: none;
-    }
-
-    .day-name {
-        font-size: 10px;
-    }
-
-    .day-date {
-        font-size: 9px;
-        white-space: nowrap;
-        /* Prevent wrapping */
     }
 }

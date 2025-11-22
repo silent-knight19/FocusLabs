@@ -17,7 +17,13 @@ export function HabitGrid({
   getCompletionStatus,
   reorderHabits
 }) {
-  const sensors = useSensors(useSensor(PointerSensor));
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    })
+  );
   
   if (habits.length === 0) {
     return (
@@ -48,8 +54,11 @@ export function HabitGrid({
     <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
       <SortableContext items={sortedHabits.map(h => h.id)}>
         <div className="habit-grid-container">
-          <GridHeader weekDates={weekDates} />
-          <div className="habit-grid-body">
+          <div 
+            className="habit-grid-body"
+            style={{ '--days-count': weekDates.length }}
+          >
+            <GridHeader weekDates={weekDates} />
             {sortedHabits.map(habit => (
               <HabitRow
                 key={habit.id}
