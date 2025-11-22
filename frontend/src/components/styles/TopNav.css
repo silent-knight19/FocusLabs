@@ -299,30 +299,21 @@
         padding: var(--spacing-sm) var(--spacing-md);
     }
 
-    .app-logo {
-        font-size: var(--font-size-lg);
+    .app-logo-text {
+        display: none;
     }
 
-    .logo-icon {
-        font-size: 1.25rem;
+    .app-logo-img {
+        height: 32px;
     }
 
-    .date-time-display {
-        padding: 4px 12px;
-        min-width: auto;
-    }
-
-    .nav-date {
-        font-size: 0.85rem;
-    }
-
-    .nav-time {
-        font-size: 0.75rem;
+    .nav-center {
+        display: none;
     }
 
     .nav-icon-btn {
-        width: 38px;
-        height: 38px;
+        width: 40px;
+        height: 40px;
         padding: 8px;
         margin-left: 4px;
     }
@@ -330,5 +321,9 @@
     .nav-icon-btn svg {
         width: 20px;
         height: 20px;
+    }
+
+    .user-profile-container {
+        margin-left: var(--spacing-sm);
     }
 }

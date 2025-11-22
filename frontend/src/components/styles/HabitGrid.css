@@ -80,10 +80,15 @@
 @media (max-width: 768px) {
     .habit-grid-container {
         border-radius: var(--radius-md);
+        margin: 0 -1rem;
+        /* Negative margin to allow full-width scroll */
+        border-left: none;
+        border-right: none;
     }
 
     .habit-grid-body {
         /* Enable smooth scrolling on mobile */
         -webkit-overflow-scrolling: touch;
+        padding-bottom: var(--spacing-sm);
     }
 }

@@ -85,12 +85,18 @@
     animation: cellPop 0.3s ease;
 }
 
-/* Mobile - Larger touch targets */
+/* Mobile - Larger/* Mobile responsive */
 @media (max-width: 768px) {
     .day-cell {
-        width: 44px;
-        height: 44px;
-        min-width: 44px;
-        min-height: 44px;
+        width: 36px;
+        height: 36px;
+        min-width: 36px;
+        min-height: 36px;
+        font-size: 14px;
+        /* Smaller icon */
+    }
+
+    .cell-icon {
+        font-size: 14px;
     }
 }
