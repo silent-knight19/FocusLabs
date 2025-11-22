@@ -15,6 +15,9 @@ import { AnalyticsView } from './components/AnalyticsView';
 import { StudyView } from './components/StudyView';
 import { Stopwatch } from './components/Stopwatch';
 import { AnalyticsModal } from './components/AnalyticsModal';
+import { StudyHeatmap } from './components/StudyHeatmap';
+import { ProductivityHeatmap } from './components/ProductivityHeatmap';
+import { DayHistoryModal } from './components/DayHistoryModal';
 import { useHabits } from './hooks/useHabits.jsx';
 import { useSettings } from './hooks/useSettings';
 import { useActiveHabit } from './hooks/useActiveHabit';
@@ -31,6 +34,7 @@ function App() {
   const [isStopwatchOpen, setIsStopwatchOpen] = useState(false);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [isAnalyticsOpen, setIsAnalyticsOpen] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(null);
   const [editingHabit, setEditingHabit] = useState(null);
   const [currentDate] = useState(getToday());
   const [searchTerm, setSearchTerm] = useState('');
@@ -42,6 +46,7 @@ function App() {
     habits,
     completions,
     subtasks,
+    subtaskCompletions,
     addHabit,
     updateHabit,
     deleteHabit,
@@ -261,6 +266,14 @@ function App() {
             getLongestStreak={getLongestStreak}
             completions={completions}
           />
+
+          <div className="heatmaps-container">
+            {/* Study Activity Heatmap */}
+            <StudyHeatmap />
+
+            {/* Productivity & Growth Heatmap */}
+            <ProductivityHeatmap />
+          </div>
         </div>
       </main>
 
@@ -297,9 +310,25 @@ function App() {
             <CalendarView
               habits={filteredHabits}
               completions={completions}
+              subtasks={subtasks}
+              subtaskCompletions={subtaskCompletions}
+              onDateClick={(date) => {
+                setSelectedDate(date);
+                // Don't close calendar - let day history modal overlay on top
+              }}
             />
           </div>
         </div>
+      )}
+
+      {/* Day History Modal */}
+      {selectedDate && (
+        <DayHistoryModal
+          date={selectedDate}
+          habits={habits}
+          completions={completions}
+          onClose={() => setSelectedDate(null)}
+        />
       )}
     </div>
   );

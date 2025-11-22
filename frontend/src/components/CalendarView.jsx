@@ -1,15 +1,109 @@
 import React, { useState, useEffect } from 'react';
+import { Search, X } from 'lucide-react';
 import { getMonthDates, getMonthName, isSameDay, getTwoYearsAgo, isWithinTwoYears } from '../utils/dateHelpers';
 import './styles/CalendarView.css';
 
-export function CalendarView({ habits, completions, onDateClick }) {
+export function CalendarView({ habits, completions, subtasks = [], subtaskCompletions = {}, onDateClick }) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [calendarDays, setCalendarDays] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [matchingDates, setMatchingDates] = useState(new Set());
+  const [searchSuggestions, setSearchSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
 
   useEffect(() => {
     const dates = getMonthDates(currentDate.getFullYear(), currentDate.getMonth());
     setCalendarDays(dates);
   }, [currentDate]);
+
+  // Generate search suggestions
+  useEffect(() => {
+    if (!searchTerm.trim()) {
+      setSearchSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+
+    const suggestions = new Set();
+    const searchLower = searchTerm.toLowerCase();
+
+    // 1. Collect matching Habits
+    habits.forEach(habit => {
+      if (habit.name.toLowerCase().includes(searchLower)) {
+        suggestions.add(JSON.stringify({ type: 'habit', text: habit.name, color: habit.color }));
+      }
+    });
+
+    // 2. Collect matching Subtasks
+    if (subtasks && subtasks.length > 0) {
+      subtasks.forEach(subtask => {
+        if (subtask.title.toLowerCase().includes(searchLower)) {
+          const parentHabit = habits.find(h => h.id === subtask.habitId);
+          if (parentHabit) {
+            suggestions.add(JSON.stringify({ 
+              type: 'subtask', 
+              text: subtask.title, 
+              habitName: parentHabit.name, 
+              color: parentHabit.color 
+            }));
+          }
+        }
+      });
+    }
+
+    // Parse back to objects and limit
+    const uniqueSuggestions = Array.from(suggestions).map(s => JSON.parse(s));
+    setSearchSuggestions(uniqueSuggestions.slice(0, 10));
+    setShowSuggestions(uniqueSuggestions.length > 0);
+  }, [searchTerm, habits, subtasks]);
+
+  // Search for habits and subtasks
+  useEffect(() => {
+    if (!searchTerm.trim()) {
+      setMatchingDates(new Set());
+      return;
+    }
+
+    const matches = new Set();
+    const searchLower = searchTerm.toLowerCase();
+
+    // 1. Search Habit History (Completed Habits)
+    Object.entries(completions).forEach(([dateStr, dayCompletions]) => {
+      Object.keys(dayCompletions).forEach(habitId => {
+        // Check if habit was completed on this day
+        if (dayCompletions[habitId] !== 'completed') return;
+
+        const habit = habits.find(h => h.id === habitId);
+        if (!habit) return;
+
+        if (habit.name.toLowerCase().includes(searchLower)) {
+          matches.add(dateStr);
+        }
+      });
+    });
+
+    // 2. Search Subtask History (Completed Subtasks)
+    // Iterate through all subtasks to find matches
+    const matchingSubtasks = subtasks.filter(st => 
+      st.title.toLowerCase().includes(searchLower)
+    );
+
+    matchingSubtasks.forEach(subtask => {
+      const habitId = subtask.habitId;
+      const habitCompletions = subtaskCompletions[habitId] || {};
+
+      // Check all dates for this habit
+      Object.entries(habitCompletions).forEach(([dateKey, dateData]) => {
+        // dateKey is YYYY-MM-DD
+        // dateData is { subtaskId: boolean }
+        if (dateData[subtask.id] === true) {
+          matches.add(dateKey);
+        }
+      });
+    });
+
+    setMatchingDates(matches);
+  }, [searchTerm, completions, habits, subtasks, subtaskCompletions]);
 
   const handlePrevMonth = () => {
     const newDate = new Date(currentDate);
@@ -55,20 +149,83 @@ export function CalendarView({ habits, completions, onDateClick }) {
   return (
     <div className="calendar-view">
       <div className="calendar-header">
-        <div className="calendar-nav">
-          <button onClick={handlePrevMonth} className="nav-btn">
-            &lt;
-          </button>
-          <button onClick={handleToday} className="nav-btn today-btn">
-            Today
-          </button>
-          <button onClick={handleNextMonth} className="nav-btn">
-            &gt;
-          </button>
+        <div className="calendar-header-top">
+          <div className="calendar-nav">
+            <button onClick={handlePrevMonth} className="nav-btn">
+              &lt;
+            </button>
+            <button onClick={handleToday} className="nav-btn today-btn">
+              Today
+            </button>
+            <button onClick={handleNextMonth} className="nav-btn">
+              &gt;
+            </button>
+          </div>
+          <h2 className="current-month">
+            {getMonthName(currentDate.getMonth())} {currentDate.getFullYear()}
+          </h2>
         </div>
-        <h2 className="current-month">
-          {getMonthName(currentDate.getMonth())} {currentDate.getFullYear()}
-        </h2>
+        
+        {/* Search Bar */}
+        <div className="calendar-search">
+          <div className="search-input-wrapper">
+            <Search size={18} className="search-icon" />
+            <input
+              type="text"
+              placeholder="Search habits, subtasks..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              onFocus={() => searchTerm && setShowSuggestions(true)}
+              className="calendar-search-input"
+            />
+            {searchTerm && (
+              <button 
+                onClick={() => {
+                  setSearchTerm('');
+                  setShowSuggestions(false);
+                }}
+                className="clear-search-btn"
+              >
+                <X size={18} />
+              </button>
+            )}
+            
+            {/* Autocomplete Dropdown */}
+            {showSuggestions && searchSuggestions.length > 0 && (
+              <div className="search-suggestions">
+                {searchSuggestions.map((suggestion, idx) => (
+                  <div
+                    key={idx}
+                    className="suggestion-item"
+                    onClick={() => {
+                      setSearchTerm(suggestion.text);
+                      setShowSuggestions(false);
+                    }}
+                  >
+                    <span 
+                      className="suggestion-dot" 
+                      style={{ backgroundColor: suggestion.color }}
+                    />
+                    <div className="suggestion-content">
+                      <span className="suggestion-text">{suggestion.text}</span>
+                      {suggestion.type === 'subtask' && (
+                        <span className="suggestion-meta">in {suggestion.habitName}</span>
+                      )}
+                    </div>
+                    <span className="suggestion-type">
+                      {suggestion.type === 'habit' ? 'Habit' : 'Subtask'}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          {matchingDates.size > 0 && (
+            <div className="search-results-count">
+              {matchingDates.size} day{matchingDates.size !== 1 ? 's' : ''} found
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="calendar-grid">
@@ -79,6 +236,8 @@ export function CalendarView({ habits, completions, onDateClick }) {
           const stats = getDayCompletionStats(date);
           const isToday = isSameDay(date, new Date());
           const isCurrentMonth = date.getMonth() === currentDate.getMonth();
+          const dateStr = date.toISOString().split('T')[0];
+          const isMatching = matchingDates.has(dateStr);
           
           // Get stopwatch time for this day
           let totalHours = 0;
@@ -98,7 +257,7 @@ export function CalendarView({ habits, completions, onDateClick }) {
           return (
             <div 
               key={index} 
-              className={`calendar-day ${!isCurrentMonth ? 'other-month' : ''} ${isToday ? 'today' : ''}`}
+              className={`calendar-day ${!isCurrentMonth ? 'other-month' : ''} ${isToday ? 'today' : ''} ${isMatching ? 'search-match' : ''}`}
               onClick={() => onDateClick && onDateClick(date)}
             >
               <div className="day-number">{date.getDate()}</div>

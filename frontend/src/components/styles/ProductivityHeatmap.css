@@ -1,0 +1,99 @@
+/* Productivity Heatmap CSS Variables */
+:root {
+    --github-level-1: rgba(0, 255, 159, 0.2);
+    --github-level-2: rgba(0, 255, 159, 0.4);
+    --github-level-3: rgba(0, 255, 159, 0.6);
+    --github-level-4: rgba(0, 255, 159, 0.8);
+    --github-level-5: #00FF9F;
+    /* Neon Green */
+}
+
+.productivity-heatmap-container {
+    background: var(--bg-card);
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-lg);
+    /* Reduced padding */
+    margin: 0;
+    /* Remove margin as flex handles gap */
+    width: 100%;
+    box-shadow: var(--shadow-md);
+    flex: 1;
+    /* Take equal width */
+    min-width: 0;
+    /* Allow shrinking */
+}
+
+.heatmap-title-green {
+    font-size: var(--font-size-lg);
+    /* Smaller title */
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0;
+    background: linear-gradient(135deg, var(--github-level-5), #00cc80);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.stat-value-green {
+    font-size: var(--font-size-lg);
+    /* Smaller stats */
+    font-weight: 700;
+    color: var(--github-level-5);
+}
+
+/* Reusing layout classes from StudyHeatmap.css where possible, 
+   but defining specific ones here to ensure independence */
+
+.productivity-heatmap-container .heatmap-cell {
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.productivity-heatmap-container .heatmap-cell.empty {
+    background-color: transparent !important;
+    border: none;
+}
+
+.productivity-heatmap-container .heatmap-cell:not(.empty):hover {
+    transform: scale(1.5);
+    z-index: 10;
+    border-radius: 3px;
+    box-shadow: 0 0 10px currentColor, 0 0 20px rgba(0, 255, 159, 0.4);
+    border-color: var(--github-level-5);
+}
+
+.productivity-heatmap-container .heatmap-cell.green-level-0 {
+    background-color: var(--heatmap-empty);
+}
+
+.productivity-heatmap-container .heatmap-cell.green-level-1:hover {
+    box-shadow: 0 0 8px var(--github-level-1);
+    border-color: var(--github-level-5);
+}
+
+.productivity-heatmap-container .heatmap-cell.green-level-2:hover {
+    box-shadow: 0 0 10px var(--github-level-2);
+    border-color: var(--github-level-5);
+}
+
+.productivity-heatmap-container .heatmap-cell.green-level-3:hover {
+    box-shadow: 0 0 12px var(--github-level-3);
+    border-color: var(--github-level-5);
+}
+
+.productivity-heatmap-container .heatmap-cell.green-level-4:hover {
+    box-shadow: 0 0 15px var(--github-level-4);
+    border-color: var(--github-level-5);
+}
+
+.productivity-heatmap-container .heatmap-cell.green-level-5:hover {
+    box-shadow: 0 0 20px var(--github-level-5), 0 0 30px rgba(0, 255, 159, 0.6);
+    border-color: var(--github-level-5);
+}

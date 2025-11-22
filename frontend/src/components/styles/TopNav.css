@@ -1,13 +1,16 @@
 .top-nav {
     background-color: var(--bg-card);
     box-shadow: var(--shadow-sm);
-    padding: var(--spacing-md) var(--spacing-xl);
+    padding: var(--spacing-sm) var(--spacing-lg);
+    /* Reduced padding */
     display: flex;
     align-items: center;
     justify-content: space-between;
     position: sticky;
     top: 0;
     z-index: 100;
+    height: 64px;
+    /* Explicit height control */
 }
 
 .nav-left,
@@ -27,7 +30,8 @@
 }
 
 .top-nav-title {
-    font-size: var(--font-size-xl);
+    font-size: var(--font-size-lg);
+    /* Reduced from xl */
     font-weight: 700;
     color: var(--text-neon);
     text-shadow: var(--glow-cyan);
@@ -59,12 +63,11 @@
 }
 
 .app-logo-img {
-    height: 40px;
-    /* Adjust based on navbar height */
+    height: 36px;
+    /* Reduced from 40px */
     width: auto;
     object-fit: contain;
     filter: drop-shadow(0 0 8px rgba(255, 107, 53, 0.3));
-    /* Subtle glow matching theme */
     transition: transform 0.3s ease;
 }
 
@@ -72,8 +75,8 @@
 .app-logo-text {
     font-weight: 800;
     margin-left: 8px;
-    font-size: 1.8rem;
-    /* Increased from xl */
+    font-size: 1.6rem;
+    /* Reduced from 1.8rem */
     background: linear-gradient(135deg, var(--neon-orange), var(--neon-orange-bright));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -107,32 +110,37 @@
     align-items: center;
     justify-content: center;
     background-color: var(--bg-hover);
-    padding: var(--spacing-xs) var(--spacing-lg);
+    padding: 4px var(--spacing-md);
+    /* Reduced padding */
     border-radius: var(--radius-md);
     border: 1px solid var(--border-color);
-    min-width: 200px;
+    min-width: 180px;
+    /* Reduced min-width */
 }
 
 .nav-date {
-    font-size: 1rem;
+    font-size: 0.9rem;
+    /* Reduced from 1rem */
     font-weight: 600;
     color: var(--text-primary);
     margin-bottom: 2px;
 }
 
 .nav-time {
-    font-size: 1.2rem;
-    /* Increased from 0.85rem */
+    font-size: 1.1rem;
+    /* Reduced from 1.2rem */
     font-weight: 700;
-    /* Made bolder */
     color: var(--text-neon);
     letter-spacing: 0.5px;
 }
 
 .nav-icon-btn {
-    width: 44px;
-    height: 44px;
-    padding: 10px;
+    width: 40px;
+    /* Reduced from 44px */
+    height: 40px;
+    /* Reduced from 44px */
+    padding: 8px;
+    /* Reduced padding */
     display: flex;
     align-items: center;
     justify-content: center;
@@ -146,8 +154,10 @@
 }
 
 .nav-icon-btn svg {
-    width: 24px;
-    height: 24px;
+    width: 22px;
+    /* Reduced from 24px */
+    height: 22px;
+    /* Reduced from 24px */
     stroke-width: 2;
 }
 
@@ -170,8 +180,10 @@
 }
 
 .user-profile-btn {
-    width: 40px;
-    height: 40px;
+    width: 36px;
+    /* Reduced from 40px */
+    height: 36px;
+    /* Reduced from 40px */
     padding: 0;
     border: 2px solid var(--border-color);
     border-radius: 50%;

@@ -1,0 +1,309 @@
+/* Heatmap CSS Variables */
+:root {
+    --heatmap-empty: #1A1A26;
+    --heatmap-level-1: rgba(255, 107, 53, 0.2);
+    --heatmap-level-2: rgba(255, 107, 53, 0.4);
+    --heatmap-level-3: rgba(255, 107, 53, 0.6);
+    --heatmap-level-4: rgba(255, 107, 53, 0.8);
+    --heatmap-level-5: #FF6B35;
+}
+
+.study-heatmap-container {
+    background: var(--bg-card);
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-lg);
+    /* Reduced padding */
+    margin: 0;
+    /* Remove margin as flex handles gap */
+    width: 100%;
+    box-shadow: var(--shadow-md);
+    flex: 1;
+    /* Take equal width */
+    min-width: 0;
+    /* Allow shrinking */
+}
+
+.heatmap-header {
+    margin-bottom: var(--spacing-lg);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
+}
+
+.heatmap-title {
+    font-size: var(--font-size-lg);
+    /* Smaller title */
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0;
+    background: linear-gradient(135deg, var(--neon-orange), var(--neon-orange-bright));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.heatmap-stats {
+    display: flex;
+    gap: var(--spacing-md);
+    /* Reduced gap */
+    flex-wrap: wrap;
+}
+
+.stat-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    align-items: flex-end;
+}
+
+.stat-value {
+    font-size: var(--font-size-lg);
+    /* Smaller stats */
+    font-weight: 700;
+    color: var(--neon-orange);
+}
+
+.stat-label {
+    font-size: 10px;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.heatmap-wrapper {
+    overflow-x: auto;
+    padding: var(--spacing-sm) 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    /* Align left to fit better */
+}
+
+/* Adjusted grid sizes for 10px cells */
+.heatmap-months {
+    display: grid;
+    grid-template-columns: repeat(53, 10px);
+    gap: 2px;
+    margin-left: 30px;
+    /* Adjusted for labels */
+    margin-bottom: var(--spacing-xs);
+    height: 20px;
+    width: max-content;
+}
+
+.month-label {
+    font-size: 10px;
+    color: var(--text-secondary);
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.heatmap-content {
+    display: flex;
+    gap: var(--spacing-xs);
+    width: max-content;
+}
+
+.heatmap-days {
+    display: grid;
+    grid-template-rows: repeat(7, 10px);
+    gap: 2px;
+    padding-top: 0;
+}
+
+.day-label {
+    font-size: 9px;
+    color: var(--text-secondary);
+    line-height: 10px;
+    text-align: right;
+    padding-right: 4px;
+    white-space: nowrap;
+    font-weight: 500;
+}
+
+.heatmap-grid {
+    display: flex;
+    gap: 2px;
+    flex: 1;
+}
+
+.heatmap-column {
+    display: grid;
+    grid-template-rows: repeat(7, 10px);
+    gap: 2px;
+}
+
+.study-heatmap-container .heatmap-cell {
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.study-heatmap-container .heatmap-cell.empty {
+    background-color: transparent !important;
+    border: none;
+}
+
+.study-heatmap-container .heatmap-cell:not(.empty):hover {
+    transform: scale(1.5);
+    z-index: 10;
+    border-radius: 3px;
+    box-shadow: 0 0 10px currentColor, 0 0 20px rgba(255, 107, 53, 0.4);
+    border-color: var(--neon-orange);
+}
+
+/* Intensity levels with glow effects */
+.study-heatmap-container .heatmap-cell.level-0 {
+    background-color: var(--heatmap-empty);
+}
+
+.study-heatmap-container .heatmap-cell.level-1:hover {
+    box-shadow: 0 0 8px var(--heatmap-level-1);
+}
+
+.study-heatmap-container .heatmap-cell.level-2:hover {
+    box-shadow: 0 0 10px var(--heatmap-level-2);
+}
+
+.study-heatmap-container .heatmap-cell.level-3:hover {
+    box-shadow: 0 0 12px var(--heatmap-level-3);
+}
+
+.study-heatmap-container .heatmap-cell.level-4:hover {
+    box-shadow: 0 0 15px var(--heatmap-level-4);
+}
+
+.study-heatmap-container .heatmap-cell.level-5:hover {
+    box-shadow: 0 0 20px var(--heatmap-level-5), 0 0 30px rgba(255, 107, 53, 0.6);
+}
+
+.heatmap-legend {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--spacing-sm);
+    margin-top: var(--spacing-lg);
+    padding-top: var(--spacing-md);
+    border-top: 1px solid var(--border-color);
+}
+
+.legend-label {
+    font-size: var(--font-size-xs);
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.legend-cells {
+    display: flex;
+    gap: 4px;
+    /* Increased from 3px */
+}
+
+.legend-cell {
+    width: 15px;
+    /* Increased from 10px */
+    height: 15px;
+    /* Increased from 10px */
+    border-radius: 3px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.legend-cell:hover {
+    transform: scale(1.3);
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+    .heatmap-stats {
+        gap: var(--spacing-md);
+    }
+
+    .stat-item {
+        min-width: 80px;
+    }
+}
+
+@media (max-width: 768px) {
+    .study-heatmap-container {
+        padding: var(--spacing-md);
+    }
+
+    .heatmap-wrapper {
+        overflow-x: scroll;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .heatmap-content {
+        min-width: 700px;
+    }
+
+    .heatmap-stats {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--spacing-md);
+    }
+
+    .stat-item {
+        min-width: auto;
+    }
+
+    .heatmap-title {
+        font-size: var(--font-size-lg);
+    }
+}
+
+@media (max-width: 480px) {
+    .heatmap-stats {
+        grid-template-columns: 1fr;
+    }
+
+    .day-label {
+        font-size: 9px;
+    }
+
+    .month-label {
+        font-size: 9px;
+    }
+}
+
+/* Animation for cells loading */
+@keyframes cellFadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.heatmap-cell:not(.empty) {
+    animation: cellFadeIn 0.3s ease-out;
+    animation-fill-mode: both;
+}
+
+/* Stagger the animation across cells */
+.heatmap-column:nth-child(1) .heatmap-cell {
+    animation-delay: 0.01s;
+}
+
+.heatmap-column:nth-child(2) .heatmap-cell {
+    animation-delay: 0.02s;
+}
+
+.heatmap-column:nth-child(3) .heatmap-cell {
+    animation-delay: 0.03s;
+}
+
+/* Continue pattern for smooth cascade effect */

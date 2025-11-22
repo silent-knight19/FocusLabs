@@ -306,6 +306,7 @@ export function useHabits() {
     habits,
     completions,
     subtasks,
+    subtaskCompletions,
     addHabit,
     updateHabit,
     deleteHabit,

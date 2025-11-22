@@ -24,8 +24,20 @@
   flex-wrap: wrap;
 }
 
+.heatmaps-container {
+  display: flex;
+  gap: var(--spacing-lg);
+  margin-top: var(--spacing-xl);
+  width: 100%;
+}
 
 /* Mobile responsive */
+@media (max-width: 1200px) {
+  .heatmaps-container {
+    flex-direction: column;
+  }
+}
+
 @media (max-width: 768px) {
   .app-main {
     padding: var(--spacing-md) 0;

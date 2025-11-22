@@ -5,7 +5,8 @@
     padding: var(--spacing-md);
     background-color: var(--bg-card);
     border-bottom: 1px solid var(--border-color);
-    align-items: center;
+    align-items: start;
+    justify-items: start;
     transition: all var(--transition-fast);
     position: relative;
 }
@@ -20,12 +21,21 @@
     display: flex;
     flex-direction: column;
     gap: var(--spacing-xs);
+    align-items: flex-start !important;
+    justify-self: start !important;
+    width: 100%;
+    margin-left: 0 !important;
+    padding-left: 0 !important;
+    text-align: left !important;
 }
 
 .habit-name-section {
     display: flex;
     align-items: center;
     gap: var(--spacing-sm);
+    justify-content: flex-start !important;
+    width: 100%;
+    text-align: left;
 }
 
 .habit-color-indicator {
@@ -43,9 +53,11 @@
     font-weight: 500;
     color: var(--text-primary);
     cursor: pointer;
-    text-align: left;
+    text-align: left !important;
     transition: color var(--transition-fast);
     flex: 1;
+    display: block;
+    width: 100%;
 }
 
 .habit-name-button:hover {

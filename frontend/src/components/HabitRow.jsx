@@ -17,8 +17,7 @@ export function HabitRow({ habit, weekDates, onToggle, onEdit, onDelete, getStat
   return (
     <div ref={setNodeRef} {...attributes} style={style} className="habit-row">
       <div className="habit-info">
-        <span className="drag-handle" {...listeners} style={{ marginRight: '8px', cursor: 'grab' }}>⋮⋮</span>
-        <div className="habit-name-section">
+        <div className="habit-name-section" {...listeners}>
           <div 
             className="habit-color-indicator" 
             style={{ backgroundColor: habit.color }}
