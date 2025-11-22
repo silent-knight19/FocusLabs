@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from 'react';
+import { useAuth } from '../contexts/AuthContext';
+import { Calendar, Timer, Settings, LogOut, User } from 'lucide-react';
 import './styles/TopNav.css';
 
 /**
  * Top navigation bar with app name and settings
  */
 export function TopNav({ onSettingsClick, onStopwatchClick, onCalendarClick }) {
+  const { user, signOut } = useAuth();
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [showUserMenu, setShowUserMenu] = useState(false);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -27,6 +31,17 @@ export function TopNav({ onSettingsClick, onStopwatchClick, onCalendarClick }) {
     minute: '2-digit',
     hour12: true
   }).format(currentTime);
+
+  // Get user initials for fallback avatar
+  const getUserInitials = () => {
+    if (!user?.displayName) return user?.email?.[0]?.toUpperCase() || 'U';
+    return user.displayName
+      .split(' ')
+      .map(n => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
 
   return (
     <nav className="top-nav">
@@ -51,12 +66,7 @@ export function TopNav({ onSettingsClick, onStopwatchClick, onCalendarClick }) {
           onClick={onCalendarClick}
           title="Calendar"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-            <line x1="16" y1="2" x2="16" y2="6"></line>
-            <line x1="8" y1="2" x2="8" y2="6"></line>
-            <line x1="3" y1="10" x2="21" y2="10"></line>
-          </svg>
+          <Calendar size={20} />
         </button>
         <button
           type="button"
@@ -64,10 +74,7 @@ export function TopNav({ onSettingsClick, onStopwatchClick, onCalendarClick }) {
           onClick={onStopwatchClick}
           title="Stopwatch"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="12" cy="12" r="10"></circle>
-            <polyline points="12 6 12 12 16 14"></polyline>
-          </svg>
+          <Timer size={20} />
         </button>
         <button
           type="button"
@@ -75,11 +82,66 @@ export function TopNav({ onSettingsClick, onStopwatchClick, onCalendarClick }) {
           onClick={onSettingsClick}
           title="Settings"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="12" cy="12" r="3"></circle>
-            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-          </svg>
+          <Settings size={20} />
         </button>
+
+        {user && (
+          <div className="user-profile-container">
+            <button
+              type="button"
+              className="user-profile-btn"
+              onClick={() => setShowUserMenu(!showUserMenu)}
+              title={user.displayName || user.email}
+            >
+              {user.photoURL ? (
+                <img 
+                  src={user.photoURL} 
+                  alt={user.displayName || 'User'} 
+                  className="user-avatar"
+                  referrerPolicy="no-referrer"
+                />
+              ) : (
+                <div className="user-avatar-placeholder">
+                  {getUserInitials()}
+                </div>
+              )}
+            </button>
+
+            {showUserMenu && (
+              <div className="user-menu">
+                <div className="user-menu-header">
+                  {user.photoURL ? (
+                    <img 
+                      src={user.photoURL} 
+                      alt={user.displayName || 'User'} 
+                      className="user-menu-avatar"
+                      referrerPolicy="no-referrer"
+                    />
+                  ) : (
+                    <div className="user-menu-avatar-placeholder">
+                      {getUserInitials()}
+                    </div>
+                  )}
+                  <div className="user-menu-info">
+                    <div className="user-menu-name">{user.displayName || 'User'}</div>
+                    <div className="user-menu-email">{user.email}</div>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  className="user-menu-signout"
+                  onClick={() => {
+                    setShowUserMenu(false);
+                    signOut();
+                  }}
+                >
+                  <LogOut size={16} style={{ marginRight: '8px' }} />
+                  Sign Out
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </nav>
   );

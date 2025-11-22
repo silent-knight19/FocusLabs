@@ -1,4 +1,5 @@
-import { useLocalStorage } from './useLocalStorage';
+import { useFirestore } from './useFirestore';
+import { useAuth } from '../contexts/AuthContext';
 import { formatDateKey } from '../utils/dateHelpers';
 
 /**
@@ -6,10 +7,13 @@ import { formatDateKey } from '../utils/dateHelpers';
  * @returns {object} Habits state and CRUD methods
  */
 export function useHabits() {
-  const [habits, setHabits] = useLocalStorage('habitgrid_habits', []);
-  const [completions, setCompletions] = useLocalStorage('habitgrid_completions', {});
-  const [subtasks, setSubtasks] = useLocalStorage('habitgrid_subtasks', []);
-  const [subtaskCompletions, setSubtaskCompletions] = useLocalStorage('habitgrid_subtask_completions', {});
+  const { user } = useAuth();
+  const userId = user?.uid;
+
+  const [habits, setHabits, habitsLoading] = useFirestore(userId, 'habits', []);
+  const [completions, setCompletions, completionsLoading] = useFirestore(userId, 'completions', {});
+  const [subtasks, setSubtasks, subtasksLoading] = useFirestore(userId, 'subtasks', []);
+  const [subtaskCompletions, setSubtaskCompletions, subtaskCompletionsLoading] = useFirestore(userId, 'subtask_completions', {});
 
   /**
    * Generate unique ID for new habits/subtasks

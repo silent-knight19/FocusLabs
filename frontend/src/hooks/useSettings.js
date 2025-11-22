@@ -1,16 +1,20 @@
-import { useLocalStorage } from './useLocalStorage';
+import { useFirestore } from './useFirestore';
+import { useAuth } from '../contexts/AuthContext';
 
 /**
  * Custom hook for managing user settings
  * @returns {object} { settings, updateSettings, resetSettings }
  */
 export function useSettings() {
+  const { user } = useAuth();
+  const userId = user?.uid;
+
   const defaultSettings = {
     theme: 'dark',  // Dark neon theme as default
     startOfWeek: 'sunday'
   };
 
-  const [settings, setSettings] = useLocalStorage('habitgrid_settings', defaultSettings);
+  const [settings, setSettings] = useFirestore(userId, 'settings', defaultSettings);
 
   /**
    * Update one or more settings
