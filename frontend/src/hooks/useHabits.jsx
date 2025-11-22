@@ -33,11 +33,20 @@ export function useHabits() {
       endTime: habitData.endTime || '',
       color: habitData.color || '#FF6B35',
       weeklyTarget: habitData.weeklyTarget || 7,
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      order: habits.length // initial order based on current list length
     };
 
     setHabits(prev => [...prev, newHabit]);
     return newHabit;
+  };
+
+  // Reorder habits based on a new ordered array of habit IDs
+  const reorderHabits = (newOrder) => {
+    const habitMap = {};
+    habits.forEach(h => { habitMap[h.id] = h; });
+    const reordered = newOrder.map((id, index) => ({ ...habitMap[id], order: index }));
+    setHabits(reordered);
   };
 
   /**
@@ -127,12 +136,11 @@ export function useHabits() {
    */
   const toggleSubtaskCompletion = (habitId, subtaskId, date) => {
     const dateKey = formatDateKey(date);
-
     setSubtaskCompletions(prev => {
       const habitData = prev[habitId] || {};
       const dateData = habitData[dateKey] || {};
       const isCompleted = dateData[subtaskId] || false;
-
+      
       return {
         ...prev,
         [habitId]: {
@@ -160,7 +168,7 @@ export function useHabits() {
   const getSubtaskCompletionPercentage = (habitId, date) => {
     const habitSubtasks = getSubtasks(habitId);
     if (habitSubtasks.length === 0) return 100;
-
+    
     const completed = habitSubtasks.filter(st => 
       getSubtaskStatus(habitId, st.id, date)
     ).length;
@@ -310,6 +318,7 @@ export function useHabits() {
     deleteSubtask,
     toggleSubtaskCompletion,
     getSubtaskStatus,
-    getSubtaskCompletionPercentage
+    getSubtaskCompletionPercentage,
+    reorderHabits
   };
 }

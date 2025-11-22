@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import confetti from 'canvas-confetti';
 import { TopNav } from './components/TopNav';
 import { HabitGrid } from './components/HabitGrid';
 import { AddHabitButton } from './components/AddHabitButton';
@@ -13,7 +14,7 @@ import { CalendarView } from './components/CalendarView';
 import { AnalyticsView } from './components/AnalyticsView';
 import { StudyView } from './components/StudyView';
 import { Stopwatch } from './components/Stopwatch';
-import { useHabits } from './hooks/useHabits';
+import { useHabits } from './hooks/useHabits.jsx';
 import { useSettings } from './hooks/useSettings';
 import { useActiveHabit } from './hooks/useActiveHabit';
 import { getWeekDates, getToday } from './utils/dateHelpers';
@@ -54,7 +55,8 @@ function App() {
     deleteSubtask,
     toggleSubtaskCompletion,
     getSubtaskStatus,
-    getSubtaskCompletionPercentage
+    getSubtaskCompletionPercentage,
+    reorderHabits
   } = useHabits();
 
   const { settings, updateSettings } = useSettings();
@@ -84,9 +86,39 @@ function App() {
     }
   }, [settings.theme]);
 
+  // Celebrate when all habits are completed for today and when a habit reaches a 10+ day streak
+  useEffect(() => {
+    const today = getToday();
+    // Full day celebration
+    const allCompleted = habits.length > 0 && habits.every(habit => getCompletionStatus(habit.id, today) === 'completed');
+    if (allCompleted) {
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 },
+        colors: ['#FF6B35', '#00FF9F', '#0080FF']
+      });
+    }
+    // Streak celebration for each habit with 10+ day streak
+    habits.forEach(habit => {
+      if (getCurrentStreak && getCurrentStreak(habit.id) >= 10) {
+        confetti({
+          particleCount: 30,
+          spread: 30,
+          origin: { x: Math.random(), y: Math.random() },
+          colors: ['#FF6B35', '#00FF9F', '#0080FF']
+        });
+      }
+    });
+  }, [completions]);
+
   const handleAddHabit = () => {
     setEditingHabit(null);
     setIsHabitModalOpen(true);
+  };
+
+  const handleToggle = (habitId, date) => {
+    toggleCompletion(habitId, date);
   };
 
   const handleEditHabit = (habit) => {
@@ -195,11 +227,11 @@ function App() {
               <HabitGrid
                 habits={filteredHabits}
                 weekDates={weekDates}
-                completions={completions}
-                onToggleCompletion={toggleCompletion}
+                onToggle={handleToggle}
                 onEditHabit={handleEditHabit}
                 onDeleteHabit={handleDeleteHabit}
                 getCompletionStatus={getCompletionStatus}
+                reorderHabits={reorderHabits}
               />
               
               <div className="section-divider" style={{ margin: '40px 0', borderTop: '1px solid var(--border-color)' }}></div>

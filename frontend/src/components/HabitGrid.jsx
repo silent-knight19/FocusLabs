@@ -2,6 +2,8 @@ import React from 'react';
 import { GridHeader } from './GridHeader';
 import { HabitRow } from './HabitRow';
 import './styles/HabitGrid.css';
+import { DndContext, useSensor, useSensors, PointerSensor } from '@dnd-kit/core';
+import { SortableContext, arrayMove } from '@dnd-kit/sortable';
 
 /**
  * Main grid container displaying all habits and their weekly completion status
@@ -12,8 +14,10 @@ export function HabitGrid({
   onToggle, 
   onEditHabit, 
   onDeleteHabit,
-  getCompletionStatus 
+  getCompletionStatus,
+  reorderHabits
 }) {
+  const sensors = useSensors(useSensor(PointerSensor));
   
   if (habits.length === 0) {
     return (
@@ -27,22 +31,39 @@ export function HabitGrid({
     );
   }
 
+  // Sort habits by their order field
+  const sortedHabits = [...habits].sort((a, b) => a.order - b.order);
+
+  const handleDragEnd = (event) => {
+    const { active, over } = event;
+    if (active && over && active.id !== over.id) {
+      const oldIndex = sortedHabits.findIndex(h => h.id === active.id);
+      const newIndex = sortedHabits.findIndex(h => h.id === over.id);
+      const newOrder = arrayMove(sortedHabits.map(h => h.id), oldIndex, newIndex);
+      if (reorderHabits) reorderHabits(newOrder);
+    }
+  };
+
   return (
-    <div className="habit-grid-container">
-      <GridHeader weekDates={weekDates} />
-      <div className="habit-grid-body">
-        {habits.map(habit => (
-          <HabitRow
-            key={habit.id}
-            habit={habit}
-            weekDates={weekDates}
-            onToggle={onToggle}
-            onEdit={onEditHabit}
-            onDelete={onDeleteHabit}
-            getStatus={getCompletionStatus}
-          />
-        ))}
-      </div>
-    </div>
+    <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+      <SortableContext items={sortedHabits.map(h => h.id)}>
+        <div className="habit-grid-container">
+          <GridHeader weekDates={weekDates} />
+          <div className="habit-grid-body">
+            {sortedHabits.map(habit => (
+              <HabitRow
+                key={habit.id}
+                habit={habit}
+                weekDates={weekDates}
+                onToggle={onToggle}
+                onEdit={onEditHabit}
+                onDelete={onDeleteHabit}
+                getStatus={getCompletionStatus}
+              />
+            ))}
+          </div>
+        </div>
+      </SortableContext>
+    </DndContext>
   );
 }

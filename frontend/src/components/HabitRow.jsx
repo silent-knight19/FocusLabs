@@ -1,14 +1,23 @@
 import React from 'react';
 import { DayCell } from './DayCell';
 import './styles/HabitRow.css';
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 /**
  * Individual habit row with name, time, and day cells
  */
 export function HabitRow({ habit, weekDates, onToggle, onEdit, onDelete, getStatus }) {
+  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: habit.id });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    cursor: 'grab'
+  };
   return (
-    <div className="habit-row">
+    <div ref={setNodeRef} {...attributes} style={style} className="habit-row">
       <div className="habit-info">
+        <span className="drag-handle" {...listeners} style={{ marginRight: '8px', cursor: 'grab' }}>⋮⋮</span>
         <div className="habit-name-section">
           <div 
             className="habit-color-indicator" 
