@@ -104,6 +104,14 @@ export function useDailyTasks() {
   };
 
   /**
+   * Delete all daily tasks for a specific habit
+   * @param {string} habitId - Habit ID
+   */
+  const deleteTasksForHabit = (habitId) => {
+    setDailyTasks(prev => prev.filter(task => task.habitId !== habitId));
+  };
+
+  /**
    * Calculate completion percentage for a habit on a date
    * @param {string} habitId - Habit ID
    * @param {Date|string} date - Date object or ISO string
@@ -166,6 +174,7 @@ export function useDailyTasks() {
     deleteDailyTask,
     getDailyCompletion,
     getDateCompletion,
-    reorderDailyTasks
+    reorderDailyTasks,
+    deleteTasksForHabit
   };
 }

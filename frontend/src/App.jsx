@@ -86,7 +86,8 @@ function App() {
     updateDailyTask,
     deleteDailyTask,
     getDailyCompletion,
-    getDateCompletion
+    getDateCompletion,
+    deleteTasksForHabit
   } = useDailyTasks();
 
   const { settings, updateSettings } = useSettings();
@@ -177,6 +178,7 @@ function App() {
   const handleDeleteHabit = (habitId) => {
     if (window.confirm('Are you sure you want to delete this habit?')) {
       deleteHabit(habitId);
+      deleteTasksForHabit(habitId);
     }
   };
 
