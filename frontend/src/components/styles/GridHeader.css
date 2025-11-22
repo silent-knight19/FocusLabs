@@ -21,6 +21,12 @@
     color: var(--text-secondary);
 }
 
+.grid-header-cell.day-cell {
+    border: none;
+    background-color: transparent;
+    box-shadow: none;
+}
+
 .grid-header-cell.habit-name-cell {
     justify-content: flex-start;
 }
@@ -64,31 +70,29 @@
 /* Mobile responsive */
 @media (max-width: 768px) {
     .grid-header {
-        /* Name (sticky), Days (scrollable), Actions placeholder */
-        grid-template-columns: 140px repeat(7, 40px) 50px;
+        /* Name, Days, Actions placeholder - All scrollable */
+        grid-template-columns: 160px repeat(7, 64px) 100px;
+        /* Increased from 40px */
         gap: 0;
         padding: var(--spacing-sm) 0;
         width: max-content;
-        position: sticky;
-        top: 0;
-        z-index: 20;
-        /* Higher than row sticky elements */
+        /* Remove vertical sticky for mobile to avoid complexity with overflow-x */
+        position: static;
     }
 
     .grid-header-cell {
-        padding: var(--spacing-xs);
+        padding: 2px;
+        /* Reduced padding */
         font-size: 10px;
     }
 
-    /* Sticky Name Header */
+    /* Remove Sticky Name Header */
     .grid-header-cell.habit-name-cell {
-        position: sticky;
-        left: 0;
-        background-color: var(--bg-card);
-        z-index: 25;
+        position: static;
+        background-color: transparent;
+        box-shadow: none;
+        border-right: none;
         padding-left: var(--spacing-md);
-        border-right: 1px solid var(--border-color);
-        box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
     }
 
     /* Hide Time Header */
@@ -102,5 +106,7 @@
 
     .day-date {
         font-size: 9px;
+        white-space: nowrap;
+        /* Prevent wrapping */
     }
 }

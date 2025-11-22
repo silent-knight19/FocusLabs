@@ -121,24 +121,22 @@
 /* Mobile responsive */
 @media (max-width: 768px) {
     .habit-row {
-        /* Name (sticky), Days (scrollable), Actions */
-        grid-template-columns: 140px repeat(7, 40px) 50px;
+        /* Name, Days, Actions - All scrollable together */
+        grid-template-columns: 160px repeat(7, 64px) 100px;
         gap: 0;
         padding: var(--spacing-sm) 0;
         width: max-content;
         /* Force width to accommodate all columns */
     }
 
-    /* Sticky Name Column */
+    /* Remove Sticky Name Column */
     .habit-info {
-        position: sticky;
-        left: 0;
-        background-color: var(--bg-card);
+        position: static;
+        background-color: transparent;
         z-index: 10;
         padding-left: var(--spacing-md);
-        border-right: 1px solid var(--border-color);
-        /* Ensure shadow covers scrolled content */
-        box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+        border-right: none;
+        box-shadow: none;
     }
 
     .habit-name-section {
@@ -150,7 +148,7 @@
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
-        max-width: 100px;
+        max-width: 120px;
     }
 
     .habit-category {
@@ -169,15 +167,14 @@
         padding: 0 var(--spacing-sm);
     }
 
-    /* Actions */
+    /* Remove Sticky Actions */
     .habit-actions {
         opacity: 1;
         padding-right: var(--spacing-sm);
-        position: sticky;
-        right: 0;
-        background-color: var(--bg-card);
+        position: static;
+        background-color: transparent;
         z-index: 10;
-        border-left: 1px solid var(--border-color);
+        border-left: none;
     }
 
     .action-button {

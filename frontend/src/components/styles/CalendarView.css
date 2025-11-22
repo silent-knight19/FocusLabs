@@ -114,12 +114,19 @@
 
 .completion-dots {
     display: flex;
-    flex-wrap: wrap;
-    gap: 2px;
-    justify-content: flex-end;
+    gap: 4px;
+    justify-content: center;
+    margin-top: 4px;
 }
 
-.habit-dot {
+.day-time {
+    margin-top: 4px;
+    font-size: 0.65rem;
+    color: var(--neon-orange);
+    font-weight: 600;
+}
+
+.stat-dot {
     width: 6px;
     height: 6px;
     border-radius: 50%;
@@ -147,6 +154,15 @@
 
 /* Mobile responsive */
 @media (max-width: 768px) {
+    .calendar-header {
+        flex-direction: column-reverse;
+        gap: var(--spacing-md);
+        align-items: center;
+        padding-right: 0;
+        margin-top: var(--spacing-lg);
+        /* Space for close button */
+    }
+
     .calendar-day {
         min-height: 60px;
     }
@@ -158,5 +174,6 @@
 
     .current-month {
         font-size: var(--font-size-lg);
+        text-align: center;
     }
 }

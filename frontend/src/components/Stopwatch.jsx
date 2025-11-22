@@ -12,10 +12,12 @@ export function Stopwatch({ isOpen, onClose }) {
     reset,
     lap,
     updateLapLabel,
+    updateLapCategory,
     formatTime
   } = useStopwatch();
 
   const [editingLapId, setEditingLapId] = useState(null);
+  const [selectedCategory, setSelectedCategory] = useState('other');
   const editInputRef = useRef(null);
 
   useEffect(() => {
@@ -73,9 +75,26 @@ export function Stopwatch({ isOpen, onClose }) {
         </div>
 
         <div className="stopwatch-controls">
+          {isRunning && (
+            <div className="category-selector">
+              <label htmlFor="lap-category">Category:</label>
+              <select 
+                id="lap-category"
+                value={selectedCategory} 
+                onChange={(e) => setSelectedCategory(e.target.value)}
+                className="category-select"
+              >
+                <option value="study">Study</option>
+                <option value="prod">Productive</option>
+                <option value="self">Self-Growth</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+          )}
+          
           <button 
             className={`control-btn secondary ${isRunning ? 'lap' : 'reset'}`}
-            onClick={isRunning ? lap : reset}
+            onClick={isRunning ? () => lap(selectedCategory) : reset}
           >
             {isRunning ? 'Lap' : 'Reset'}
           </button>
@@ -93,6 +112,15 @@ export function Stopwatch({ isOpen, onClose }) {
             const lapFormatted = formatTime(lapItem.time);
             const isEditing = editingLapId === lapItem.id;
             
+            const getCategoryColor = (cat) => {
+              switch(cat) {
+                case 'study': return '#3b82f6';
+                case 'prod': return '#10b981';
+                case 'self': return '#f59e0b';
+                default: return '#6b7280';
+              }
+            };
+            
             return (
               <div key={lapItem.id} className="lap-item">
                 <div className="lap-label-container" onClick={() => handleLapClick(lapItem.id)}>
@@ -107,7 +135,15 @@ export function Stopwatch({ isOpen, onClose }) {
                       onKeyDown={handleKeyDown}
                     />
                   ) : (
-                    <span className="lap-label">{lapItem.label}</span>
+                    <>
+                      <span 
+                        className="category-badge" 
+                        style={{ backgroundColor: getCategoryColor(lapItem.category || 'other') }}
+                      >
+                        {(lapItem.category || 'other').toUpperCase()}
+                      </span>
+                      <span className="lap-label">{lapItem.label}</span>
+                    </>
                   )}
                 </div>
                 <div className="lap-time">

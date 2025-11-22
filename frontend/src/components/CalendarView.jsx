@@ -75,12 +75,26 @@ export function CalendarView({ habits, completions, onDateClick }) {
         {weekDays.map(day => (
           <div key={day} className="calendar-day-header">{day}</div>
         ))}
-        
         {calendarDays.map((date, index) => {
           const stats = getDayCompletionStats(date);
           const isToday = isSameDay(date, new Date());
           const isCurrentMonth = date.getMonth() === currentDate.getMonth();
           
+          // Get stopwatch time for this day
+          let totalHours = 0;
+          try {
+            const lapHistory = JSON.parse(localStorage.getItem('habitgrid_lap_history') || '[]');
+            const dayKey = date.toISOString().split('T')[0];
+            const dayLaps = lapHistory.filter(lap => {
+              const lapDateKey = lap.date ? lap.date.split('T')[0] : null;
+              return lapDateKey === dayKey;
+            });
+            const totalMs = dayLaps.reduce((sum, lap) => sum + (lap.time || 0), 0);
+            totalHours = totalMs / (1000 * 60 * 60);
+          } catch {
+            // Ignore errors
+          }
+
           return (
             <div 
               key={index} 
@@ -114,6 +128,9 @@ export function CalendarView({ habits, completions, onDateClick }) {
                     />
                   </div>
                 </div>
+              )}
+              {totalHours > 0 && (
+                <div className="day-time">{totalHours.toFixed(1)}h</div>
               )}
             </div>
           );

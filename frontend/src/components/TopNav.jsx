@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { Calendar, Timer, Settings, LogOut, User } from 'lucide-react';
+import { Calendar, Timer, Settings, LogOut, User, BarChart3 } from 'lucide-react';
 import './styles/TopNav.css';
 
 /**
  * Top navigation bar with app name and settings
  */
-export function TopNav({ onSettingsClick, onStopwatchClick, onCalendarClick }) {
+export function TopNav({ onSettingsClick, onStopwatchClick, onCalendarClick, onAnalyticsClick }) {
   const { user, signOut } = useAuth();
   const [currentTime, setCurrentTime] = useState(new Date());
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -67,6 +67,14 @@ export function TopNav({ onSettingsClick, onStopwatchClick, onCalendarClick }) {
           title="Calendar"
         >
           <Calendar size={20} />
+        </button>
+        <button
+          type="button"
+          className="nav-icon-btn"
+          onClick={onAnalyticsClick}
+          title="Analytics & Time Tracking"
+        >
+          <BarChart3 size={20} />
         </button>
         <button
           type="button"

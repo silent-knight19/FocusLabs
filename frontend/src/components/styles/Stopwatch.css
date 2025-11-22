@@ -88,9 +88,43 @@
 
 .stopwatch-controls {
     display: flex;
-    justify-content: space-between;
+    flex-direction: column;
+    align-items: center;
+    /* Added to center buttons */
+    gap: 20px;
     margin-bottom: 40px;
     padding: 0 20px;
+}
+
+.category-selector {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    color: white;
+    font-size: 1rem;
+}
+
+.category-select {
+    flex: 1;
+    padding: 8px 12px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    color: white;
+    font-size: 1rem;
+    cursor: pointer;
+}
+
+.category-select:focus {
+    outline: none;
+    border-color: var(--neon-orange);
+}
+
+.control-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
 }
 
 .control-btn {
@@ -161,6 +195,18 @@
 .lap-label-container {
     flex: 1;
     cursor: text;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.category-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: white;
 }
 
 .lap-label {

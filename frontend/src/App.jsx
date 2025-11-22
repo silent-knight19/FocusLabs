@@ -7,13 +7,14 @@ import { HabitModal } from './components/HabitModal';
 import { SettingsPanel } from './components/SettingsPanel';
 import { ProgressSection } from './components/ProgressSection';
 import { SearchBar } from './components/SearchBar';
-import { QuickActions } from './components/QuickActions';
+import { DailyOverview } from './components/DailyOverview';
 import { HabitStats } from './components/HabitStats';
 import { ActiveHabitTracker } from './components/ActiveHabitTracker';
 import { CalendarView } from './components/CalendarView';
 import { AnalyticsView } from './components/AnalyticsView';
 import { StudyView } from './components/StudyView';
 import { Stopwatch } from './components/Stopwatch';
+import { AnalyticsModal } from './components/AnalyticsModal';
 import { useHabits } from './hooks/useHabits.jsx';
 import { useSettings } from './hooks/useSettings';
 import { useActiveHabit } from './hooks/useActiveHabit';
@@ -29,12 +30,13 @@ function App() {
   const [isSettingsPanelOpen, setIsSettingsPanelOpen] = useState(false);
   const [isStopwatchOpen, setIsStopwatchOpen] = useState(false);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+  const [isAnalyticsOpen, setIsAnalyticsOpen] = useState(false);
   const [editingHabit, setEditingHabit] = useState(null);
   const [currentDate] = useState(getToday());
   const [searchTerm, setSearchTerm] = useState('');
 
   const [selectedCategory, setSelectedCategory] = useState('all');
-  const [currentView, setCurrentView] = useState('week'); // 'week', 'month', 'study'
+  const [currentView, setCurrentView] = useState('week'); // 'week' view only
 
   const {
     habits,
@@ -127,10 +129,20 @@ function App() {
   };
 
   const handleSaveHabit = (habitData) => {
+    let habitId;
     if (editingHabit) {
       updateHabit(editingHabit.id, habitData);
+      habitId = editingHabit.id;
     } else {
-      addHabit(habitData);
+      const newHabit = addHabit(habitData);
+      habitId = newHabit.id;
+    }
+
+    // Add any new subtasks
+    if (habitData.subtasks && habitData.subtasks.length > 0) {
+      habitData.subtasks.forEach(title => {
+        addSubtask(habitId, title);
+      });
     }
   };
 
@@ -173,11 +185,16 @@ function App() {
         onSettingsClick={() => setIsSettingsPanelOpen(true)}
         onStopwatchClick={() => setIsStopwatchOpen(true)}
         onCalendarClick={() => setIsCalendarOpen(!isCalendarOpen)}
+        onAnalyticsClick={() => setIsAnalyticsOpen(true)}
         currentDate={currentDate}
       />
 
       <main className="app-main">
         <div className="app-container">
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
+            <AddHabitButton onClick={handleAddHabit} />
+          </div>
+
           {/* Active Habit Tracker */}
           <ActiveHabitTracker
             activeData={activeData}
@@ -190,37 +207,33 @@ function App() {
             getCompletionStatus={getCompletionStatus}
           />
 
-          <div className="app-header">
-            <AddHabitButton onClick={handleAddHabit} />
-            <QuickActions
-              onCompleteAll={handleCompleteAllToday}
-              onClearAll={handleClearAllToday}
-              habitCount={habits.length}
-            />
-          </div>
+          <DailyOverview 
+            habits={habits}
+            getCompletionStatus={getCompletionStatus}
+            getToday={getToday}
+          />
 
-          <div className="view-toggle-container" style={{ display: 'flex', justifyContent: 'center', marginBottom: 'var(--spacing-lg)', gap: 'var(--spacing-md)' }}>
+          <div className="view-toggle-container" style={{ display: 'flex', justifyContent: 'center', marginBottom: 'var(--spacing-lg)', marginTop: 'var(--spacing-xl)', gap: 'var(--spacing-md)' }}>
             <button 
               className={`view-toggle-btn ${currentView === 'week' ? 'active' : ''}`}
               onClick={() => setCurrentView('week')}
+              style={{ 
+                fontSize: '1.2rem', 
+                padding: '1rem 3rem', 
+                fontWeight: '700',
+                background: 'linear-gradient(135deg, var(--neon-orange), var(--neon-orange-dark))',
+                color: '#fff',
+                border: '1px solid var(--neon-orange)',
+                borderRadius: 'var(--radius-md)',
+                boxShadow: 'var(--glow-orange)',
+                cursor: 'pointer'
+              }}
             >
               Week View
             </button>
-            <button 
-              className={`view-toggle ${currentView === 'study' ? 'active' : ''}`}
-              onClick={() => setCurrentView('study')}
-            >
-              Study View
-            </button>
           </div>
 
-          <SearchBar
-            searchTerm={searchTerm}
-            onSearchChange={setSearchTerm}
-            selectedCategory={selectedCategory}
-            onCategoryChange={setSelectedCategory}
-            categories={CATEGORIES}
-          />
+
 
           {currentView === 'week' && (
             <>
@@ -232,14 +245,6 @@ function App() {
                 onDeleteHabit={handleDeleteHabit}
                 getCompletionStatus={getCompletionStatus}
                 reorderHabits={reorderHabits}
-              />
-              
-              <div className="section-divider" style={{ margin: '40px 0', borderTop: '1px solid var(--border-color)' }}></div>
-              
-              <h2 style={{ padding: '0 20px', marginBottom: '20px', color: 'var(--text-primary)' }}>Analytics & Progress</h2>
-              <AnalyticsView
-                habits={habits}
-                completions={completions}
               />
             </>
           )}
@@ -254,11 +259,6 @@ function App() {
             completionData={weekCompletionData}
             getCurrentStreak={getCurrentStreak}
             getLongestStreak={getLongestStreak}
-            completions={completions}
-          />
-
-          <HabitStats
-            habits={habits}
             completions={completions}
           />
         </div>
@@ -278,9 +278,16 @@ function App() {
         onUpdateSettings={updateSettings}
       />
 
-      <Stopwatch
+      {/* Stopwatch */}
+      <Stopwatch 
         isOpen={isStopwatchOpen}
         onClose={() => setIsStopwatchOpen(false)}
+      />
+
+      {/* Analytics Modal */}
+      <AnalyticsModal
+        isOpen={isAnalyticsOpen}
+        onClose={() => setIsAnalyticsOpen(false)}
       />
 
       {isCalendarOpen && (

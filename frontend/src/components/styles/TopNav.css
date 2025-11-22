@@ -72,7 +72,8 @@
 .app-logo-text {
     font-weight: 800;
     margin-left: 8px;
-    font-size: var(--font-size-xl);
+    font-size: 1.8rem;
+    /* Increased from xl */
     background: linear-gradient(135deg, var(--neon-orange), var(--neon-orange-bright));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -120,8 +121,10 @@
 }
 
 .nav-time {
-    font-size: 0.85rem;
-    font-weight: 500;
+    font-size: 1.2rem;
+    /* Increased from 0.85rem */
+    font-weight: 700;
+    /* Made bolder */
     color: var(--text-neon);
     letter-spacing: 0.5px;
 }
@@ -300,7 +303,10 @@
     }
 
     .app-logo-text {
-        display: none;
+        display: inline-block;
+        font-size: 1.25rem;
+        /* Increased from 1rem */
+        margin-left: 4px;
     }
 
     .app-logo-img {

@@ -84,11 +84,14 @@
         /* Negative margin to allow full-width scroll */
         border-left: none;
         border-right: none;
+        overflow-x: auto;
+        /* Scroll the whole container */
+        -webkit-overflow-scrolling: touch;
     }
 
     .habit-grid-body {
-        /* Enable smooth scrolling on mobile */
-        -webkit-overflow-scrolling: touch;
+        overflow-x: visible;
+        /* Let body expand */
         padding-bottom: var(--spacing-sm);
     }
 }

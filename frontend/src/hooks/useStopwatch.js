@@ -112,11 +112,12 @@ export function useStopwatch() {
     localStorage.removeItem(STORAGE_KEY);
   };
 
-  const lap = () => {
+  const lap = (category = 'other') => {
     const newLap = {
       id: Date.now().toString(),
       time: time,
       label: `Lap ${laps.length + 1}`,
+      category: category, // 'study', 'prod', 'self', 'other'
       date: new Date().toISOString() // Store date for history
     };
     setLaps([newLap, ...laps]);
@@ -125,6 +126,16 @@ export function useStopwatch() {
     const history = JSON.parse(localStorage.getItem('habitgrid_lap_history') || '[]');
     history.push(newLap);
     localStorage.setItem('habitgrid_lap_history', JSON.stringify(history));
+  };
+
+  const updateLapCategory = (id, newCategory) => {
+    const updatedLaps = laps.map(l => l.id === id ? { ...l, category: newCategory } : l);
+    setLaps(updatedLaps);
+    
+    // Update in permanent history as well
+    const history = JSON.parse(localStorage.getItem('habitgrid_lap_history') || '[]');
+    const updatedHistory = history.map(l => l.id === id ? { ...l, category: newCategory } : l);
+    localStorage.setItem('habitgrid_lap_history', JSON.stringify(updatedHistory));
   };
 
   const updateLapLabel = (id, newLabel) => {
@@ -160,6 +171,7 @@ export function useStopwatch() {
     reset,
     lap,
     updateLapLabel,
+    updateLapCategory,
     formatTime
   };
 }
