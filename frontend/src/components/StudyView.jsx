@@ -1,10 +1,16 @@
 import React, { useMemo } from 'react';
+import { useFirestore } from '../hooks/useFirestore';
+import { useAuth } from '../contexts/AuthContext';
 import { formatTime12 } from '../utils/dateHelpers';
 import './styles/AnalyticsView.css'; // Reuse analytics styles
 
 export function StudyView() {
+  const { user } = useAuth();
+  const userId = user?.uid;
+  const [history] = useFirestore(userId, 'stopwatch_history', []);
+
   const studyStats = useMemo(() => {
-    const history = JSON.parse(localStorage.getItem('habitgrid_lap_history') || '[]');
+    if (!history) return { totalHours: '0.0', count: 0, chartData: [] };
     
     // Filter laps labeled "study" (case insensitive)
     const studyLaps = history.filter(l => l.label.toLowerCase().includes('study'));

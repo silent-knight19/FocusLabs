@@ -1,4 +1,6 @@
 import React, { useMemo, useState } from 'react';
+import { useFirestore } from '../hooks/useFirestore';
+import { useAuth } from '../contexts/AuthContext';
 import { X, CheckCircle, Circle, Clock, TrendingUp, Target, ListTodo, ChevronDown, FileText } from 'lucide-react';
 import { useHabitNotes } from '../hooks/useHabitNotes';
 import { formatDateKey } from '../utils/dateHelpers';
@@ -31,9 +33,13 @@ export function DayHistoryModal({
   };
 
   // Get all lap data for this day
+  const { user } = useAuth();
+  const userId = user?.uid;
+  const [lapHistory] = useFirestore(userId, 'stopwatch_history', []);
+
   const dayData = useMemo(() => {
     try {
-      const lapHistory = JSON.parse(localStorage.getItem('habitgrid_lap_history') || '[]');
+      if (!lapHistory) return { laps: [], categoryTime: {}, totalTime: 0, lapCount: 0 };
       const dayLaps = lapHistory.filter(lap => {
         const lapDateKey = lap.date ? formatDateKey(new Date(lap.date)) : null;
         return lapDateKey === dateStr && (lap.time || 0) >= 60000;
@@ -47,8 +53,8 @@ export function DayHistoryModal({
       });
 
       // Get total time from stopwatch history
-      const stopwatchHistory = JSON.parse(localStorage.getItem('habitgrid_stopwatch_history') || '{}');
-      const totalMs = stopwatchHistory[dateStr] || 0;
+      // We calculate total time from laps directly now
+      const totalMs = dayLaps.reduce((sum, lap) => sum + (lap.time || 0), 0);
 
       return {
         laps: dayLaps,

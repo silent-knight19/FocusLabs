@@ -1,4 +1,6 @@
 import { useMemo } from 'react';
+import { useFirestore } from './useFirestore';
+import { useAuth } from '../contexts/AuthContext';
 
 /**
  * Hook for analyzing stopwatch lap data
@@ -6,14 +8,15 @@ import { useMemo } from 'react';
  */
 export function useAnalytics() {
   // Get lap history from localStorage
+  // Get lap history from Firestore
+  const { user } = useAuth();
+  const userId = user?.uid;
+  const [history] = useFirestore(userId, 'stopwatch_history', []);
+
   const getLapHistory = () => {
-    try {
-      const history = JSON.parse(localStorage.getItem('habitgrid_lap_history') || '[]');
-      // Filter out laps less than 60 seconds (60000 ms)
-      return history.filter(lap => (lap.time || 0) > 60000);
-    } catch {
-      return [];
-    }
+    if (!history) return [];
+    // Filter out laps less than 60 seconds (60000 ms)
+    return history.filter(lap => (lap.time || 0) > 60000);
   };
 
   /**

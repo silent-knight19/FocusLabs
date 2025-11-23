@@ -1,4 +1,7 @@
 import React, { useMemo } from 'react';
+import { useFirestore } from '../hooks/useFirestore';
+import { useAuth } from '../contexts/AuthContext';
+import './styles/ProductivityHeatmap.css';
 import './styles/ProductivityHeatmap.css';
 
 /**
@@ -7,14 +10,15 @@ import './styles/ProductivityHeatmap.css';
  */
 export function ProductivityHeatmap({ habits = [], completions = {}, dataVersion = 0 }) {
   // Get lap history from localStorage (where categories are stored)
+  // Get lap history from Firestore
+  const { user } = useAuth();
+  const userId = user?.uid;
+  const [history, , loading] = useFirestore(userId, 'stopwatch_history', []);
+
   const getLapHistory = () => {
-    try {
-      const history = JSON.parse(localStorage.getItem('habitgrid_lap_history') || '[]');
-      // Filter out laps less than 60 seconds
-      return history.filter(lap => (lap.time || 0) > 60000);
-    } catch {
-      return [];
-    }
+    if (loading || !history) return [];
+    // Filter out laps less than 60 seconds
+    return history.filter(lap => (lap.time || 0) > 60000);
   };
 
   // Generate heatmap data for the current year (Jan - Dec)
@@ -64,17 +68,13 @@ export function ProductivityHeatmap({ habits = [], completions = {}, dataVersion
         const stopwatchMs = dayLaps.reduce((sum, lap) => sum + (lap.time || 0), 0);
         let totalHours = stopwatchMs / (1000 * 60 * 60);
 
-        // 2. Calculate Habit Completion Hours (1 completion = 1 hour equivalent for visualization)
-        // Filter for productive categories
-        const productiveHabits = habits.filter(h => 
-          ['work', 'study', 'self growth', 'fitness', 'health'].includes(h.category?.toLowerCase())
-        );
-
-        productiveHabits.forEach(habit => {
-          if (completions[habit.id]?.[dateKey] === 'completed') {
-            totalHours += 1; // Add 1 hour equivalent per completed habit
-          }
-        });
+        // 2. Calculate Habit Completion Hours - REMOVED artificial time
+        // We only visualize stopwatch time now to avoid confusion
+        // productiveHabits.forEach(habit => {
+        //   if (completions[habit.id]?.[dateKey] === 'completed') {
+        //     totalHours += 1; // Add 1 hour equivalent per completed habit
+        //   }
+        // });
         
         weekData.push({
           date: currentDate,
@@ -131,20 +131,20 @@ export function ProductivityHeatmap({ habits = [], completions = {}, dataVersion
       dailyTotals[dateKey] = (dailyTotals[dateKey] || 0) + (lap.time || 0);
     });
 
-    // 2. Add Habit Completions (1 hour per completion)
-    const productiveHabits = habits.filter(h => 
-      ['work', 'study', 'self growth', 'fitness', 'health'].includes(h.category?.toLowerCase())
-    );
+    // 2. Add Habit Completions - REMOVED artificial time
+    // const productiveHabits = habits.filter(h => 
+    //   ['work', 'study', 'self growth', 'fitness', 'health'].includes(h.category?.toLowerCase())
+    // );
 
-    productiveHabits.forEach(habit => {
-      const habitCompletions = completions[habit.id] || {};
-      Object.entries(habitCompletions).forEach(([dateKey, status]) => {
-        if (status === 'completed') {
-          // Add 1 hour (3600000 ms)
-          dailyTotals[dateKey] = (dailyTotals[dateKey] || 0) + 3600000;
-        }
-      });
-    });
+    // productiveHabits.forEach(habit => {
+    //   const habitCompletions = completions[habit.id] || {};
+    //   Object.entries(habitCompletions).forEach(([dateKey, status]) => {
+    //     if (status === 'completed') {
+    //       // Add 1 hour (3600000 ms)
+    //       dailyTotals[dateKey] = (dailyTotals[dateKey] || 0) + 3600000;
+    //     }
+    //   });
+    // });
 
     const allHours = Object.values(dailyTotals).map(ms => ms / (1000 * 60 * 60));
     const totalHours = allHours.reduce((sum, h) => sum + h, 0);

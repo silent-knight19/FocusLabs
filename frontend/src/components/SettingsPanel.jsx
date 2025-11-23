@@ -1,4 +1,8 @@
 import React, { useState } from 'react';
+import { useFirestore } from '../hooks/useFirestore';
+import { doc, deleteDoc } from 'firebase/firestore';
+import { db } from '../config/firebase';
+import { useAuth } from '../contexts/AuthContext';
 import { downloadDataAsJson, importData, clearAllData } from '../utils/storageHelpers';
 import { useLockBodyScroll } from '../hooks/useLockBodyScroll';
 import './styles/SettingsPanel.css';
@@ -8,6 +12,10 @@ import './styles/SettingsPanel.css';
  */
 export function SettingsPanel({ isOpen, onClose, settings, onUpdateSettings }) {
   useLockBodyScroll(isOpen);
+  const { user } = useAuth();
+  const userId = user?.uid;
+  const [history, setHistory] = useFirestore(userId, 'stopwatch_history', []);
+
   const [importError, setImportError] = useState('');
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
@@ -53,9 +61,6 @@ export function SettingsPanel({ isOpen, onClose, settings, onUpdateSettings }) {
 
   const handleClearFocusTime = (windowType) => {
     try {
-      const raw = localStorage.getItem('habitgrid_lap_history') || '[]';
-      const history = JSON.parse(raw);
-
       if (!Array.isArray(history) || history.length === 0) {
         setSuccessMessage('No focus time found to delete.');
         setTimeout(() => setSuccessMessage(''), 2500);
@@ -104,8 +109,11 @@ export function SettingsPanel({ isOpen, onClose, settings, onUpdateSettings }) {
         });
       }
 
-      localStorage.setItem('habitgrid_lap_history', JSON.stringify(filtered));
-      window.dispatchEvent(new Event('habit-data-updated'));
+
+
+      setHistory(filtered);
+      // localStorage.setItem('habitgrid_lap_history', JSON.stringify(filtered));
+      // window.dispatchEvent(new Event('habit-data-updated'));
 
       const labelMap = {
         study: 'Study',
@@ -127,13 +135,39 @@ export function SettingsPanel({ isOpen, onClose, settings, onUpdateSettings }) {
     }
   };
 
-  const handleClearData = () => {
-    clearAllData();
-    setShowClearConfirm(false);
-    setSuccessMessage('All data cleared! Refreshing page...');
-    setTimeout(() => {
-      window.location.reload();
-    }, 1000);
+  const handleClearData = async () => {
+    try {
+      // 1. Clear Firestore Data
+      if (userId) {
+        const collections = [
+          'habits', 
+          'completions', 
+          'subtasks', 
+          'subtask_completions', 
+          'stopwatch_history', 
+          'settings', 
+          'daily_tasks'
+        ];
+        
+        await Promise.all(collections.map(colName => {
+          const docRef = doc(db, 'users', userId, 'data', colName);
+          return deleteDoc(docRef);
+        }));
+      }
+
+      // 2. Clear Local Storage
+      clearAllData();
+      
+      setShowClearConfirm(false);
+      setSuccessMessage('All data cleared from Cloud & Local! Refreshing...');
+      
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
+    } catch (error) {
+      console.error('Error clearing data:', error);
+      setImportError('Failed to clear cloud data.');
+    }
   };
 
   if (!isOpen) return null;

@@ -1,4 +1,7 @@
 import React, { useMemo } from 'react';
+import { useFirestore } from '../hooks/useFirestore';
+import { useAuth } from '../contexts/AuthContext';
+import './styles/StudyHeatmap.css';
 import './styles/StudyHeatmap.css';
 
 /**
@@ -7,14 +10,15 @@ import './styles/StudyHeatmap.css';
  */
 export function StudyHeatmap({ dataVersion = 0 }) {
   // Get lap history from localStorage
+  // Get lap history from Firestore
+  const { user } = useAuth();
+  const userId = user?.uid;
+  const [history, , loading] = useFirestore(userId, 'stopwatch_history', []);
+
   const getLapHistory = () => {
-    try {
-      const history = JSON.parse(localStorage.getItem('habitgrid_lap_history') || '[]');
-      // Filter out laps less than 60 seconds
-      return history.filter(lap => (lap.time || 0) > 60000);
-    } catch {
-      return [];
-    }
+    if (loading || !history) return [];
+    // Filter out laps less than 60 seconds
+    return history.filter(lap => (lap.time || 0) > 60000);
   };
 
   // Generate heatmap data for the current year (Jan - Dec)

@@ -1,4 +1,6 @@
 import React, { useMemo } from 'react';
+import { useFirestore } from '../hooks/useFirestore';
+import { useAuth } from '../contexts/AuthContext';
 import { getToday, formatDateKey, getWeekStart, getMonthDates } from '../utils/dateHelpers';
 import './styles/AnalyticsView.css';
 
@@ -41,8 +43,12 @@ export function AnalyticsView({ habits, completions }) {
   // ... (Weekly, Monthly, Yearly stats remain same) ...
 
   // 5. Productivity Hours (Filtered by > 60s) & Daily Average
+  const { user } = useAuth();
+  const userId = user?.uid;
+  const [history] = useFirestore(userId, 'stopwatch_history', []);
+
   const productivityStats = useMemo(() => {
-    const history = JSON.parse(localStorage.getItem('habitgrid_lap_history') || '[]');
+    if (!history) return { stats: [], max: 1, dailyAverage: '0.0' };
     // Filter laps > 60s
     const validLaps = history.filter(l => (l.time || 0) > 60000);
     

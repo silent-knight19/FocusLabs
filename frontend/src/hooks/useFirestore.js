@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { 
   collection, 
   doc, 
@@ -54,6 +54,9 @@ export function useFirestore(userId, collectionName, initialValue) {
     return unsubscribe;
   }, [userId, collectionName]);
 
+  const lastWriteRef = useRef(0);
+  const pendingUpdateRef = useRef(null);
+
   const updateValue = async (newValue) => {
     if (!userId) {
       console.warn('Cannot update Firestore: No user logged in');
@@ -66,13 +69,28 @@ export function useFirestore(userId, collectionName, initialValue) {
       // Optimistic update
       setValue(valueToStore);
       
-      // Persist to Firestore
+      // Throttle writes to max 1 per 2 seconds to prevent quota exhaustion
+      const now = Date.now();
+      if (now - lastWriteRef.current < 2000) {
+        // If throttled, schedule a final update
+        if (pendingUpdateRef.current) clearTimeout(pendingUpdateRef.current);
+        
+        pendingUpdateRef.current = setTimeout(async () => {
+          const docRef = doc(db, 'users', userId, 'data', collectionName);
+          await setDoc(docRef, { value: valueToStore }, { merge: true });
+          lastWriteRef.current = Date.now();
+          pendingUpdateRef.current = null;
+        }, 2000);
+        return;
+      }
+
+      // Immediate write
       const docRef = doc(db, 'users', userId, 'data', collectionName);
       await setDoc(docRef, { value: valueToStore }, { merge: true });
+      lastWriteRef.current = now;
     } catch (error) {
       console.error(`Error saving Firestore "${collectionName}":`, error);
-      // Revert on error
-      setValue(value);
+      // Revert on error (optional, might be jarring)
     }
   };
 
