@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { validateHabit } from '../utils/validationHelpers';
+import { useLockBodyScroll } from '../hooks/useLockBodyScroll';
 import './styles/HabitModal.css';
 
 const CATEGORIES = ['fitness', 'work', 'study', 'personal', 'health', 'social', 'other'];
@@ -12,6 +13,7 @@ const DEFAULT_COLORS = [
  * Modal for creating or editing habits
  */
 export function HabitModal({ isOpen, onClose, onSave, habit = null }) {
+  useLockBodyScroll(isOpen);
   const [formData, setFormData] = useState({
     name: '',
     description: '',

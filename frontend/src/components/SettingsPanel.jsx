@@ -1,14 +1,20 @@
 import React, { useState } from 'react';
 import { downloadDataAsJson, importData, clearAllData } from '../utils/storageHelpers';
+import { useLockBodyScroll } from '../hooks/useLockBodyScroll';
 import './styles/SettingsPanel.css';
 
 /**
  * Settings panel for theme, preferences, and data management
  */
 export function SettingsPanel({ isOpen, onClose, settings, onUpdateSettings }) {
+  useLockBodyScroll(isOpen);
   const [importError, setImportError] = useState('');
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
+  const [focusCategory, setFocusCategory] = useState('study');
+  const [showFocusDeletePanel, setShowFocusDeletePanel] = useState(false);
+  const [focusDeleteRange, setFocusDeleteRange] = useState(null); // 10 | 30 | 60 | 120 | 180 | 'day'
+  const [showFocusConfirm, setShowFocusConfirm] = useState(false);
 
   const handleThemeToggle = () => {
     onUpdateSettings({ theme: settings.theme === 'light' ? 'dark' : 'light' });
@@ -43,6 +49,82 @@ export function SettingsPanel({ isOpen, onClose, settings, onUpdateSettings }) {
       }
     };
     reader.readAsText(file);
+  };
+
+  const handleClearFocusTime = (windowType) => {
+    try {
+      const raw = localStorage.getItem('habitgrid_lap_history') || '[]';
+      const history = JSON.parse(raw);
+
+      if (!Array.isArray(history) || history.length === 0) {
+        setSuccessMessage('No focus time found to delete.');
+        setTimeout(() => setSuccessMessage(''), 2500);
+        return;
+      }
+
+      const now = new Date();
+      const categoryKey = focusCategory; // 'study' | 'prod' | 'self'
+
+      const matchesCategory = (lap) => {
+        if (!lap) return false;
+        const label = (lap.label || '').toLowerCase();
+
+        if (categoryKey === 'study') {
+          // Study analytics sometimes key off label containing "study"
+          return lap.category === 'study' || label.includes('study');
+        }
+
+        if (categoryKey === 'prod') {
+          return lap.category === 'prod';
+        }
+
+        if (categoryKey === 'self') {
+          // Self-growth often uses category 'self' or label containing 'self'
+          return lap.category === 'self' || label.includes('self');
+        }
+
+        return false;
+      };
+
+      let filtered;
+      if (windowType === 'day') {
+        const todayKey = now.toISOString().split('T')[0];
+        filtered = history.filter(lap => {
+          if (!matchesCategory(lap)) return true;
+          const lapDateKey = new Date(lap.date).toISOString().split('T')[0];
+          return lapDateKey !== todayKey;
+        });
+      } else {
+        const minutes = windowType; // 10 | 30 | 60
+        const cutoff = now.getTime() - minutes * 60 * 1000;
+        filtered = history.filter(lap => {
+          if (!matchesCategory(lap)) return true;
+          const ts = new Date(lap.date).getTime();
+          return ts < cutoff;
+        });
+      }
+
+      localStorage.setItem('habitgrid_lap_history', JSON.stringify(filtered));
+      window.dispatchEvent(new Event('habit-data-updated'));
+
+      const labelMap = {
+        study: 'Study',
+        prod: 'Productive',
+        self: 'Self-Growth'
+      };
+
+      const rangeLabel =
+        windowType === 'day'
+          ? 'today'
+          : `last ${windowType} minutes`;
+
+      setSuccessMessage(`Cleared ${labelMap[categoryKey] || 'focus'} time for ${rangeLabel}.`);
+      setTimeout(() => setSuccessMessage(''), 3000);
+    } catch (e) {
+      console.error('Error clearing focus time', e);
+      setImportError('Failed to clear focus time.');
+      setTimeout(() => setImportError(''), 3000);
+    }
   };
 
   const handleClearData = () => {
@@ -168,6 +250,126 @@ export function SettingsPanel({ isOpen, onClose, settings, onUpdateSettings }) {
 
             {importError && (
               <div className="error-banner">{importError}</div>
+            )}
+
+            <div className="setting-item">
+              <div className="setting-info">
+                <label>Delete Focus Time</label>
+                <p className="setting-description">
+                  Remove recorded stopwatch time for Study / Productive / Self-Growth. This updates all related analytics.
+                </p>
+              </div>
+              <div className="focus-delete-wrapper">
+                <button
+                  type="button"
+                  className="danger"
+                  onClick={() => setShowFocusDeletePanel(prev => !prev)}
+                >
+                  {showFocusDeletePanel ? 'Hide Options' : 'Delete Focus Time'}
+                </button>
+              </div>
+            </div>
+
+            {showFocusDeletePanel && (
+              <div className="focus-delete-panel">
+                <div className="focus-delete-row">
+                  <span className="focus-step-label">1. Choose category</span>
+                  <div className="focus-category-toggle">
+                    <button
+                      type="button"
+                      className={focusCategory === 'study' ? 'active' : ''}
+                      onClick={() => setFocusCategory('study')}
+                    >
+                      Study
+                    </button>
+                    <button
+                      type="button"
+                      className={focusCategory === 'prod' ? 'active' : ''}
+                      onClick={() => setFocusCategory('prod')}
+                    >
+                      Productive
+                    </button>
+                    <button
+                      type="button"
+                      className={focusCategory === 'self' ? 'active' : ''}
+                      onClick={() => setFocusCategory('self')}
+                    >
+                      Self-Growth
+                    </button>
+                  </div>
+                </div>
+
+                <div className="focus-delete-row">
+                  <span className="focus-step-label">2. Choose time range</span>
+                  <div className="focus-range-grid">
+                    {[10, 30, 60, 120, 180].map((m) => (
+                      <button
+                        key={m}
+                        type="button"
+                        className={focusDeleteRange === m ? 'range-active' : ''}
+                        onClick={() => setFocusDeleteRange(m)}
+                      >
+                        Last {m} min
+                      </button>
+                    ))}
+                    <button
+                      type="button"
+                      className={`danger-outline ${focusDeleteRange === 'day' ? 'range-active' : ''}`}
+                      onClick={() => setFocusDeleteRange('day')}
+                    >
+                      Entire Day (Today)
+                    </button>
+                  </div>
+                </div>
+
+                <div className="focus-delete-row">
+                  <span className="focus-step-label">3. Confirm delete</span>
+                  <button
+                    type="button"
+                    className="danger full-width"
+                    disabled={!focusDeleteRange}
+                    onClick={() => setShowFocusConfirm(true)}
+                  >
+                    Delete Selected Focus Time
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {showFocusConfirm && (
+              <div className="focus-confirm-overlay">
+                <div className="focus-confirm-modal">
+                  <h4>Confirm deletion</h4>
+                  <p>
+                    This will permanently delete recorded
+                    {' '}
+                    <strong>{focusCategory === 'study' ? 'Study' : focusCategory === 'prod' ? 'Productive' : 'Self-Growth'}</strong>
+                    {' '}time for
+                    {' '}
+                    {focusDeleteRange === 'day' ? 'today' : `the last ${focusDeleteRange} minutes`}.
+                  </p>
+                  <div className="focus-confirm-actions">
+                    <button
+                      type="button"
+                      className="danger"
+                      onClick={() => {
+                        handleClearFocusTime(focusDeleteRange);
+                        setShowFocusConfirm(false);
+                        setShowFocusDeletePanel(false);
+                        setFocusDeleteRange(null);
+                      }}
+                    >
+                      Yes, delete
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowFocusConfirm(false)}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              </div>
             )}
 
             <div className="setting-item">

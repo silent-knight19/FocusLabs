@@ -1,0 +1,361 @@
+/* Redesigned Progress Section */
+.progress-section-redesigned {
+    padding: var(--spacing-xl) 0;
+}
+
+.progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-lg);
+}
+
+.progress-header h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.progress-count {
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    font-weight: 600;
+}
+
+/* Main Grid */
+.progress-main-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: var(--spacing-lg);
+}
+
+/* Progress Cards */
+.progress-card {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01));
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 20px;
+    padding: var(--spacing-xl);
+    transition: all 0.3s;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+    border-color: rgba(255, 107, 53, 0.3);
+}
+
+
+.card-header {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-lg);
+}
+
+.card-header h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.card-header svg {
+    color: var(--neon-orange);
+}
+
+/* Circular Progress */
+.circular-progress-container {
+    position: relative;
+    width: 200px;
+    height: 200px;
+    margin: 0 auto var(--spacing-lg);
+}
+
+.circular-progress {
+    width: 100%;
+    height: 100%;
+    filter: drop-shadow(0 0 10px rgba(255, 107, 53, 0.3));
+}
+
+.progress-ring {
+    transition: stroke-dashoffset 1s ease-out;
+    animation: progressGlow 2s ease-in-out infinite;
+}
+
+@keyframes progressGlow {
+
+    0%,
+    100% {
+        filter: drop-shadow(0 0 8px rgba(255, 107, 53, 0.4));
+    }
+
+    50% {
+        filter: drop-shadow(0 0 15px rgba(255, 107, 53, 0.6));
+    }
+}
+
+.progress-center-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+}
+
+.progress-percentage {
+    display: block;
+    font-size: 3rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--neon-orange), var(--neon-orange-bright));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1;
+    margin-bottom: 4px;
+}
+
+.progress-label {
+    display: block;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* Today Card Specific */
+.today-card .card-header svg {
+    color: var(--neon-orange);
+}
+
+/* Weekly Card Specific */
+.weekly-card .card-header svg {
+    color: #3b82f6;
+}
+
+.weekly-card .progress-ring {
+    animation: weeklyGlow 2s ease-in-out infinite;
+}
+
+@keyframes weeklyGlow {
+
+    0%,
+    100% {
+        filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.4));
+    }
+
+    50% {
+        filter: drop-shadow(0 0 15px rgba(59, 130, 246, 0.6));
+    }
+}
+
+.weekly-card .progress-percentage {
+    background: linear-gradient(135deg, #3b82f6, #60a5fa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* Weekly card – make it feel clickable */
+.weekly-card {
+    position: relative;
+    cursor: pointer;
+    overflow: hidden;
+}
+
+.weekly-card::before {
+    content: "";
+    position: absolute;
+    inset: -2px;
+    border-radius: inherit;
+    background: radial-gradient(circle at top, rgba(96, 165, 250, 0.35), transparent 60%);
+    opacity: 0;
+    transition: opacity 0.3s ease-out;
+    pointer-events: none;
+}
+
+.weekly-card:hover {
+    transform: translateY(-4px) scale(1.01);
+    box-shadow: 0 14px 35px rgba(15, 23, 42, 0.7), 0 0 25px rgba(59, 130, 246, 0.35);
+    border-color: rgba(59, 130, 246, 0.6);
+}
+
+.weekly-card:hover::before {
+    opacity: 1;
+}
+
+.weekly-card:active {
+    transform: translateY(-1px) scale(0.99);
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.6), 0 0 18px rgba(59, 130, 246, 0.4);
+}
+
+/* Week Mini Bars */
+.week-mini-bars {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    height: 60px;
+    align-items: flex-end;
+}
+
+.mini-bar-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+}
+
+.mini-bar {
+    width: 100%;
+    min-height: 4px;
+    border-radius: 4px 4px 0 0;
+    transition: all 0.3s;
+    box-shadow: 0 0 8px currentColor;
+}
+
+.mini-bar-container:hover .mini-bar {
+    transform: scaleY(1.1);
+    filter: brightness(1.2);
+}
+
+.mini-bar-label {
+    font-size: 0.75rem;
+    color: var(--text-tertiary);
+    font-weight: 600;
+}
+
+/* Streaks Card */
+.streaks-card .card-header svg {
+    color: #f59e0b;
+}
+
+.streaks-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+}
+
+.streak-item {
+    background: rgba(20, 20, 25, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    padding: var(--spacing-lg);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.streak-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 107, 53, 0.3);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+.streak-info {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    flex: 1;
+    min-width: 0;
+    /* Allow text truncation */
+}
+
+.streak-color-dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    /* Box shadow is now handled inline for dynamic colors */
+}
+
+.streak-name {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.streak-stats {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-lg);
+    padding-left: var(--spacing-md);
+}
+
+.streak-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    min-width: 60px;
+}
+
+.streak-value {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: var(--neon-orange);
+    line-height: 1;
+    text-shadow: 0 0 20px rgba(255, 107, 53, 0.3);
+}
+
+.streak-value.best {
+    color: #fbbf24;
+    /* Amber-400 */
+    text-shadow: 0 0 20px rgba(251, 191, 36, 0.3);
+}
+
+.streak-label {
+    font-size: 0.65rem;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 700;
+    opacity: 0.8;
+}
+
+.streak-divider {
+    width: 1px;
+    height: 40px;
+    background: linear-gradient(to bottom, transparent, rgba(255, 255, 255, 0.1), transparent);
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .progress-main-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .progress-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--spacing-sm);
+    }
+
+    .circular-progress-container {
+        width: 180px;
+        height: 180px;
+    }
+
+    .progress-percentage {
+        font-size: 2.5rem;
+    }
+
+    .streak-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--spacing-sm);
+    }
+
+    .streak-stats {
+        width: 100%;
+        justify-content: space-around;
+    }
+}

@@ -3,7 +3,7 @@
     display: flex;
     flex-direction: column;
     gap: var(--spacing-sm);
-    margin-bottom: var(--spacing-md);
+    margin-bottom: var(--spacing-sm);
 }
 
 .no-tasks-message {
@@ -18,10 +18,13 @@
 .daily-task-item-active {
     display: flex;
     align-items: center;
-    gap: var(--spacing-md);
-    padding: var(--spacing-md);
+    gap: calc(var(--spacing-md) * 0.7);
+    /* Reduced by another 10% */
+    padding: calc(var(--spacing-md) * 0.7);
+    /* Reduced by another 10% */
     background: var(--bg-secondary);
-    border-radius: var(--radius-md);
+    border-radius: 50px;
+    /* Fully rounded corners (pill shape) */
     border: 1px solid var(--border-color);
     transition: all var(--transition-fast);
 }
@@ -38,7 +41,8 @@
     min-width: 24px;
     min-height: 24px;
     border: 2px solid var(--border-color);
-    border-radius: var(--radius-sm);
+    border-radius: 50%;
+    /* Circle shape */
     background: transparent;
     cursor: pointer;
     display: flex;
@@ -106,17 +110,20 @@
 .add-task-form {
     display: flex;
     gap: var(--spacing-sm);
-    margin-top: var(--spacing-md);
+    margin-top: calc(var(--spacing-md) * 0.175);
+    /* Further reduced by 50% */
 }
 
 .add-task-input {
     flex: 1;
-    padding: var(--spacing-md);
+    padding: calc(var(--spacing-sm) * 0.8);
+    /* Reduced padding */
     background: var(--bg-secondary);
     border: 1px solid var(--border-color);
-    border-radius: var(--radius-md);
+    border-radius: 50px;
+    /* Pill shape */
     color: var(--text-primary);
-    font-size: var(--font-size-md);
+    font-size: var(--font-size-sm);
     transition: all var(--transition-fast);
 }
 
@@ -131,7 +138,7 @@
 }
 
 .add-task-btn {
-    padding: var(--spacing-md);
+    padding: calc(var(--spacing-sm) * 0.9);
     background: linear-gradient(135deg, var(--neon-orange), var(--neon-orange-dark));
     color: white;
     border: none;
@@ -142,8 +149,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 48px;
-    height: 48px;
+    width: 42px;
+    height: 42px;
 }
 
 .add-task-btn:hover:not(:disabled) {

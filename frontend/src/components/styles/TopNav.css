@@ -173,6 +173,30 @@
     transform: translateY(0);
 }
 
+/* Add Habit Button - Special Styling */
+.nav-icon-btn.add-habit-btn {
+    background: linear-gradient(135deg, var(--neon-orange), var(--neon-orange-dark));
+    border-color: var(--neon-orange);
+    color: white;
+    box-shadow: 0 0 15px rgba(255, 107, 53, 0.4);
+    width: auto;
+    /* Allow width to grow */
+    padding: 8px 16px;
+    gap: 8px;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.nav-icon-btn.add-habit-btn:hover {
+    background: linear-gradient(135deg, var(--neon-orange-bright), var(--neon-orange));
+    transform: translateY(-3px);
+    box-shadow: 0 0 25px rgba(255, 107, 53, 0.6), 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.nav-icon-btn.add-habit-btn:active {
+    transform: translateY(-1px);
+}
+
 /* User Profile */
 .user-profile-container {
     position: relative;

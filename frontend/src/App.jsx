@@ -31,6 +31,7 @@ import {
   getToday,
   getCurrentMonthDates 
 } from './utils/dateHelpers';
+import { useLockBodyScroll } from './hooks/useLockBodyScroll';
 
 import './App.css';
 import './components/styles/CalendarOverlay.css';
@@ -47,6 +48,8 @@ function App() {
   const [editingHabit, setEditingHabit] = useState(null);
   const [currentDate] = useState(getToday());
   const [searchTerm, setSearchTerm] = useState('');
+
+  useLockBodyScroll(isCalendarOpen);
 
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [currentView, setCurrentView] = useState('week'); // 'week' or 'daily'
@@ -224,15 +227,12 @@ function App() {
         onSettingsClick={() => setIsSettingsPanelOpen(true)}
         onStopwatchClick={() => setIsStopwatchOpen(true)}
         onCalendarClick={() => setIsCalendarOpen(!isCalendarOpen)}
-        onAnalyticsClick={() => setIsAnalyticsOpen(true)}
+        onAddHabitClick={handleAddHabit}
         currentDate={currentDate}
       />
 
       <main className="app-main">
         <div className="app-container">
-          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
-            <AddHabitButton onClick={handleAddHabit} />
-          </div>
 
           {/* Active Habit Tracker */}
           <ActiveHabitTracker
@@ -326,11 +326,10 @@ function App() {
 
           <ProgressSection
             habits={habits}
-            weekDates={weekDates}
-            completionData={weekCompletionData}
             getCurrentStreak={getCurrentStreak}
             getLongestStreak={getLongestStreak}
             completions={completions}
+            onOpenAnalytics={() => setIsAnalyticsOpen(true)}
           />
 
           <div className="heatmaps-container">
@@ -383,10 +382,12 @@ function App() {
               subtasks={subtasks}
               subtaskCompletions={subtaskCompletions}
               dailyTasks={dailyTasks}
-              onDateClick={(date) => {
+              onDateDoubleClick={(date) => {
                 setSelectedDate(date);
-                // Don't close calendar - let day history modal overlay on top
               }}
+              onToggleTask={toggleDailyTask}
+              onUpdateTask={updateDailyTask}
+              onDeleteTask={deleteDailyTask}
             />
           </div>
         </div>

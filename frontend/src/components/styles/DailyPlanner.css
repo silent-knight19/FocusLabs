@@ -13,10 +13,10 @@
     align-items: center;
     margin-bottom: var(--spacing-xl);
     padding: var(--spacing-lg);
-    background: var(--bg-card);
+    background: #0A0A0A;
     border-radius: var(--radius-lg);
-    border: 1px solid var(--border-color);
-    box-shadow: var(--shadow-md);
+    border: 2px solid var(--neon-orange);
+    box-shadow: none;
     position: relative;
     /* For absolute positioning of children */
 }
@@ -28,8 +28,8 @@
 }
 
 .nav-btn {
-    background: var(--bg-hover);
-    border: 1px solid var(--border-color);
+    background: #111111;
+    border: 1px solid #262626;
     color: var(--text-primary);
     padding: var(--spacing-sm);
     border-radius: var(--radius-md);
@@ -45,7 +45,7 @@
 .nav-btn:hover {
     border-color: var(--neon-orange);
     color: var(--neon-orange);
-    box-shadow: 0 0 10px rgba(255, 107, 53, 0.2);
+    background: #171717;
     transform: translateY(-1px);
 }
 
@@ -81,8 +81,8 @@
 }
 
 .today-btn {
-    background: var(--bg-secondary);
-    border: 1px solid var(--border-color);
+    background: #111111;
+    border: 1px solid #262626;
     color: var(--text-primary);
     padding: var(--spacing-sm) var(--spacing-lg);
     border-radius: var(--radius-md);
@@ -100,7 +100,7 @@
 .today-btn:hover:not(.disabled) {
     border-color: var(--neon-orange);
     color: var(--neon-orange);
-    box-shadow: 0 0 10px rgba(255, 107, 53, 0.2);
+    background: #171717;
 }
 
 .today-btn.disabled {
@@ -110,12 +110,12 @@
 
 /* Overall progress section */
 .overall-progress {
-    background: var(--bg-card);
+    background: #0A0A0A;
     border-radius: var(--radius-lg);
     padding: var(--spacing-lg);
     margin-bottom: var(--spacing-xl);
-    border: 1px solid var(--border-color);
-    box-shadow: var(--shadow-sm);
+    border: 2px solid var(--neon-orange);
+    box-shadow: none;
 }
 
 .progress-stats {
@@ -139,7 +139,7 @@
 
 .overall-progress-bar {
     height: 12px;
-    background: var(--bg-secondary);
+    background: #111111;
     border-radius: 6px;
     overflow: hidden;
 }
@@ -164,9 +164,9 @@
 .empty-state {
     text-align: center;
     padding: var(--spacing-xxl);
-    background: var(--bg-card);
+    background: #0A0A0A;
     border-radius: var(--radius-lg);
-    border: 2px dashed var(--border-color);
+    border: 2px solid var(--neon-orange);
 }
 
 .empty-icon {
@@ -187,11 +187,11 @@
 
 /* Footer with quick stats */
 .planner-footer {
-    background: var(--bg-card);
+    background: #0A0A0A;
     border-radius: var(--radius-lg);
     padding: var(--spacing-lg);
-    border: 1px solid var(--border-color);
-    box-shadow: var(--shadow-sm);
+    border: 2px solid var(--neon-orange);
+    box-shadow: none;
 }
 
 .quick-stats {

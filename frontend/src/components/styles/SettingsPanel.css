@@ -163,6 +163,165 @@
     color: var(--accent-green);
 }
 
+/* Focus Time Delete UI */
+.focus-delete-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+.focus-delete-panel {
+    margin-top: var(--spacing-sm);
+    padding: var(--spacing-md);
+    border-radius: var(--radius-md);
+    background: var(--bg-card);
+    border: 1px dashed var(--border-color);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+}
+
+.focus-category-toggle {
+    display: flex;
+    gap: var(--spacing-sm);
+    flex-wrap: wrap;
+}
+
+.focus-category-toggle button {
+    flex: 0 0 auto;
+    padding: var(--spacing-xs) var(--spacing-md);
+    border-radius: 999px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-hover);
+    color: var(--text-secondary);
+    font-size: var(--font-size-sm);
+    cursor: pointer;
+    transition: all var(--transition-base);
+}
+
+.focus-category-toggle button:hover {
+    border-color: var(--border-hover);
+    color: var(--text-primary);
+}
+
+.focus-category-toggle button.active {
+    background: var(--accent-primary);
+    border-color: var(--accent-primary);
+    color: #fff;
+}
+
+.focus-range-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+}
+
+.focus-range-label {
+    font-size: var(--font-size-xs);
+    color: var(--text-secondary);
+}
+
+.focus-range-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--spacing-xs);
+}
+
+.focus-range-grid button {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    font-size: var(--font-size-sm);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+    background: var(--bg-hover);
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all var(--transition-base);
+}
+
+.focus-range-grid button:hover {
+    border-color: var(--accent-primary);
+}
+
+.focus-range-grid button.danger-outline {
+    border-color: var(--accent-red);
+    color: var(--accent-red);
+    background: transparent;
+}
+
+.focus-range-grid button.danger-outline:hover {
+    background: rgba(239, 68, 68, 0.1);
+}
+
+.focus-step-label {
+    display: block;
+    font-size: var(--font-size-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-secondary);
+    margin-bottom: var(--spacing-xs);
+}
+
+.focus-delete-row {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+}
+
+.focus-range-grid button.range-active,
+.focus-range-grid button.range-active:hover {
+    border-color: var(--accent-primary);
+    background: var(--accent-primary);
+    color: white;
+}
+
+/* Ensure the danger-outline style doesn't override the active state */
+.focus-range-grid button.danger-outline.range-active,
+.focus-range-grid button.danger-outline.range-active:hover {
+    border-color: var(--accent-primary);
+    background: var(--accent-primary);
+    color: white;
+}
+
+.danger.full-width {
+    width: 100%;
+}
+
+.focus-confirm-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 40;
+}
+
+.focus-confirm-modal {
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-lg);
+    max-width: 380px;
+    width: 90%;
+    box-shadow: 0 18px 45px rgba(15, 23, 42, 0.8);
+}
+
+.focus-confirm-modal h4 {
+    margin: 0 0 var(--spacing-sm);
+    font-size: var(--font-size-lg);
+}
+
+.focus-confirm-modal p {
+    margin: 0 0 var(--spacing-md);
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+}
+
+.focus-confirm-actions {
+    display: flex;
+    gap: var(--spacing-sm);
+    justify-content: flex-end;
+}
+
 /* Mobile responsive */
 @media (max-width: 768px) {
     .setting-item {

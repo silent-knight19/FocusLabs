@@ -1,6 +1,8 @@
-import React, { useMemo } from 'react';
-import { X, CheckCircle, Circle, Clock, TrendingUp, Target, ListTodo } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import { X, CheckCircle, Circle, Clock, TrendingUp, Target, ListTodo, ChevronDown, FileText } from 'lucide-react';
+import { useHabitNotes } from '../hooks/useHabitNotes';
 import { formatDateKey } from '../utils/dateHelpers';
+import { useLockBodyScroll } from '../hooks/useLockBodyScroll';
 import './styles/DayHistoryModal.css';
 
 /**
@@ -16,7 +18,17 @@ export function DayHistoryModal({
   dailyTasks = [],
   onClose 
 }) {
+  useLockBodyScroll(true);
   const dateStr = formatDateKey(date);
+  const { getNote, hasNote } = useHabitNotes();
+  const [expandedHabits, setExpandedHabits] = useState({});
+
+  const toggleHabit = (habitId) => {
+    setExpandedHabits(prev => ({
+      ...prev,
+      [habitId]: !prev[habitId]
+    }));
+  };
 
   // Get all lap data for this day
   const dayData = useMemo(() => {
@@ -24,7 +36,7 @@ export function DayHistoryModal({
       const lapHistory = JSON.parse(localStorage.getItem('habitgrid_lap_history') || '[]');
       const dayLaps = lapHistory.filter(lap => {
         const lapDateKey = lap.date ? formatDateKey(new Date(lap.date)) : null;
-        return lapDateKey === dateStr;
+        return lapDateKey === dateStr && (lap.time || 0) >= 60000;
       });
 
       // Group by category
@@ -184,7 +196,10 @@ export function DayHistoryModal({
 
                   return (
                     <div key={habit.id} className="habit-item">
-                      <div className="habit-header">
+                      <div 
+                        className="habit-header clickable" 
+                        onClick={() => toggleHabit(habit.id)}
+                      >
                         <div className="habit-info">
                           {isCompleted ? (
                             <CheckCircle size={20} color="var(--neon-orange)" />
@@ -206,48 +221,70 @@ export function DayHistoryModal({
                           {habit.timeAllocation && (
                             <span className="habit-time">{habit.timeAllocation}</span>
                           )}
+                          <ChevronDown 
+                            size={20} 
+                            className={`expand-chevron ${expandedHabits[habit.id] ? 'expanded' : ''}`}
+                          />
                         </div>
                       </div>
 
-                      {/* Static Subtasks */}
-                      {habitSubtasks.length > 0 && (
-                        <div className="subtasks-container">
-                          <div className="subtasks-header">Static Subtasks</div>
-                          {habitSubtasks.map((subtask) => {
-                            const subtaskCompleted = subtaskCompletions[habit.id]?.[dateStr]?.[subtask.id] === true;
-                            return (
-                              <div key={subtask.id} className="subtask-item">
-                                {subtaskCompleted ? (
-                                  <CheckCircle size={16} color="var(--accent-green)" />
-                                ) : (
-                                  <Circle size={16} color="var(--text-secondary)" />
-                                )}
-                                <span className={`subtask-text ${subtaskCompleted ? 'completed' : ''}`}>
-                                  {subtask.title}
-                                </span>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      )}
-
-                      {/* Daily Tasks */}
-                      {habitDailyTasks.length > 0 && (
-                        <div className="subtasks-container">
-                          <div className="subtasks-header">Daily Tasks</div>
-                          {habitDailyTasks.map((task) => (
-                            <div key={task.id} className="subtask-item">
-                              {task.completed ? (
-                                <CheckCircle size={16} color="var(--accent-green)" />
-                              ) : (
-                                <Circle size={16} color="var(--text-secondary)" />
-                              )}
-                              <span className={`subtask-text ${task.completed ? 'completed' : ''}`}>
-                                {task.title}
-                              </span>
+                      {/* Collapsible Content */}
+                      {expandedHabits[habit.id] && (
+                        <>
+                          {/* Static Subtasks */}
+                          {habitSubtasks.length > 0 && (
+                            <div className="subtasks-container">
+                              <div className="subtasks-header">Static Subtasks</div>
+                              {habitSubtasks.map((subtask) => {
+                                const subtaskCompleted = subtaskCompletions[habit.id]?.[dateStr]?.[subtask.id] === true;
+                                return (
+                                  <div key={subtask.id} className="subtask-item">
+                                    {subtaskCompleted ? (
+                                      <CheckCircle size={16} color="var(--accent-green)" />
+                                    ) : (
+                                      <Circle size={16} color="var(--text-secondary)" />
+                                    )}
+                                    <span className={`subtask-text ${subtaskCompleted ? 'completed' : ''}`}>
+                                      {subtask.title}
+                                    </span>
+                                  </div>
+                                );
+                              })}
                             </div>
-                          ))}
-                        </div>
+                          )}
+
+                          {/* Daily Tasks */}
+                          {habitDailyTasks.length > 0 && (
+                            <div className="subtasks-container">
+                              <div className="subtasks-header">Daily Tasks</div>
+                              {habitDailyTasks.map((task) => (
+                                <div key={task.id} className="subtask-item">
+                                  {task.completed ? (
+                                    <CheckCircle size={16} color="var(--accent-green)" />
+                                  ) : (
+                                    <Circle size={16} color="var(--text-secondary)" />
+                                  )}
+                                  <span className={`subtask-text ${task.completed ? 'completed' : ''}`}>
+                                    {task.title}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
+                          {/* Notes Section */}
+                          {hasNote(habit.id, dateStr) && (
+                            <div className="notes-container">
+                              <div className="notes-header">
+                                <FileText size={16} />
+                                <span>Note</span>
+                              </div>
+                              <div className="notes-content">
+                                {getNote(habit.id, dateStr)}
+                              </div>
+                            </div>
+                          )}
+                        </>
                       )}
                     </div>
                   );

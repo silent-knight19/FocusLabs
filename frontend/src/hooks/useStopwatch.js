@@ -114,17 +114,28 @@ export function useStopwatch() {
   };
 
   const lap = (category = 'other') => {
+    // We store both:
+    // - time: the duration of this lap since the previous lap (for display)
+    // - totalTime: the absolute stopwatch time when this lap was recorded (for history/derivations)
+
+    // Laps array is stored with newest first. The previous lap (if any) is at index 0.
+    const previousTotal = laps[0]?.totalTime ?? 0;
+    const lapDuration = time - previousTotal;
+
     const newLap = {
       id: Date.now().toString(),
-      time: time,
+      time: lapDuration,
+      totalTime: time,
       label: `Lap ${laps.length + 1}`,
       category: category, // 'study', 'prod', 'self', 'other'
       date: new Date().toISOString() // Store date for history
     };
+
     setLaps([newLap, ...laps]);
     
     // Save to permanent history
     const history = JSON.parse(localStorage.getItem('habitgrid_lap_history') || '[]');
+    history.push(newLap);
     localStorage.setItem('habitgrid_lap_history', JSON.stringify(history));
     window.dispatchEvent(new Event('habit-data-updated'));
   };

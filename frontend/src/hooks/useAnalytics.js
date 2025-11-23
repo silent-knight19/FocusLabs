@@ -9,7 +9,8 @@ export function useAnalytics() {
   const getLapHistory = () => {
     try {
       const history = JSON.parse(localStorage.getItem('habitgrid_lap_history') || '[]');
-      return history;
+      // Filter out laps less than 60 seconds (60000 ms)
+      return history.filter(lap => (lap.time || 0) > 60000);
     } catch {
       return [];
     }
@@ -133,14 +134,14 @@ export function useAnalytics() {
   };
 
   /**
-   * Get all categories with their totals for today
+   * Get all categories with their totals for a specific time range
    */
-  const getCategorySummary = () => {
+  const getCategorySummary = (dateRange = 'day') => {
     const categories = ['study', 'prod', 'self', 'other'];
     return categories.map(cat => ({
       category: cat,
-      totalTime: getTotalTime(cat, 'day'),
-      sessions: getSessionCount(cat, 'day')
+      totalTime: getTotalTime(cat, dateRange),
+      sessions: getSessionCount(cat, dateRange)
     }));
   };
 

@@ -1,0 +1,132 @@
+/* ===== Stopwatch Controls - Minimal Design ===== */
+.stopwatch-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 12px;
+    background: #111111;
+    border: 1px solid #262626;
+    border-radius: 8px;
+    margin-top: 15px;
+}
+
+.stopwatch-time-display {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-right: 12px;
+    border-right: 1px solid #262626;
+    color: var(--neon-orange);
+}
+
+.stopwatch-time {
+    font-family: 'Courier New', monospace;
+    font-size: 0.95rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    min-width: 60px;
+}
+
+.stopwatch-actions {
+    display: flex;
+    gap: 6px;
+}
+
+.stopwatch-btn {
+    padding: 6px 10px;
+    background: #171717;
+    border: 1px solid #333;
+    border-radius: 6px;
+    color: var(--text-primary);
+    font-weight: 600;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    min-width: 36px;
+}
+
+.stopwatch-btn:hover:not(:disabled) {
+    background: #1F1F1F;
+    border-color: var(--neon-orange);
+    color: var(--neon-orange);
+}
+
+.stopwatch-btn.start {
+    background: var(--neon-orange);
+    border-color: var(--neon-orange);
+    color: white;
+}
+
+.stopwatch-btn.start:hover {
+    background: #ff7a4d;
+    border-color: #ff7a4d;
+    color: white;
+}
+
+.stopwatch-btn.stop {
+    background: #dc2626;
+    border-color: #dc2626;
+    color: white;
+}
+
+.stopwatch-btn.stop:hover {
+    background: #ef4444;
+    border-color: #ef4444;
+    color: white;
+}
+
+.stopwatch-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+.active-habit-actions {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: nowrap;
+    margin-top: 0;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .stopwatch-controls {
+        flex-direction: column;
+        gap: 8px;
+        width: 100%;
+        margin-right: 0;
+        margin-bottom: 12px;
+    }
+
+    .stopwatch-time-display {
+        border-right: none;
+        border-bottom: 1px solid #262626;
+        padding-right: 0;
+        padding-bottom: 8px;
+        width: 100%;
+        justify-content: center;
+    }
+
+    .stopwatch-actions {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .stopwatch-btn {
+        flex: 1;
+    }
+
+    .active-habit-actions {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .completion-btn {
+        width: 100%;
+    }
+}

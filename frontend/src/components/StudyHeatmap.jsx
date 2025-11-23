@@ -6,19 +6,20 @@ import './styles/StudyHeatmap.css';
  * Minimum 2 hours to show color intensity effect
  */
 export function StudyHeatmap({ dataVersion = 0 }) {
-  // Get stopwatch history from localStorage
-  const getStopwatchHistory = () => {
+  // Get lap history from localStorage
+  const getLapHistory = () => {
     try {
-      const history = JSON.parse(localStorage.getItem('habitgrid_stopwatch_history') || '{}');
-      return history;
+      const history = JSON.parse(localStorage.getItem('habitgrid_lap_history') || '[]');
+      // Filter out laps less than 60 seconds
+      return history.filter(lap => (lap.time || 0) > 60000);
     } catch {
-      return {};
+      return [];
     }
   };
 
   // Generate heatmap data for the current year (Jan - Dec)
   const heatmapData = useMemo(() => {
-    const history = getStopwatchHistory();
+    const history = getLapHistory();
     const weeks = [];
     const today = new Date();
     const currentYear = today.getFullYear();
@@ -27,17 +28,10 @@ export function StudyHeatmap({ dataVersion = 0 }) {
     const startDate = new Date(currentYear, 0, 1); // Jan 1
     
     // Adjust to start on the Monday of that week
-    // getDay(): 0=Sun, 1=Mon... 
-    // We want 1=Mon to be index 0. 
-    // If Jan 1 is Mon (1), offset is 0.
-    // If Jan 1 is Tue (2), offset is 1.
-    // If Jan 1 is Sun (0), offset is 6.
     const dayOfWeek = startDate.getDay(); // 0-6 (Sun-Sat)
     const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
     startDate.setDate(startDate.getDate() - daysToMonday);
     
-    // Calculate total weeks for the year (52 or 53)
-    // We'll just generate 53 weeks to be safe and cover the whole year
     const totalWeeks = 53;
     
     // Generate weeks
@@ -50,34 +44,26 @@ export function StudyHeatmap({ dataVersion = 0 }) {
         
         // Only show days within the current year
         if (currentDate.getFullYear() !== currentYear) {
-           // If it's before Jan 1 or after Dec 31, show empty
-           // But we want to keep the grid structure, so we push a placeholder or null
-           // GitHub shows empty squares for days outside the year in the grid
-           // We'll push null but handle it in rendering to show an empty cell if desired, 
-           // or just show it as 0 hours if we want the grid to look complete.
-           // User said "name of months should start from january".
-           // Let's just show 0 hours for padding days to keep the grid shape nice.
-           // Actually, GitHub hides days from previous/next year in the first/last columns usually?
-           // Let's just render them as empty/invisible if they are not in the year.
-           // But for "Jan 1 starts on Wed", Mon/Tue should be invisible.
            if (currentDate.getFullYear() < currentYear) {
-             weekData.push(null); // Before year start
+             weekData.push(null);
              continue;
            }
            if (currentDate.getFullYear() > currentYear) {
-             weekData.push(null); // After year end
+             weekData.push(null);
              continue;
            }
         }
         
-        // Don't show future dates (optional, but user wants "current year", so maybe show empty cells for future?)
-        // User didn't specify, but usually "heatmap" implies past data. 
-        // If I show full year, future dates should be empty cells.
-        // I'll allow future dates to be rendered as empty cells (0 hours).
-        
         const dateKey = currentDate.toISOString().split('T')[0];
-        const milliseconds = history[dateKey] || 0;
-        const hours = milliseconds / (1000 * 60 * 60);
+        
+        // Calculate Study Hours
+        const dayLaps = history.filter(lap => {
+          const lapDate = new Date(lap.date).toISOString().split('T')[0];
+          return lapDate === dateKey && lap.category === 'study';
+        });
+        
+        const totalMs = dayLaps.reduce((sum, lap) => sum + (lap.time || 0), 0);
+        const hours = totalMs / (1000 * 60 * 60);
         
         weekData.push({
           date: currentDate,
@@ -119,8 +105,19 @@ export function StudyHeatmap({ dataVersion = 0 }) {
 
   // Calculate statistics
   const stats = useMemo(() => {
-    const history = getStopwatchHistory();
-    const allHours = Object.values(history).map(ms => ms / (1000 * 60 * 60));
+    const history = getLapHistory();
+    // Filter relevant laps first
+    const relevantLaps = history.filter(lap => lap.category === 'study');
+
+    // Group by date to calculate daily totals
+    const dailyTotals = {};
+    
+    relevantLaps.forEach(lap => {
+      const dateKey = new Date(lap.date).toISOString().split('T')[0];
+      dailyTotals[dateKey] = (dailyTotals[dateKey] || 0) + (lap.time || 0);
+    });
+
+    const allHours = Object.values(dailyTotals).map(ms => ms / (1000 * 60 * 60));
     const totalHours = allHours.reduce((sum, h) => sum + h, 0);
     const daysWithActivity = allHours.filter(h => h > 0).length;
     const maxHours = Math.max(...allHours, 0);

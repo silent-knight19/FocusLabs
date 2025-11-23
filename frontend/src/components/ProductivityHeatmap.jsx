@@ -10,7 +10,8 @@ export function ProductivityHeatmap({ habits = [], completions = {}, dataVersion
   const getLapHistory = () => {
     try {
       const history = JSON.parse(localStorage.getItem('habitgrid_lap_history') || '[]');
-      return history;
+      // Filter out laps less than 60 seconds
+      return history.filter(lap => (lap.time || 0) > 60000);
     } catch {
       return [];
     }
@@ -99,16 +100,16 @@ export function ProductivityHeatmap({ habits = [], completions = {}, dataVersion
     return 5; // Maximum intensity for 6+ hours
   };
 
-  // Get color based on intensity level using GitHub green theme
+  // Get color based on intensity level using green theme
   const getColor = (hours) => {
     const level = getIntensityLevel(hours);
     const colors = {
-      0: 'var(--heatmap-empty)',
-      1: 'var(--github-level-1)',
-      2: 'var(--github-level-2)',
-      3: 'var(--github-level-3)',
-      4: 'var(--github-level-4)',
-      5: 'var(--github-level-5)'
+      0: 'var(--heatmap-green-empty)',
+      1: 'var(--heatmap-green-level-1)',
+      2: 'var(--heatmap-green-level-2)',
+      3: 'var(--heatmap-green-level-3)',
+      4: 'var(--heatmap-green-level-4)',
+      5: 'var(--heatmap-green-level-5)'
     };
     return colors[level];
   };
@@ -189,15 +190,15 @@ export function ProductivityHeatmap({ habits = [], completions = {}, dataVersion
         <h3 className="heatmap-title-green">Productivity & Growth</h3>
         <div className="heatmap-stats">
           <div className="stat-item">
-            <span className="stat-value-green">{stats.total}h</span>
+            <span className="stat-value">{stats.total}h</span>
             <span className="stat-label">Total</span>
           </div>
           <div className="stat-item">
-            <span className="stat-value-green">{stats.days}</span>
+            <span className="stat-value">{stats.days}</span>
             <span className="stat-label">Days</span>
           </div>
           <div className="stat-item">
-            <span className="stat-value-green">{stats.max}h</span>
+            <span className="stat-value">{stats.max}h</span>
             <span className="stat-label">Max</span>
           </div>
         </div>
@@ -265,12 +266,12 @@ export function ProductivityHeatmap({ habits = [], completions = {}, dataVersion
         <div className="heatmap-legend">
           <span className="legend-label">Less</span>
           <div className="legend-cells">
-            <div className="legend-cell green-level-0" style={{ backgroundColor: 'var(--heatmap-empty)' }} />
-            <div className="legend-cell green-level-1" style={{ backgroundColor: 'var(--github-level-1)' }} />
-            <div className="legend-cell green-level-2" style={{ backgroundColor: 'var(--github-level-2)' }} />
-            <div className="legend-cell green-level-3" style={{ backgroundColor: 'var(--github-level-3)' }} />
-            <div className="legend-cell green-level-4" style={{ backgroundColor: 'var(--github-level-4)' }} />
-            <div className="legend-cell green-level-5" style={{ backgroundColor: 'var(--github-level-5)' }} />
+            <div className="legend-cell green-level-0" style={{ backgroundColor: 'var(--heatmap-green-empty)' }} />
+            <div className="legend-cell green-level-1" style={{ backgroundColor: 'var(--heatmap-green-level-1)' }} />
+            <div className="legend-cell green-level-2" style={{ backgroundColor: 'var(--heatmap-green-level-2)' }} />
+            <div className="legend-cell green-level-3" style={{ backgroundColor: 'var(--heatmap-green-level-3)' }} />
+            <div className="legend-cell green-level-4" style={{ backgroundColor: 'var(--heatmap-green-level-4)' }} />
+            <div className="legend-cell green-level-5" style={{ backgroundColor: 'var(--heatmap-green-level-5)' }} />
           </div>
           <span className="legend-label">More</span>
         </div>

@@ -4,9 +4,11 @@
     left: 0;
     width: 100vw;
     height: 100vh;
-    background: rgba(10, 10, 15, 0.8);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    background: radial-gradient(circle at top left, rgba(255, 255, 255, 0.08), transparent 55%),
+        radial-gradient(circle at bottom right, rgba(56, 189, 248, 0.12), transparent 55%),
+        rgba(10, 10, 15, 0.78);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
     z-index: 1100;
     /* Higher than stopwatch if needed, or same */
     display: flex;
@@ -16,13 +18,15 @@
 }
 
 .calendar-modal {
-    width: 90%;
-    max-width: 1000px;
-    height: 85vh;
-    background: var(--bg-secondary);
+    width: 95%;
+    max-width: 1200px;
+    height: 90vh;
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.72), rgba(15, 23, 42, 0.55));
     border-radius: var(--radius-lg);
-    border: 1px solid var(--border-color);
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    box-shadow: 0 24px 60px rgba(15, 23, 42, 0.95);
+    backdrop-filter: blur(26px) saturate(140%);
+    -webkit-backdrop-filter: blur(26px) saturate(140%);
     position: relative;
     overflow: hidden;
     display: flex;
@@ -34,7 +38,7 @@
     top: 15px;
     right: 15px;
     z-index: 10;
-    background: rgba(255, 255, 255, 0.1);
+    background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.08));
     border: none;
     width: 32px;
     height: 32px;
@@ -49,8 +53,8 @@
 }
 
 .calendar-modal .close-btn:hover {
-    background: rgba(255, 255, 255, 0.2);
-    transform: scale(1.1);
+    background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.12));
+    transform: scale(1.08) translateY(-1px);
 }
 
 /* Ensure CalendarView fits inside */

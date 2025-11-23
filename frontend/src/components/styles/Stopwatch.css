@@ -18,7 +18,7 @@
     width: 100%;
     height: 100%;
     max-width: none;
-    background: rgba(255, 255, 255, 0.05);
+    background: linear-gradient(135deg, rgba(20, 20, 30, 0.95), rgba(10, 10, 20, 0.95));
     border-radius: 0;
     border: none;
     box-shadow: none;
@@ -62,17 +62,15 @@
 
 .stopwatch-display {
     font-size: 8vw;
-    /* Responsive font size */
     font-weight: 200;
     color: white;
     text-align: center;
-    margin: auto;
-    /* Center vertically */
+    margin: auto 0;
     font-variant-numeric: tabular-nums;
     display: flex;
     justify-content: center;
     align-items: baseline;
-    text-shadow: 0 0 30px rgba(255, 255, 255, 0.3);
+    text-shadow: 0 0 40px rgba(255, 107, 53, 0.5);
     padding: 40px 0;
 }
 
@@ -86,60 +84,141 @@
     color: var(--text-secondary);
 }
 
-.stopwatch-controls {
+/* Alarm Notification */
+.alarm-notification {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    background: rgba(255, 59, 48, 0.2);
+    border: 2px solid #ff3b30;
+    border-radius: 12px;
+    padding: 15px 25px;
+    margin: 20px auto;
+    animation: pulse 1s infinite;
+}
+
+.alarm-icon {
+    font-size: 2rem;
+    animation: shake 0.5s infinite;
+}
+
+.alarm-text {
+    color: white;
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+.alarm-dismiss-btn {
+    background: #ff3b30;
+    color: white;
+    border: none;
+    padding: 8px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.alarm-dismiss-btn:hover {
+    background: #ff5548;
+    transform: scale(1.05);
+}
+
+@keyframes shake {
+
+    0%,
+    100% {
+        transform: rotate(-5deg);
+    }
+
+    50% {
+        transform: rotate(5deg);
+    }
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.8;
+    }
+}
+
+/* Category Selector - Button Group */
+.category-selector {
     display: flex;
     flex-direction: column;
     align-items: center;
-    /* Added to center buttons */
-    gap: 20px;
+    gap: 12px;
+    margin-bottom: 25px;
+}
+
+.category-label {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.category-buttons {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.category-btn {
+    padding: 10px 20px;
+    border: 2px solid transparent;
+    border-radius: 25px;
+    background: rgba(255, 255, 255, 0.05);
+    color: white;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.category-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(-2px);
+}
+
+.category-btn.active {
+    font-weight: 600;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.stopwatch-controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 40px;
     margin-bottom: 40px;
     padding: 0 20px;
 }
 
-.category-selector {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    color: white;
-    font-size: 1rem;
-}
-
-.category-select {
-    flex: 1;
-    padding: 8px 12px;
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 8px;
-    color: white;
-    font-size: 1rem;
-    cursor: pointer;
-}
-
-.category-select:focus {
-    outline: none;
-    border-color: var(--neon-orange);
-}
-
-.control-buttons {
-    display: flex;
-    justify-content: center;
-    gap: 40px;
-}
-
 .control-btn {
-    width: 80px;
-    height: 80px;
+    width: 90px;
+    height: 90px;
     border-radius: 50%;
     border: none;
     font-size: 16px;
-    font-weight: 500;
+    font-weight: 600;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.3s ease;
     display: flex;
     align-items: center;
     justify-content: center;
     position: relative;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
 }
 
 /* Double ring effect */
@@ -153,25 +232,40 @@
     border-radius: 50%;
     border: 2px solid currentColor;
     opacity: 0.3;
+    transition: all 0.3s ease;
+}
+
+.control-btn:hover::after {
+    top: -6px;
+    left: -6px;
+    right: -6px;
+    bottom: -6px;
+    opacity: 0.5;
 }
 
 .control-btn.primary.start {
-    background: rgba(52, 199, 89, 0.2);
-    color: #34c759;
+    background: linear-gradient(135deg, #34c759, #30d158);
+    color: white;
 }
 
 .control-btn.primary.stop {
-    background: rgba(255, 59, 48, 0.2);
-    color: #ff3b30;
+    background: linear-gradient(135deg, #ff3b30, #ff6259);
+    color: white;
 }
 
 .control-btn.secondary {
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.15);
     color: white;
+    border: 2px solid rgba(255, 255, 255, 0.3);
 }
 
 .control-btn:active {
     transform: scale(0.95);
+}
+
+.control-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
 }
 
 .laps-list {
@@ -244,4 +338,248 @@
 .laps-list::-webkit-scrollbar-thumb {
     background: rgba(255, 255, 255, 0.2);
     border-radius: 2px;
+}
+
+/* Alarm Settings */
+.alarm-settings {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Alarm Enable Button */
+.alarm-enable-btn {
+    position: relative;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1.5px solid rgba(255, 255, 255, 0.15);
+    padding: 10px;
+    border-radius: 12px;
+    color: rgba(255, 255, 255, 0.4);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s;
+}
+
+.alarm-enable-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.25);
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.alarm-enable-btn.enabled {
+    background: rgba(255, 107, 53, 0.15);
+    border-color: var(--neon-orange);
+    color: var(--neon-orange);
+    box-shadow: 0 0 15px rgba(255, 107, 53, 0.3);
+}
+
+.alarm-enable-btn.enabled:hover {
+    background: rgba(255, 107, 53, 0.2);
+    box-shadow: 0 0 20px rgba(255, 107, 53, 0.4);
+}
+
+/* Enabled indicator dot */
+.alarm-enabled-dot {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 8px;
+    height: 8px;
+    background: var(--neon-orange);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        box-shadow: 0 0 4px var(--neon-orange);
+    }
+
+    50% {
+        box-shadow: 0 0 10px var(--neon-orange), 0 0 16px var(--neon-orange);
+    }
+}
+
+/* Alarm Settings Button (shows duration) */
+.alarm-settings-btn {
+    background: rgba(255, 107, 53, 0.1);
+    border: 1px solid var(--neon-orange);
+    padding: 8px 12px;
+    border-radius: 20px;
+    color: var(--neon-orange);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s;
+}
+
+.alarm-settings-btn:hover {
+    background: rgba(255, 107, 53, 0.2);
+    box-shadow: 0 0 10px rgba(255, 107, 53, 0.2);
+}
+
+.alarm-input-popup {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    background: #1a1a2e;
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 16px;
+    width: 240px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+    z-index: 100;
+    animation: slideDown 0.2s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.popup-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.popup-close {
+    background: transparent;
+    border: none;
+    color: var(--text-tertiary);
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    display: flex;
+}
+
+.popup-close:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+.input-group {
+    position: relative;
+    display: flex;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.alarm-input {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 10px 12px;
+    color: white;
+    font-size: 1.1rem;
+    width: 100%;
+    font-weight: 600;
+}
+
+.alarm-input:focus {
+    outline: none;
+    border-color: var(--neon-orange);
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.input-suffix {
+    position: absolute;
+    right: 12px;
+    color: var(--text-tertiary);
+    font-size: 0.9rem;
+    pointer-events: none;
+}
+
+.quick-presets {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+}
+
+.preset-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid transparent;
+    border-radius: 6px;
+    padding: 6px 0;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.preset-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Updated Notification Styling */
+.alarm-notification {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: rgba(255, 59, 48, 0.15);
+    border: 1px solid #ff3b30;
+    border-radius: 16px;
+    padding: 16px 24px;
+    margin: 20px auto;
+    animation: pulse 1s infinite;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 8px 32px rgba(255, 59, 48, 0.2);
+    max-width: 400px;
+}
+
+.alarm-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.alarm-title {
+    color: #ff3b30;
+    font-weight: 700;
+    font-size: 1.1rem;
+    line-height: 1.2;
+}
+
+.alarm-subtitle {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.9rem;
+}
+
+.alarm-dismiss-btn {
+    background: #ff3b30;
+    color: white;
+    border: none;
+    padding: 8px 20px;
+    border-radius: 20px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 4px 12px rgba(255, 59, 48, 0.4);
+}
+
+.alarm-dismiss-btn:hover {
+    background: #ff5548;
+    transform: scale(1.05);
+    box-shadow: 0 6px 16px rgba(255, 59, 48, 0.6);
 }

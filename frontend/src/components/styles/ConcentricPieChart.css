@@ -1,0 +1,17 @@
+/* Concentric Pie Chart Styling */
+.concentric-pie-chart {
+    width: 100%;
+    max-width: 330px; /* ~10% larger */
+    margin: 0 auto;
+    position: relative;
+    padding: var(--spacing-lg) 0;
+}
+
+/* Tooltip custom styling is applied inline in component */
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .concentric-pie-chart {
+        max-width: 286px; /* ~10% larger */
+    }
+}

@@ -1,5 +1,9 @@
 import React, { useState } from 'react';
+import { FileText } from 'lucide-react';
 import { DailyTaskItem } from './DailyTaskItem';
+import { HabitNoteModal } from './HabitNoteModal';
+import { useHabitNotes } from '../hooks/useHabitNotes';
+import { formatDateKey } from '../utils/dateHelpers';
 import './styles/DailyTaskPanel.css';
 
 /**
@@ -18,6 +22,12 @@ export function DailyTaskPanel({
 }) {
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [isExpanded, setIsExpanded] = useState(true);
+  const [isNoteModalOpen, setIsNoteModalOpen] = useState(false);
+  
+  const { getNote, saveNote, hasNote } = useHabitNotes();
+  const dateKey = formatDateKey(date);
+  const currentNote = getNote(habit.id, dateKey);
+  const noteExists = hasNote(habit.id, dateKey);
 
   const handleAdd = () => {
     if (newTaskTitle.trim()) {
@@ -34,6 +44,10 @@ export function DailyTaskPanel({
     }
   };
 
+  const handleSaveNote = (noteText) => {
+    saveNote(habit.id, dateKey, noteText);
+  };
+
   return (
     <div className="daily-task-panel">
       <div className="panel-header" onClick={() => setIsExpanded(!isExpanded)}>
@@ -42,7 +56,7 @@ export function DailyTaskPanel({
             className="habit-color-dot"
             style={{ backgroundColor: habit.color }}
           />
-          <h3 className="habit-name">{habit.name}</h3>
+          <h2 className="habit-name">{habit.name}</h2>
           {habit.startTime && (
             <span className="habit-time">
               {habit.startTime}
@@ -51,6 +65,17 @@ export function DailyTaskPanel({
           )}
         </div>
         <div className="header-right">
+          <button
+            type="button"
+            className={`note-icon-btn ${noteExists ? 'has-note' : ''}`}
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsNoteModalOpen(true);
+            }}
+            title={noteExists ? 'View/Edit Note' : 'Add Note'}
+          >
+            <FileText size={18} />
+          </button>
           <span className="task-count">
             {tasks.filter(t => t.completed).length}/{tasks.length} tasks
           </span>
@@ -109,6 +134,15 @@ export function DailyTaskPanel({
           </div>
         </div>
       )}
+
+      <HabitNoteModal
+        isOpen={isNoteModalOpen}
+        onClose={() => setIsNoteModalOpen(false)}
+        habitName={habit.name}
+        date={dateKey}
+        initialNote={currentNote}
+        onSave={handleSaveNote}
+      />
     </div>
   );
 }
