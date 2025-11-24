@@ -158,7 +158,8 @@ export function CalendarView({ habits, completions, subtasks = [], subtaskComple
   const [searchTerm, setSearchTerm] = useState('');
   const [matchingDates, setMatchingDates] = useState(new Set());
   const [searchSuggestions, setSearchSuggestions] = useState([]);
-
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  
   const [selectedDate, setSelectedDate] = useState(new Date());
 
   // Confirmation Modal State

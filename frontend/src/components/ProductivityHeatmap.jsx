@@ -88,7 +88,7 @@ export function ProductivityHeatmap({ habits = [], completions = {}, dataVersion
     }
     
     return weeks;
-  }, [dataVersion, habits, completions]);
+  }, [dataVersion, history, habits, completions]);
 
   // Calculate intensity level based on hours (same logic as StudyHeatmap)
   const getIntensityLevel = (hours) => {

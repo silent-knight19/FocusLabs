@@ -5,7 +5,7 @@ import { useLockBodyScroll } from '../hooks/useLockBodyScroll';
 import './styles/Stopwatch.css';
 import './styles/StopwatchAlarmRedesign.css';
 
-export function Stopwatch({ isOpen, onClose }) {
+export function Stopwatch({ isOpen, onClose, onDataUpdate }) {
   useLockBodyScroll(isOpen);
   const {
     time,
@@ -279,7 +279,10 @@ export function Stopwatch({ isOpen, onClose }) {
         <div className="stopwatch-controls">
           <button 
             className={`control-btn secondary ${isRunning ? 'lap' : 'reset'}`}
-            onClick={isRunning ? () => lap(selectedCategory) : reset}
+            onClick={isRunning ? () => {
+              lap(selectedCategory);
+              if (onDataUpdate) onDataUpdate();
+            } : reset}
           >
             {isRunning ? 'Lap' : 'Reset'}
           </button>

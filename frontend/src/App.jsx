@@ -240,9 +240,9 @@ function App() {
 
   // Force re-render of heatmaps when data changes
   const [dataVersion, setDataVersion] = useState(0);
-
+  const handleDataUpdate = () => setDataVersion(v => v + 1);
+  // Keep listener for external events if any other parts dispatch
   useEffect(() => {
-    const handleDataUpdate = () => setDataVersion(v => v + 1);
     window.addEventListener('habit-data-updated', handleDataUpdate);
     return () => window.removeEventListener('habit-data-updated', handleDataUpdate);
   }, []);
@@ -391,6 +391,7 @@ function App() {
       <Stopwatch 
         isOpen={isStopwatchOpen}
         onClose={() => setIsStopwatchOpen(false)}
+        onDataUpdate={handleDataUpdate}
       />
 
       {/* Analytics Modal */}

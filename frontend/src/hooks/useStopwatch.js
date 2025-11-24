@@ -17,6 +17,7 @@ export function useStopwatch() {
   const [time, setTime] = useState(0);
   const [isRunning, setIsRunning] = useState(false);
   const [startTime, setStartTime] = useState(null);
+  const [lastLapTime, setLastLapTime] = useState(0); // Track time of last lap to calculate duration
   
   const requestRef = useRef();
   const previousTimeRef = useRef();
@@ -25,7 +26,7 @@ export function useStopwatch() {
   useEffect(() => {
     const savedState = localStorage.getItem('stopwatch_active_state');
     if (savedState) {
-      const { savedTime, savedIsRunning, savedLastActive } = JSON.parse(savedState);
+      const { savedTime, savedIsRunning, savedLastActive, savedLastLapTime } = JSON.parse(savedState);
       
       if (savedIsRunning) {
         // Calculate time elapsed while away
@@ -38,6 +39,11 @@ export function useStopwatch() {
         setTime(savedTime);
         setIsRunning(false);
       }
+      
+      // Restore lastLapTime
+      if (savedLastLapTime !== undefined) {
+        setLastLapTime(savedLastLapTime);
+      }
     }
   }, []);
 
@@ -46,9 +52,10 @@ export function useStopwatch() {
     localStorage.setItem('stopwatch_active_state', JSON.stringify({
       savedTime: time,
       savedIsRunning: isRunning,
-      savedLastActive: Date.now()
+      savedLastActive: Date.now(),
+      savedLastLapTime: lastLapTime
     }));
-  }, [time, isRunning]);
+  }, [time, isRunning, lastLapTime]);
 
   const animate = useCallback((timestamp) => {
     if (previousTimeRef.current != undefined) {
@@ -84,72 +91,36 @@ export function useStopwatch() {
     setIsRunning(false);
     setTime(0);
     setStartTime(null);
+    setLastLapTime(0); // Reset last lap time
   };
 
   const lap = (category = 'other') => {
+    // Calculate the duration of this session (time since last lap or since start)
+    const sessionDuration = time - lastLapTime;
+    
+    // Only save if there's meaningful time (at least 1 second)
+    if (sessionDuration < 1000) {
+      console.warn('Session too short to save (< 1 second)');
+      return;
+    }
+
     const newLap = {
       id: Date.now().toString(),
-      time: time, // The duration of the lap/session
+      time: sessionDuration, // ✅ Save DURATION, not cumulative time
       date: new Date().toISOString(),
       category: category,
       label: `Session ${laps.length + 1}`
     };
 
     // Add to Firestore
-    // Note: useFirestore's setValue (setLaps) handles the merge/update
     setLaps(prev => [newLap, ...prev]);
     
-    // Reset timer after lap if it's a "session" style stopwatch
-    // Based on StudyHeatmap, it seems to track "sessions". 
-    // Usually a stopwatch lap just marks a point, but in productivity apps, "Lap" often means "Save Session".
-    // Let's check if the previous behavior was to reset. 
-    // If I look at Stopwatch.jsx: `onClick={isRunning ? () => lap(selectedCategory) : reset}`
-    // It calls lap. Does it reset?
-    // Usually "Lap" in a stopwatch adds a split time but keeps running.
-    // BUT, for a study timer, you often want to "Save and Continue" or "Save and Reset".
-    // Let's assume standard stopwatch behavior (keep running) unless we see evidence otherwise.
-    // Wait, StudyHeatmap sums up `lap.time`. If I lap at 10m, then lap at 20m, 
-    // if I save 10m then 20m, the total is 30m? Or is the second lap 20m cumulative?
-    // If `lap.time` is the VALUE of the stopwatch at that moment, it is cumulative.
-    // If I save 10m, then 20m (cumulative), the heatmap would show 10m + 20m = 30m? That's wrong.
-    // It should be 10m, then 10m (delta).
-    // Let's look at `Stopwatch.jsx` again.
-    // It displays `laps`.
-    // If I use standard stopwatch logic, `lap` just records the current time.
-    // If `StudyHeatmap` sums them up, it might be double counting if we are not careful.
-    // However, `StudyHeatmap` code: `const totalMs = dayLaps.reduce((sum, lap) => sum + (lap.time || 0), 0);`
-    // This implies `lap.time` is the DURATION of that session.
-    // So if I "Lap", I probably want to record the DURATION since last lap?
-    // OR, maybe the user uses "Reset" to finish a session?
-    // But `Stopwatch.jsx` has a "Lap" button.
-    // Let's implement "Lap" as "Record current elapsed time and CONTINUE".
-    // But for the heatmap to work correctly as "Study Hours", we probably want "Session Duration".
-    // If I run for 1 hour and hit Lap. `time` is 1h. `newLap.time` is 1h.
-    // If I keep running for another hour (total 2h) and hit Lap. `time` is 2h. `newLap.time` is 2h.
-    // Heatmap sum: 1h + 2h = 3h. WRONG. User studied 2h.
-    // So `lap.time` MUST be the delta or the stopwatch must reset.
-    // Let's assume "Lap" means "Save Session and Reset" OR "Save Split".
-    // Given it's a "Focus" app, usually you "Stop" and "Save".
-    // But the button says "Lap".
-    // Let's stick to standard stopwatch behavior but maybe `StudyHeatmap` expects distinct sessions.
-    // I will implement it such that `lap` records the current time.
-    // AND I will add logic to handle the "delta" if needed, but for now I'll mirror standard behavior.
-    // Actually, if I look at `StudyHeatmap.jsx`, it filters `lap.time > 60000`.
-    // If I have multiple laps for the same session, it might be an issue.
-    // I'll implement a simple "Save Session" logic: When you hit Lap, it saves the current time.
-    // Ideally, for a study tracker, you want to save the *interval*.
-    // I will add a `duration` field which is `time - lastLapTime`.
+    // Update last lap time to current time
+    // This allows the next lap to calculate duration correctly
+    setLastLapTime(time);
     
-    // For now, I will just save `time` as the lap time.
-    // I will also reset the timer if that's what the user expects? 
-    // No, "Lap" usually implies continuous running.
-    // I'll stick to: Lap = Record current timestamp.
-    
-    // Wait, if I look at `Stopwatch.jsx` again:
-    // `onClick={isRunning ? () => lap(selectedCategory) : reset}`
-    // It calls `lap`.
-    
-    // I will implement `lap` to just add to the list.
+    // DON'T reset the stopwatch - it should keep running!
+    // The UI can show "split time" (time - lastLapTime) if needed
   };
 
   const updateLapLabel = (id, newLabel) => {

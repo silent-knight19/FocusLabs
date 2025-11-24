@@ -81,7 +81,7 @@ export function StudyHeatmap({ dataVersion = 0 }) {
     }
     
     return weeks;
-  }, [dataVersion]);
+  }, [dataVersion, history]);
 
   // Calculate intensity level based on hours (minimum 2 hours for effect)
   const getIntensityLevel = (hours) => {
