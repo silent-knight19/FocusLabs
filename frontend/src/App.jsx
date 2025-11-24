@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import confetti from 'canvas-confetti';
 import { TopNav } from './components/TopNav';
 import { HabitGrid } from './components/HabitGrid';
@@ -19,6 +19,8 @@ import { StudyHeatmap } from './components/StudyHeatmap';
 import { ProductivityHeatmap } from './components/ProductivityHeatmap';
 import { DayHistoryModal } from './components/DayHistoryModal';
 import { DailyPlanner } from './components/DailyPlanner';
+import { ConfirmationModal } from './components/ConfirmationModal';
+
 import { useHabits } from './hooks/useHabits.jsx';
 import { useDailyTasks } from './hooks/useDailyTasks.jsx';
 import { useSettings } from './hooks/useSettings';
@@ -36,7 +38,7 @@ import { useLockBodyScroll } from './hooks/useLockBodyScroll';
 import './App.css';
 import './components/styles/CalendarOverlay.css';
 
-const CATEGORIES = ['fitness', 'work', 'study', 'personal', 'health', 'social', 'self growth', 'other'];
+const CATEGORIES = ['study', 'productive', 'self growth'];
 
 function App() {
   const [isHabitModalOpen, setIsHabitModalOpen] = useState(false);
@@ -48,6 +50,16 @@ function App() {
   const [editingHabit, setEditingHabit] = useState(null);
   const [currentDate] = useState(getToday());
   const [searchTerm, setSearchTerm] = useState('');
+  
+  // Confirmation Modal State
+  const [confirmationModal, setConfirmationModal] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {},
+    type: 'danger',
+    confirmText: 'Delete'
+  });
 
   useLockBodyScroll(isCalendarOpen);
 
@@ -179,10 +191,17 @@ function App() {
   };
 
   const handleDeleteHabit = (habitId) => {
-    if (window.confirm('Are you sure you want to delete this habit?')) {
-      deleteHabit(habitId);
-      deleteTasksForHabit(habitId);
-    }
+    setConfirmationModal({
+      isOpen: true,
+      title: 'Delete Habit',
+      message: 'Are you sure you want to delete this habit? This action cannot be undone.',
+      confirmText: 'Delete',
+      type: 'danger',
+      onConfirm: () => {
+        deleteHabit(habitId);
+        deleteTasksForHabit(habitId);
+      }
+    });
   };
 
   const handleCompleteAllToday = () => {
@@ -199,17 +218,24 @@ function App() {
   };
 
   const handleClearAllToday = () => {
-    if (window.confirm('Clear all entries for today?')) {
-      const today = getToday();
-      habits.forEach(habit => {
-        const currentStatus = getCompletionStatus(habit.id, today);
-        if (currentStatus) {
-          while (getCompletionStatus(habit.id, today)) {
-            toggleCompletion(habit.id, today);
+    setConfirmationModal({
+      isOpen: true,
+      title: 'Clear Today',
+      message: 'Are you sure you want to clear all entries for today?',
+      confirmText: 'Clear All',
+      type: 'warning',
+      onConfirm: () => {
+        const today = getToday();
+        habits.forEach(habit => {
+          const currentStatus = getCompletionStatus(habit.id, today);
+          if (currentStatus) {
+            while (getCompletionStatus(habit.id, today)) {
+              toggleCompletion(habit.id, today);
+            }
           }
-        }
-      });
-    }
+        });
+      }
+    });
   };
 
   // Force re-render of heatmaps when data changes
@@ -233,6 +259,7 @@ function App() {
 
       <main className="app-main">
         <div className="app-container">
+
 
           {/* Active Habit Tracker */}
           <ActiveHabitTracker
@@ -405,6 +432,16 @@ function App() {
           onClose={() => setSelectedDate(null)}
         />
       )}
+
+      <ConfirmationModal
+        isOpen={confirmationModal.isOpen}
+        onClose={() => setConfirmationModal(prev => ({ ...prev, isOpen: false }))}
+        onConfirm={confirmationModal.onConfirm}
+        title={confirmationModal.title}
+        message={confirmationModal.message}
+        confirmText={confirmationModal.confirmText}
+        type={confirmationModal.type}
+      />
     </div>
   );
 }

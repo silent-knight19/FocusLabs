@@ -1,0 +1,19 @@
+{
+    "indexes": [
+        {
+            "collectionGroup": "habits",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "notificationsEnabled",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "startTime",
+                    "order": "ASCENDING"
+                }
+            ]
+        }
+    ],
+    "fieldOverrides": []
+}

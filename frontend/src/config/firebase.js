@@ -1,6 +1,7 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider } from 'firebase/auth';
-import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from 'firebase/firestore';
+import { initializeFirestore, memoryLocalCache } from 'firebase/firestore';
+
 
 // Firebase configuration from environment variables
 const firebaseConfig = {
@@ -20,11 +21,12 @@ const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
 
-// Initialize Firestore with modern persistence settings
+// Initialize Firestore with memory-only cache
+// This prevents LocalStorage quota errors that were occurring with persistent cache
+// Data still syncs to Firestore in real-time, just not cached locally on disk
 export const db = initializeFirestore(app, {
-  localCache: persistentLocalCache({
-    tabManager: persistentMultipleTabManager()
-  })
+  localCache: memoryLocalCache()
 });
 
 export default app;
+

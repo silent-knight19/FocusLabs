@@ -146,7 +146,8 @@ export function SettingsPanel({ isOpen, onClose, settings, onUpdateSettings }) {
           'subtask_completions', 
           'stopwatch_history', 
           'settings', 
-          'daily_tasks'
+          'daily_tasks',
+          'notes'
         ];
         
         await Promise.all(collections.map(colName => {

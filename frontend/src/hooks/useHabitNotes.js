@@ -1,30 +1,17 @@
-import { useState, useEffect, useCallback } from 'react';
-
-const NOTES_STORAGE_KEY = 'habitgrid_notes';
+import { useCallback } from 'react';
+import { useFirestore } from './useFirestore';
+import { useAuth } from '../contexts/AuthContext';
 
 /**
  * Custom hook for managing date-specific habit notes
  * Notes are stored with key format: {date}_{habitId}
  */
 export function useHabitNotes() {
-  const [notes, setNotes] = useState(() => {
-    try {
-      const stored = localStorage.getItem(NOTES_STORAGE_KEY);
-      return stored ? JSON.parse(stored) : {};
-    } catch (error) {
-      console.error('Error loading notes:', error);
-      return {};
-    }
-  });
+  const { user } = useAuth();
+  const userId = user?.uid;
 
-  // Persist notes to localStorage whenever they change
-  useEffect(() => {
-    try {
-      localStorage.setItem(NOTES_STORAGE_KEY, JSON.stringify(notes));
-    } catch (error) {
-      console.error('Error saving notes:', error);
-    }
-  }, [notes]);
+  // Sync notes with Firestore
+  const [notes, setNotes, loading] = useFirestore(userId, 'notes', {});
 
   // Create a unique key for date + habit combination
   const createKey = useCallback((habitId, date) => {
@@ -49,7 +36,7 @@ export function useHabitNotes() {
       }
       return updated;
     });
-  }, [createKey]);
+  }, [createKey, setNotes]);
 
   // Delete note for a specific habit on a specific date
   const deleteNote = useCallback((habitId, date) => {
@@ -59,7 +46,7 @@ export function useHabitNotes() {
       delete updated[key];
       return updated;
     });
-  }, [createKey]);
+  }, [createKey, setNotes]);
 
   // Check if a note exists for a specific habit on a specific date
   const hasNote = useCallback((habitId, date) => {
@@ -71,6 +58,7 @@ export function useHabitNotes() {
     getNote,
     saveNote,
     deleteNote,
-    hasNote
+    hasNote,
+    loading
   };
 }

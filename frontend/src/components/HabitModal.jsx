@@ -3,7 +3,15 @@ import { validateHabit } from '../utils/validationHelpers';
 import { useLockBodyScroll } from '../hooks/useLockBodyScroll';
 import './styles/HabitModal.css';
 
-const CATEGORIES = ['fitness', 'work', 'study', 'personal', 'health', 'social', 'other'];
+const CATEGORIES = ['study', 'productive', 'self growth'];
+
+// Category to default color mapping
+const CATEGORY_COLORS = {
+  'study': '#FF6B35',        // Orange
+  'productive': '#00FF9F',   // Light green
+  'self growth': '#FF0055'   // Red
+};
+
 const DEFAULT_COLORS = [
   '#FF6B35', '#00FF9F', '#FF0055', '#FFD700', 
   '#BD00FF', '#FF00FF', '#FF0080', '#0080FF'
@@ -16,49 +24,59 @@ export function HabitModal({ isOpen, onClose, onSave, habit = null }) {
   useLockBodyScroll(isOpen);
   const [formData, setFormData] = useState({
     name: '',
-    description: '',
-    category: 'personal',
+    category: 'study',
     startTime: '',
     endTime: '',
     color: '#FF6B35',
-    weeklyTarget: 7,
-    subtasks: [] // Array of strings for new subtasks
+    weeklyTarget: 7
   });
   
-  const [newSubtask, setNewSubtask] = useState('');
   const [errors, setErrors] = useState({});
+  const [manualColorSelected, setManualColorSelected] = useState(false);
 
   // Populate form when editing existing habit
   useEffect(() => {
     if (habit) {
       setFormData({
         name: habit.name || '',
-        description: habit.description || '',
-        category: habit.category || 'personal',
+        category: habit.category || 'study',
         startTime: habit.startTime || habit.time || '',
         endTime: habit.endTime || '',
-        color: habit.color || '#FF6B35',
-        weeklyTarget: habit.weeklyTarget || 7,
-        subtasks: [] // We don't load existing subtasks here for simplicity, or we could fetch them if passed
+        color: habit.color || CATEGORY_COLORS[habit.category || 'study'],
+        weeklyTarget: habit.weeklyTarget || 7
       });
+      setManualColorSelected(false); // Reset when editing
     } else {
       setFormData({
         name: '',
-        description: '',
-        category: 'personal',
+        category: 'study',
         startTime: '',
         endTime: '',
-        color: '#FF6B35',
-        weeklyTarget: 7,
-        subtasks: []
+        color: CATEGORY_COLORS['study'], // Default to study color
+        weeklyTarget: 7
       });
+      setManualColorSelected(false); // Reset for new habit
     }
     setErrors({});
-    setNewSubtask('');
   }, [habit, isOpen]);
 
   const handleChange = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    // Auto-update color when category changes (unless user manually selected a color)
+    if (field === 'category' && !manualColorSelected) {
+      setFormData(prev => ({ 
+        ...prev, 
+        category: value,
+        color: CATEGORY_COLORS[value] 
+      }));
+    } else {
+      setFormData(prev => ({ ...prev, [field]: value }));
+    }
+    
+    // Track if user manually selects a color
+    if (field === 'color') {
+      setManualColorSelected(true);
+    }
+    
     if (errors[field]) {
       setErrors(prev => {
         const newErrors = { ...prev };
@@ -68,22 +86,7 @@ export function HabitModal({ isOpen, onClose, onSave, habit = null }) {
     }
   };
 
-  const handleAddSubtask = (e) => {
-    e.preventDefault();
-    if (!newSubtask.trim()) return;
-    setFormData(prev => ({
-      ...prev,
-      subtasks: [...prev.subtasks, newSubtask.trim()]
-    }));
-    setNewSubtask('');
-  };
 
-  const handleRemoveSubtask = (index) => {
-    setFormData(prev => ({
-      ...prev,
-      subtasks: prev.subtasks.filter((_, i) => i !== index)
-    }));
-  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -132,31 +135,22 @@ export function HabitModal({ isOpen, onClose, onSave, habit = null }) {
           </div>
 
           <div className="form-group">
-            <label htmlFor="habit-description">Description</label>
-            <textarea
-              id="habit-description"
-              value={formData.description}
-              onChange={(e) => handleChange('description', e.target.value)}
-              placeholder="Optional details about this habit"
-              rows="3"
-            />
+            <label>Category</label>
+            <div className="category-buttons">
+              {CATEGORIES.map(cat => (
+                <button
+                  key={cat}
+                  type="button"
+                  className={`category-btn ${formData.category === cat ? 'selected' : ''}`}
+                  onClick={() => handleChange('category', cat)}
+                >
+                  {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                </button>
+              ))}
+            </div>
           </div>
 
           <div className="form-row">
-            <div className="form-group">
-              <label htmlFor="habit-category">Category</label>
-              <select
-                id="habit-category"
-                value={formData.category}
-                onChange={(e) => handleChange('category', e.target.value)}
-              >
-                {CATEGORIES.map(cat => (
-                  <option key={cat} value={cat}>
-                    {cat.charAt(0).toUpperCase() + cat.slice(1)}
-                  </option>
-                ))}
-              </select>
-            </div>
 
             <div className="form-group">
               <label htmlFor="habit-start-time">Start Time</label>
@@ -183,44 +177,6 @@ export function HabitModal({ isOpen, onClose, onSave, habit = null }) {
             </div>
           </div>
 
-          {/* Subtasks Section */}
-          <div className="form-group">
-            <label>Subtasks</label>
-            <div className="subtask-input-group">
-              <input
-                type="text"
-                value={newSubtask}
-                onChange={(e) => setNewSubtask(e.target.value)}
-                placeholder="Add a subtask..."
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    handleAddSubtask(e);
-                  }
-                }}
-              />
-              <button type="button" onClick={handleAddSubtask} className="add-subtask-btn">
-                +
-              </button>
-            </div>
-            
-            {formData.subtasks.length > 0 && (
-              <ul className="modal-subtask-list">
-                {formData.subtasks.map((task, index) => (
-                  <li key={index} className="modal-subtask-item">
-                    <span>{task}</span>
-                    <button 
-                      type="button" 
-                      onClick={() => handleRemoveSubtask(index)}
-                      className="remove-subtask-btn"
-                    >
-                      ✕
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
 
           <div className="form-row">
             <div className="form-group">
@@ -252,6 +208,8 @@ export function HabitModal({ isOpen, onClose, onSave, habit = null }) {
               {errors.weeklyTarget && <span className="error-message">{errors.weeklyTarget}</span>}
             </div>
           </div>
+
+
 
           <div className="modal-actions">
             <button type="button" onClick={onClose}>

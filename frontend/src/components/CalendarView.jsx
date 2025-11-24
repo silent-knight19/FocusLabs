@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Search, X, Trash2, Edit2, Check, ChevronDown, ChevronRight } from 'lucide-react';
 import { getMonthDates, getMonthName, isSameDay, getTwoYearsAgo, isWithinTwoYears, formatDateKey } from '../utils/dateHelpers';
+import { ConfirmationModal } from './ConfirmationModal';
 import './styles/CalendarView.css';
 
 const TaskItem = ({ task, onToggle, onDelete, onUpdate }) => {
@@ -65,7 +66,7 @@ const TaskItem = ({ task, onToggle, onDelete, onUpdate }) => {
           className="task-action-btn delete" 
           onClick={(e) => {
             e.stopPropagation();
-            if(window.confirm('Delete this task?')) onDelete();
+            onDelete();
           }}
           title="Delete"
         >
@@ -126,7 +127,16 @@ const HabitItem = ({ habit, isCompleted, subtasks, subtaskCompletions, dailyTask
                   key={task.id} 
                   task={task} 
                   onToggle={() => onToggleTask(task.id)}
-                  onDelete={() => onDeleteTask(task.id)}
+                  onDelete={() => {
+                    setConfirmationModal({
+                      isOpen: true,
+                      title: 'Delete Task',
+                      message: 'Are you sure you want to delete this task?',
+                      confirmText: 'Delete',
+                      type: 'danger',
+                      onConfirm: () => onDeleteTask(task.id)
+                    });
+                  }}
                   onUpdate={(title) => onUpdateTask(task.id, { title })}
                 />
               ))}
@@ -148,8 +158,18 @@ export function CalendarView({ habits, completions, subtasks = [], subtaskComple
   const [searchTerm, setSearchTerm] = useState('');
   const [matchingDates, setMatchingDates] = useState(new Set());
   const [searchSuggestions, setSearchSuggestions] = useState([]);
-  const [showSuggestions, setShowSuggestions] = useState(false);
+
   const [selectedDate, setSelectedDate] = useState(new Date());
+
+  // Confirmation Modal State
+  const [confirmationModal, setConfirmationModal] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {},
+    type: 'danger',
+    confirmText: 'Delete'
+  });
 
   useEffect(() => {
     const dates = getMonthDates(currentDate.getFullYear(), currentDate.getMonth());
@@ -571,7 +591,16 @@ export function CalendarView({ habits, completions, subtasks = [], subtaskComple
                     key={task.id} 
                     task={task} 
                     onToggle={() => onToggleTask(task.id)}
-                    onDelete={() => onDeleteTask(task.id)}
+                    onDelete={() => {
+                      setConfirmationModal({
+                        isOpen: true,
+                        title: 'Delete Task',
+                        message: 'Are you sure you want to delete this task?',
+                        confirmText: 'Delete',
+                        type: 'danger',
+                        onConfirm: () => onDeleteTask(task.id)
+                      });
+                    }}
                     onUpdate={(title) => onUpdateTask(task.id, { title })}
                   />
                 ))}
@@ -582,6 +611,17 @@ export function CalendarView({ habits, completions, subtasks = [], subtaskComple
           </div>
         </div>
       </div>
+
+
+      <ConfirmationModal
+        isOpen={confirmationModal.isOpen}
+        onClose={() => setConfirmationModal(prev => ({ ...prev, isOpen: false }))}
+        onConfirm={confirmationModal.onConfirm}
+        title={confirmationModal.title}
+        message={confirmationModal.message}
+        confirmText={confirmationModal.confirmText}
+        type={confirmationModal.type}
+      />
     </div>
   );
 }
