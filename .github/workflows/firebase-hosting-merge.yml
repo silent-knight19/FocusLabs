@@ -18,3 +18,4 @@ jobs:
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_COLLABEDIT_26531 }}
           channelId: live
           projectId: collabedit-26531
+          entryPoint: frontend
