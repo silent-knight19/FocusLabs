@@ -132,7 +132,7 @@ export function StudyHeatmap({ dataVersion = 0 }) {
       max: maxHours.toFixed(1),
       average: daysWithActivity > 0 ? (totalHours / daysWithActivity).toFixed(1) : 0
     };
-  }, [dataVersion]);
+  }, [dataVersion, history, loading]);
 
   const monthLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   const dayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
