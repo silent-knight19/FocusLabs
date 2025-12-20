@@ -18,6 +18,7 @@ export function useStopwatch() {
   const [isRunning, setIsRunning] = useState(false);
   const [startTime, setStartTime] = useState(null);
   const [lastLapTime, setLastLapTime] = useState(0); // Track time of last lap to calculate duration
+  const [currentSessionLaps, setCurrentSessionLaps] = useState([]); // Current session laps for UI display
   
   const requestRef = useRef();
   const previousTimeRef = useRef();
@@ -45,6 +46,12 @@ export function useStopwatch() {
         setLastLapTime(savedLastLapTime);
       }
     }
+    
+    // Restore current session laps
+    const savedSessionLaps = localStorage.getItem('stopwatch_current_session_laps');
+    if (savedSessionLaps) {
+      setCurrentSessionLaps(JSON.parse(savedSessionLaps));
+    }
   }, []);
 
   // Save active state to localStorage on change
@@ -56,6 +63,11 @@ export function useStopwatch() {
       savedLastLapTime: lastLapTime
     }));
   }, [time, isRunning, lastLapTime]);
+
+  // Persist current session laps to localStorage
+  useEffect(() => {
+    localStorage.setItem('stopwatch_current_session_laps', JSON.stringify(currentSessionLaps));
+  }, [currentSessionLaps]);
 
   const animate = useCallback((timestamp) => {
     if (previousTimeRef.current != undefined) {
@@ -92,6 +104,7 @@ export function useStopwatch() {
     setTime(0);
     setStartTime(null);
     setLastLapTime(0); // Reset last lap time
+    setCurrentSessionLaps([]); // Clear current session laps from UI
   };
 
   const lap = (category = 'other') => {
@@ -109,11 +122,14 @@ export function useStopwatch() {
       time: sessionDuration, // ✅ Save DURATION, not cumulative time
       date: new Date().toISOString(),
       category: category,
-      label: `Session ${laps.length + 1}`
+      label: `Session ${currentSessionLaps.length + 1}`
     };
 
-    // Add to Firestore
+    // Add to Firestore for permanent history/analytics
     setLaps(prev => [newLap, ...prev]);
+    
+    // Also add to current session laps for UI display
+    setCurrentSessionLaps(prev => [newLap, ...prev]);
     
     // Update last lap time to current time
     // This allows the next lap to calculate duration correctly
@@ -124,13 +140,21 @@ export function useStopwatch() {
   };
 
   const updateLapLabel = (id, newLabel) => {
+    // Update in Firestore history
     const updatedLaps = laps.map(l => l.id === id ? { ...l, label: newLabel } : l);
     setLaps(updatedLaps);
+    // Also update in current session
+    const updatedSessionLaps = currentSessionLaps.map(l => l.id === id ? { ...l, label: newLabel } : l);
+    setCurrentSessionLaps(updatedSessionLaps);
   };
 
   const updateLapCategory = (id, newCategory) => {
+    // Update in Firestore history
     const updatedLaps = laps.map(l => l.id === id ? { ...l, category: newCategory } : l);
     setLaps(updatedLaps);
+    // Also update in current session
+    const updatedSessionLaps = currentSessionLaps.map(l => l.id === id ? { ...l, category: newCategory } : l);
+    setCurrentSessionLaps(updatedSessionLaps);
   };
 
   const formatTime = (ms) => {
@@ -146,7 +170,8 @@ export function useStopwatch() {
   return {
     time,
     isRunning,
-    laps,
+    laps: currentSessionLaps, // For UI display (current session only)
+    allHistory: laps,         // For analytics (entire history)
     start,
     pause,
     reset,

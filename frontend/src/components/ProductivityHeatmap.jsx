@@ -62,8 +62,10 @@ export function ProductivityHeatmap({ habits = [], completions = {}, dataVersion
         
         // 1. Calculate Stopwatch Hours
         const dayLaps = history.filter(lap => {
-          const lapDate = new Date(lap.date).toISOString().split('T')[0];
-          return lapDate === dateKey && (lap.category === 'prod' || lap.category === 'self' || lap.category === 'self growth');
+          const lapDateObj = new Date(lap.date);
+          // Use local date components to avoid timezone issues
+          const lapDateLocal = `${lapDateObj.getFullYear()}-${String(lapDateObj.getMonth() + 1).padStart(2, '0')}-${String(lapDateObj.getDate()).padStart(2, '0')}`;
+          return lapDateLocal === dateKey && (lap.category === 'prod' || lap.category === 'self' || lap.category === 'self growth');
         });
         const stopwatchMs = dayLaps.reduce((sum, lap) => sum + (lap.time || 0), 0);
         let totalHours = stopwatchMs / (1000 * 60 * 60);
@@ -127,7 +129,9 @@ export function ProductivityHeatmap({ habits = [], completions = {}, dataVersion
     
     // 1. Add Stopwatch times
     relevantLaps.forEach(lap => {
-      const dateKey = new Date(lap.date).toISOString().split('T')[0];
+      const lapDateObj = new Date(lap.date);
+      // Use local date components to avoid timezone issues
+      const dateKey = `${lapDateObj.getFullYear()}-${String(lapDateObj.getMonth() + 1).padStart(2, '0')}-${String(lapDateObj.getDate()).padStart(2, '0')}`;
       dailyTotals[dateKey] = (dailyTotals[dateKey] || 0) + (lap.time || 0);
     });
 

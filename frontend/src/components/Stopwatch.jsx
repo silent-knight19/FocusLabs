@@ -326,6 +326,7 @@ export function Stopwatch({ isOpen, onClose, onDataUpdate }) {
                   )}
                 </div>
                 <div className="lap-time">
+                  {lapFormatted.hours !== '00' && <>{lapFormatted.hours}:</>}
                   {lapFormatted.minutes}:{lapFormatted.seconds}.{lapFormatted.centiseconds}
                 </div>
               </div>

@@ -62,8 +62,10 @@ export function StudyHeatmap({ dataVersion = 0 }) {
         
         // Calculate Study Hours
         const dayLaps = history.filter(lap => {
-          const lapDate = new Date(lap.date).toISOString().split('T')[0];
-          return lapDate === dateKey && lap.category === 'study';
+          const lapDateObj = new Date(lap.date);
+          // Use local date components to avoid timezone issues
+          const lapDateLocal = `${lapDateObj.getFullYear()}-${String(lapDateObj.getMonth() + 1).padStart(2, '0')}-${String(lapDateObj.getDate()).padStart(2, '0')}`;
+          return lapDateLocal === dateKey && lap.category === 'study';
         });
         
         const totalMs = dayLaps.reduce((sum, lap) => sum + (lap.time || 0), 0);
@@ -117,7 +119,9 @@ export function StudyHeatmap({ dataVersion = 0 }) {
     const dailyTotals = {};
     
     relevantLaps.forEach(lap => {
-      const dateKey = new Date(lap.date).toISOString().split('T')[0];
+      const lapDateObj = new Date(lap.date);
+      // Use local date components to avoid timezone issues
+      const dateKey = `${lapDateObj.getFullYear()}-${String(lapDateObj.getMonth() + 1).padStart(2, '0')}-${String(lapDateObj.getDate()).padStart(2, '0')}`;
       dailyTotals[dateKey] = (dailyTotals[dateKey] || 0) + (lap.time || 0);
     });
 
