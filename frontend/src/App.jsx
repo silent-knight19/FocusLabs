@@ -119,7 +119,14 @@ function App() {
     deleteCustomHabit,
     toggleCustomCompletion,
     getCustomCompletionStatus,
-    formatDateRange
+    formatDateRange,
+    // Subtask methods
+    getCustomSubtasks,
+    addCustomSubtask,
+    deleteCustomSubtask,
+    toggleCustomSubtaskCompletion,
+    getCustomSubtaskStatus,
+    getCustomSubtaskCompletionPercentage
   } = useCustomHabits();
 
   // Helper to check if a date has custom habits (blocking regular habits)
@@ -419,6 +426,19 @@ function App() {
               getDailyCompletion={getDailyCompletion}
               getDateCompletion={getDateCompletion}
               onAddHabit={handleAddHabit}
+              // Custom habits props
+              customHabits={customHabits}
+              customCompletions={customCompletions}
+              toggleCustomCompletion={toggleCustomCompletion}
+              getCustomCompletionStatus={getCustomCompletionStatus}
+              onAddCustomHabit={handleAddCustomHabit}
+              // Custom subtask props
+              getCustomSubtasks={getCustomSubtasks}
+              addCustomSubtask={addCustomSubtask}
+              deleteCustomSubtask={deleteCustomSubtask}
+              toggleCustomSubtaskCompletion={toggleCustomSubtaskCompletion}
+              getCustomSubtaskStatus={getCustomSubtaskStatus}
+              getCustomSubtaskCompletionPercentage={getCustomSubtaskCompletionPercentage}
             />
           )}
 

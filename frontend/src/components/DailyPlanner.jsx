@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { DailyTaskPanel } from './DailyTaskPanel';
+import { SubtaskList } from './SubtaskList';
 import { ChevronLeft, ChevronRight, Calendar, Plus } from 'lucide-react';
 import { formatDateKey } from '../utils/dateHelpers';
 import './styles/DailyPlanner.css';
@@ -9,6 +10,7 @@ import './styles/DailyPlannerAddBtn.css';
 /**
  * Main daily planner view component
  * Shows all habits with their daily tasks for a selected date
+ * Now includes custom date habits that apply to the selected date
  */
 export function DailyPlanner({
   habits,
@@ -21,7 +23,20 @@ export function DailyPlanner({
   onDeleteTask,
   getDailyCompletion,
   getDateCompletion,
-  onAddHabit // New prop
+  onAddHabit,
+  // Custom habits props
+  customHabits = [],
+  customCompletions = {},
+  toggleCustomCompletion,
+  getCustomCompletionStatus,
+  onAddCustomHabit,
+  // Custom subtask props
+  getCustomSubtasks,
+  addCustomSubtask,
+  deleteCustomSubtask,
+  toggleCustomSubtaskCompletion,
+  getCustomSubtaskStatus,
+  getCustomSubtaskCompletionPercentage
 }) {
   const handlePrevDay = () => {
     const newDate = new Date(selectedDate);
@@ -53,7 +68,19 @@ export function DailyPlanner({
     });
   };
 
+  // Filter custom habits that apply to selected date
+  const dateKey = formatDateKey(selectedDate);
+  const customHabitsForDate = customHabits.filter(habit => 
+    dateKey >= habit.dateFrom && dateKey <= habit.dateTo
+  );
+
   const dateCompletion = getDateCompletion(selectedDate);
+  
+  // Calculate combined totals including custom habits
+  const customCompletedCount = customHabitsForDate.filter(
+    habit => customCompletions[habit.id]?.[dateKey] === 'completed'
+  ).length;
+  const totalHabitsCount = habits.length + customHabitsForDate.length;
 
   return (
     <div className="daily-planner">
@@ -126,42 +153,106 @@ export function DailyPlanner({
         </div>
       )}
 
-      {/* Habit panels */}
+      {/* Regular Habit panels */}
       <div className="habit-panels">
-        {habits.length === 0 ? (
+        {habits.length === 0 && customHabitsForDate.length === 0 ? (
           <div className="empty-state">
             <div className="empty-icon">📋</div>
             <h3>No habits yet</h3>
             <p>Create your first habit to start planning your day</p>
           </div>
         ) : (
-          habits.map(habit => {
-            const tasks = getDailyTasks(habit.id, selectedDate);
-            const completion = getDailyCompletion(habit.id, selectedDate);
+          <>
+            {habits.map(habit => {
+              const tasks = getDailyTasks(habit.id, selectedDate);
+              const completion = getDailyCompletion(habit.id, selectedDate);
 
-            return (
-              <DailyTaskPanel
-                key={habit.id}
-                habit={habit}
-                date={selectedDate}
-                tasks={tasks}
-                onAddTask={onAddTask}
-                onToggleTask={onToggleTask}
-                onUpdateTask={onUpdateTask}
-                onDeleteTask={onDeleteTask}
-                completionPercentage={completion}
-              />
-            );
-          })
+              return (
+                <DailyTaskPanel
+                  key={habit.id}
+                  habit={habit}
+                  date={selectedDate}
+                  tasks={tasks}
+                  onAddTask={onAddTask}
+                  onToggleTask={onToggleTask}
+                  onUpdateTask={onUpdateTask}
+                  onDeleteTask={onDeleteTask}
+                  completionPercentage={completion}
+                />
+              );
+            })}
+            
+            {/* Custom Habits Section */}
+            {customHabitsForDate.length > 0 && (
+              <div className="custom-habits-daily-section">
+                <div className="custom-section-header">
+                  <Calendar size={16} />
+                  <span>Custom Date Habits</span>
+                </div>
+                {customHabitsForDate.map(habit => {
+                  const status = getCustomCompletionStatus(habit.id, selectedDate);
+                  const subtasks = getCustomSubtasks ? getCustomSubtasks(habit.id) : [];
+                  const completionPct = getCustomSubtaskCompletionPercentage ? 
+                    getCustomSubtaskCompletionPercentage(habit.id, selectedDate) : 100;
+                  
+                  return (
+                    <div key={habit.id} className="custom-habit-daily-card expanded">
+                      <div className="custom-habit-header">
+                        <div className="custom-habit-info">
+                          <div 
+                            className="habit-color-bar"
+                            style={{ backgroundColor: habit.color || '#FF6B35' }}
+                          />
+                          <div className="habit-details">
+                            <span className="habit-name">{habit.name}</span>
+                            <span className="habit-time">
+                              {habit.startTime && habit.endTime 
+                                ? `${habit.startTime} - ${habit.endTime}`
+                                : 'Any time'}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="custom-habit-actions">
+                          {subtasks.length > 0 && (
+                            <span className="completion-badge">{completionPct}%</span>
+                          )}
+                          <button
+                            className={`custom-toggle-btn ${status || ''}`}
+                            onClick={() => toggleCustomCompletion(habit.id, selectedDate)}
+                            title="Toggle completion"
+                          >
+                            {status === 'completed' ? '✓' : status === 'failed' ? '✕' : '○'}
+                          </button>
+                        </div>
+                      </div>
+                      
+                      {/* Subtask List */}
+                      {getCustomSubtasks && (
+                        <SubtaskList
+                          habitId={habit.id}
+                          subtasks={subtasks}
+                          onAddSubtask={addCustomSubtask}
+                          onDeleteSubtask={deleteCustomSubtask}
+                          onToggleSubtask={(hId, stId) => toggleCustomSubtaskCompletion(hId, stId, selectedDate)}
+                          date={selectedDate}
+                          getSubtaskStatus={(hId, stId) => getCustomSubtaskStatus(hId, stId, selectedDate)}
+                        />
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </>
         )}
       </div>
 
       {/* Quick stats footer */}
-      {habits.length > 0 && (
+      {totalHabitsCount > 0 && (
         <div className="planner-footer">
           <div className="quick-stats">
             <div className="stat-item">
-              <span className="stat-value">{habits.length}</span>
+              <span className="stat-value">{totalHabitsCount}</span>
               <span className="stat-label">Habits</span>
             </div>
             <div className="stat-divider">•</div>
@@ -180,3 +271,4 @@ export function DailyPlanner({
     </div>
   );
 }
+
