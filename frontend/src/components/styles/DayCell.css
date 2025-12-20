@@ -132,3 +132,65 @@
 .day-cell.numbered.failed:hover {
     color: white;
 }
+
+/* Custom Date Styles - distinct visual for custom date habits */
+.day-cell.custom {
+    border: 2px dashed var(--accent-orange, #FF6B35);
+    background: rgba(255, 107, 53, 0.08);
+}
+
+.day-cell.custom:hover {
+    border-color: var(--accent-orange, #FF6B35);
+    background: rgba(255, 107, 53, 0.15);
+    box-shadow: 0 0 8px rgba(255, 107, 53, 0.4);
+}
+
+.day-cell.custom.completed {
+    background: var(--status-completed);
+    border: 2px solid var(--accent-orange, #FF6B35);
+    box-shadow: 0 0 10px rgba(255, 107, 53, 0.5), 0 0 5px rgba(0, 255, 159, 0.3);
+}
+
+.day-cell.custom.completed:hover {
+    box-shadow: 0 0 15px rgba(255, 107, 53, 0.7), 0 0 10px rgba(0, 255, 159, 0.5);
+}
+
+.day-cell.custom.failed {
+    background: var(--status-failed);
+    border: 2px solid var(--accent-orange, #FF6B35);
+}
+
+/* Disabled State - for dates outside custom habit range */
+.day-cell.disabled {
+    opacity: 0.25;
+    cursor: not-allowed;
+    pointer-events: none;
+    background: transparent;
+    border-color: var(--border-color);
+}
+
+.day-cell.disabled:hover {
+    transform: none;
+    box-shadow: none;
+}
+
+/* Blocked by Custom - date has custom habits, so regular habits are blocked */
+.day-cell.blocked-by-custom {
+    background: repeating-linear-gradient(45deg,
+            rgba(255, 107, 53, 0.1),
+            rgba(255, 107, 53, 0.1) 2px,
+            transparent 2px,
+            transparent 6px);
+    border: 1px dashed rgba(255, 107, 53, 0.5);
+    cursor: not-allowed;
+    color: var(--text-secondary);
+}
+
+.day-cell.blocked-by-custom .day-number {
+    opacity: 0.5;
+}
+
+.day-cell.blocked-by-custom:hover {
+    transform: none;
+    box-shadow: none;
+}

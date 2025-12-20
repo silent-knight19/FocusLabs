@@ -6,7 +6,8 @@ import { DndContext, useSensor, useSensors, PointerSensor } from '@dnd-kit/core'
 import { SortableContext, arrayMove } from '@dnd-kit/sortable';
 
 /**
- * Main grid container displaying all habits and their weekly completion status
+ * Main grid container displaying all regular habits and their weekly completion status
+ * Custom date habits are shown in a separate CustomDateView
  */
 export function HabitGrid({ 
   habits, 
@@ -15,7 +16,8 @@ export function HabitGrid({
   onEditHabit, 
   onDeleteHabit,
   getCompletionStatus,
-  reorderHabits
+  reorderHabits,
+  isDateBlockedByCustom
 }) {
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -68,6 +70,7 @@ export function HabitGrid({
                 onEdit={onEditHabit}
                 onDelete={onDeleteHabit}
                 getStatus={getCompletionStatus}
+                isDateBlockedByCustom={isDateBlockedByCustom}
               />
             ))}
           </div>
@@ -76,3 +79,5 @@ export function HabitGrid({
     </DndContext>
   );
 }
+
+

@@ -20,8 +20,11 @@ import { ProductivityHeatmap } from './components/ProductivityHeatmap';
 import { DayHistoryModal } from './components/DayHistoryModal';
 import { DailyPlanner } from './components/DailyPlanner';
 import { ConfirmationModal } from './components/ConfirmationModal';
+import { CustomHabitModal } from './components/CustomHabitModal';
+import { CustomDateView } from './components/CustomDateView';
 
 import { useHabits } from './hooks/useHabits.jsx';
+import { useCustomHabits } from './hooks/useCustomHabits.js';
 import { useDailyTasks } from './hooks/useDailyTasks.jsx';
 import { useSettings } from './hooks/useSettings';
 import { useActiveHabit } from './hooks/useActiveHabit';
@@ -48,6 +51,8 @@ function App() {
   const [isAnalyticsOpen, setIsAnalyticsOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState(null);
   const [editingHabit, setEditingHabit] = useState(null);
+  const [editingCustomHabit, setEditingCustomHabit] = useState(null);
+  const [isCustomHabitModalOpen, setIsCustomHabitModalOpen] = useState(false);
   const [currentDate] = useState(getToday());
   const [searchTerm, setSearchTerm] = useState('');
   
@@ -104,6 +109,26 @@ function App() {
     getDateCompletion,
     deleteTasksForHabit
   } = useDailyTasks();
+
+  // Custom habits hook
+  const {
+    customHabits,
+    customCompletions,
+    addCustomHabit,
+    updateCustomHabit,
+    deleteCustomHabit,
+    toggleCustomCompletion,
+    getCustomCompletionStatus,
+    formatDateRange
+  } = useCustomHabits();
+
+  // Helper to check if a date has custom habits (blocking regular habits)
+  const isDateBlockedByCustom = (date) => {
+    return customHabits.some(habit => {
+      const dateKey = formatDateKey(date);
+      return dateKey >= habit.dateFrom && dateKey <= habit.dateTo;
+    });
+  };
 
   const { settings, updateSettings } = useSettings();
 
@@ -200,6 +225,38 @@ function App() {
       onConfirm: () => {
         deleteHabit(habitId);
         deleteTasksForHabit(habitId);
+      }
+    });
+  };
+
+  // Custom habit handlers
+  const handleAddCustomHabit = () => {
+    setEditingCustomHabit(null);
+    setIsCustomHabitModalOpen(true);
+  };
+
+  const handleEditCustomHabit = (habit) => {
+    setEditingCustomHabit(habit);
+    setIsCustomHabitModalOpen(true);
+  };
+
+  const handleSaveCustomHabit = (habitData) => {
+    if (editingCustomHabit) {
+      updateCustomHabit(editingCustomHabit.id, habitData);
+    } else {
+      addCustomHabit(habitData);
+    }
+  };
+
+  const handleDeleteCustomHabit = (habitId) => {
+    setConfirmationModal({
+      isOpen: true,
+      title: 'Delete Custom Habit',
+      message: 'Are you sure you want to delete this custom date habit? This action cannot be undone.',
+      confirmText: 'Delete',
+      type: 'danger',
+      onConfirm: () => {
+        deleteCustomHabit(habitId);
       }
     });
   };
@@ -313,6 +370,23 @@ function App() {
             >
               Daily Planner
             </button>
+            <button 
+              className={`view-toggle-btn ${currentView === 'custom' ? 'active' : ''}`}
+              onClick={() => setCurrentView('custom')}
+              style={{ 
+                fontSize: '1.2rem', 
+                padding: '1rem 3rem', 
+                fontWeight: '700',
+                background: currentView === 'custom' ? 'linear-gradient(135deg, var(--neon-orange), var(--neon-orange-dark))' : 'var(--bg-secondary)',
+                color: currentView === 'custom' ? '#fff' : 'var(--text-secondary)',
+                border: '1px solid var(--neon-orange)',
+                borderRadius: 'var(--radius-md)',
+                boxShadow: currentView === 'custom' ? 'var(--glow-orange)' : 'none',
+                cursor: 'pointer'
+              }}
+            >
+              Custom Date
+            </button>
           </div>
 
 
@@ -327,6 +401,7 @@ function App() {
                 onDeleteHabit={handleDeleteHabit}
                 getCompletionStatus={getCompletionStatus}
                 reorderHabits={reorderHabits}
+                isDateBlockedByCustom={isDateBlockedByCustom}
               />
             </>
           )}
@@ -351,11 +426,26 @@ function App() {
             <StudyView />
           )}
 
+          {currentView === 'custom' && (
+            <CustomDateView
+              customHabits={customHabits}
+              weekDates={getCurrentMonthDates(currentDate)}
+              onToggleCustom={toggleCustomCompletion}
+              onEditCustomHabit={handleEditCustomHabit}
+              onDeleteCustomHabit={handleDeleteCustomHabit}
+              getCustomCompletionStatus={getCustomCompletionStatus}
+              onAddCustomHabit={handleAddCustomHabit}
+              formatDateRange={formatDateRange}
+            />
+          )}
+
           <ProgressSection
             habits={habits}
             getCurrentStreak={getCurrentStreak}
             getLongestStreak={getLongestStreak}
             completions={completions}
+            customHabits={customHabits}
+            customCompletions={customCompletions}
             onOpenAnalytics={() => setIsAnalyticsOpen(true)}
           />
 
@@ -378,6 +468,13 @@ function App() {
         onClose={() => setIsHabitModalOpen(false)}
         onSave={handleSaveHabit}
         habit={editingHabit}
+      />
+
+      <CustomHabitModal
+        isOpen={isCustomHabitModalOpen}
+        onClose={() => setIsCustomHabitModalOpen(false)}
+        onSave={handleSaveCustomHabit}
+        habit={editingCustomHabit}
       />
 
       <SettingsPanel

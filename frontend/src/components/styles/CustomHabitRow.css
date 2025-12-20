@@ -1,0 +1,134 @@
+.custom-habit-row {
+    display: grid;
+    grid-template-columns: minmax(200px, 1fr) auto;
+    gap: 16px;
+    padding: 12px 16px;
+    background: rgba(255, 107, 53, 0.05);
+    border: 1px dashed rgba(255, 107, 53, 0.3);
+    border-radius: var(--radius-md);
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.custom-habit-row:hover {
+    background: rgba(255, 107, 53, 0.08);
+    border-color: rgba(255, 107, 53, 0.5);
+}
+
+.custom-habit-row .habit-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.custom-habit-row .habit-name-section {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.custom-habit-row .habit-color-indicator {
+    width: 4px;
+    height: 32px;
+    border-radius: 2px;
+    flex-shrink: 0;
+}
+
+.custom-habit-row .habit-color-indicator.custom {
+    box-shadow: 0 0 8px currentColor;
+}
+
+.custom-habit-row .habit-name-button {
+    background: none;
+    border: none;
+    color: var(--text-primary);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 0;
+    text-align: left;
+}
+
+.custom-habit-row .habit-name-button:hover {
+    color: var(--accent-orange);
+}
+
+/* Date Range Badge */
+.date-range-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(255, 107, 53, 0.2);
+    color: var(--accent-orange);
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.date-range-badge svg {
+    opacity: 0.8;
+}
+
+/* Action buttons */
+.custom-habit-row .habit-inline-actions {
+    display: flex;
+    gap: 4px;
+    opacity: 0;
+    transition: opacity var(--transition-fast);
+}
+
+.custom-habit-row:hover .habit-inline-actions {
+    opacity: 1;
+}
+
+.custom-habit-row .action-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    font-size: 14px;
+    opacity: 0.6;
+    transition: opacity var(--transition-fast);
+}
+
+.custom-habit-row .action-button:hover {
+    opacity: 1;
+}
+
+.custom-habit-row .action-button.delete-button:hover {
+    color: var(--status-failed);
+}
+
+/* Time meta */
+.custom-habit-row .habit-meta {
+    padding-left: 12px;
+}
+
+.custom-habit-row .habit-time {
+    font-size: 12px;
+    color: var(--text-secondary);
+    background: var(--bg-secondary);
+    padding: 2px 8px;
+    border-radius: 4px;
+}
+
+/* Days grid */
+.custom-habit-row .habit-days {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .custom-habit-row {
+        grid-template-columns: 1fr;
+    }
+
+    .custom-habit-row .habit-days {
+        justify-content: flex-start;
+    }
+}

@@ -7,21 +7,37 @@ import './styles/ProgressSectionRedesigned.css';
 
 /**
  * Redesigned progress section with beautiful circular visualizations
+ * Now includes custom habit stats in today's progress
  */
 export function ProgressSection({
   habits,
   getCurrentStreak,
   getLongestStreak,
   completions,
+  customHabits = [],
+  customCompletions = {},
   onOpenAnalytics
 }) {
-  // Calculate today's statistics
+  // Calculate today's statistics (regular + custom habits)
   const today = getToday();
   const todayKey = formatDateKey(today);
-  const totalHabits = habits.length;
-  const completedToday = habits.filter(
+  
+  // Regular habits completed today
+  const completedRegularToday = habits.filter(
     habit => completions[habit.id]?.[todayKey] === 'completed'
   ).length;
+  
+  // Custom habits that apply today
+  const customHabitsForToday = customHabits.filter(habit => 
+    todayKey >= habit.dateFrom && todayKey <= habit.dateTo
+  );
+  const completedCustomToday = customHabitsForToday.filter(
+    habit => customCompletions[habit.id]?.[todayKey] === 'completed'
+  ).length;
+  
+  // Combined totals
+  const totalHabits = habits.length + customHabitsForToday.length;
+  const completedToday = completedRegularToday + completedCustomToday;
   const todayPercentage = totalHabits > 0 
     ? Math.round((completedToday / totalHabits) * 100)
     : 0;

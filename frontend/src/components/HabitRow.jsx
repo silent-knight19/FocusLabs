@@ -7,7 +7,7 @@ import { CSS } from '@dnd-kit/utilities';
 /**
  * Individual habit row with name, time, and day cells
  */
-export function HabitRow({ habit, weekDates, onToggle, onEdit, onDelete, getStatus }) {
+export function HabitRow({ habit, weekDates, onToggle, onEdit, onDelete, getStatus, isDateBlockedByCustom }) {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: habit.id });
   
   const CATEGORY_COLORS = {
@@ -84,16 +84,22 @@ export function HabitRow({ habit, weekDates, onToggle, onEdit, onDelete, getStat
       </div>
       
       <div className="habit-days">
-        {weekDates.map((date, index) => (
-          <DayCell
-            key={index}
-            date={date}
-            status={getStatus(habit.id, date)}
-            onClick={() => onToggle(habit.id, date)}
-            showNumber={true}
-          />
-        ))}
+        {weekDates.map((date, index) => {
+          const isBlocked = isDateBlockedByCustom && isDateBlockedByCustom(date);
+          return (
+            <DayCell
+              key={index}
+              date={date}
+              status={isBlocked ? null : getStatus(habit.id, date)}
+              onClick={isBlocked ? undefined : () => onToggle(habit.id, date)}
+              showNumber={true}
+              blockedByCustom={isBlocked}
+              disabled={isBlocked}
+            />
+          );
+        })}
       </div>
     </div>
   );
 }
+
