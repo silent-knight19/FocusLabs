@@ -4,14 +4,36 @@ import { useAuth } from '../contexts/AuthContext';
 import { getToday, formatDateKey, getWeekStart, getMonthDates } from '../utils/dateHelpers';
 import './styles/AnalyticsView.css';
 
-export function AnalyticsView({ habits, completions }) {
+export function AnalyticsView({ 
+  habits, 
+  completions,
+  customHabits = [],
+  customCompletions = {}
+}) {
   const today = getToday();
 
   // --- Analytics Logic ---
 
   // 1. Daily Progress (Today) - Redesigned as Concentric Rings
+  // Now includes custom habits that apply to today
   const dailyStats = useMemo(() => {
     const todayKey = formatDateKey(today);
+    
+    // Filter custom habits that apply to today
+    const customHabitsForToday = customHabits.filter(habit => 
+      todayKey >= habit.dateFrom && todayKey <= habit.dateTo
+    );
+    
+    // Combine regular and custom habits
+    const allHabits = [...habits, ...customHabitsForToday];
+    const allCompletions = { ...completions };
+    
+    // Merge custom completions
+    customHabitsForToday.forEach(habit => {
+      if (customCompletions[habit.id]?.[todayKey]) {
+        allCompletions[habit.id] = { [todayKey]: customCompletions[habit.id][todayKey] };
+      }
+    });
     
     // Calculate stats for different categories
     const categories = [
@@ -21,13 +43,13 @@ export function AnalyticsView({ habits, completions }) {
     ];
 
     const stats = categories.map(cat => {
-      const catHabits = habits.filter(h => 
+      const catHabits = allHabits.filter(h => 
         h.category?.toLowerCase().includes(cat.id) || 
         (cat.id === 'prod' && ['work', 'fitness', 'health'].includes(h.category?.toLowerCase()))
       );
       
       const total = catHabits.length;
-      const completed = catHabits.filter(h => completions[todayKey]?.[h.id]).length;
+      const completed = catHabits.filter(h => allCompletions[h.id]?.[todayKey] === 'completed').length;
       const percentage = total === 0 ? 0 : Math.round((completed / total) * 100);
       
       return { ...cat, completed, total, percentage };
@@ -38,7 +60,7 @@ export function AnalyticsView({ habits, completions }) {
     const totalHabits = stats.reduce((acc, curr) => acc + curr.total, 0);
 
     return { categories: stats, totalCompleted, totalHabits };
-  }, [habits, completions, today]);
+  }, [habits, completions, customHabits, customCompletions, today]);
 
   // ... (Weekly, Monthly, Yearly stats remain same) ...
 

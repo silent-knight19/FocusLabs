@@ -1,17 +1,21 @@
 import { useState, useEffect } from 'react';
+import { formatDateKey } from '../utils/dateHelpers';
 
 /**
  * Hook to determine which habit is currently active based on time ranges
- * @param {Array} habits - List of all habits
+ * Now includes custom habits that apply to today's date
+ * @param {Array} habits - List of all regular habits
+ * @param {Array} customHabits - List of custom date habits
  * @returns {Object} Active habit data with countdown timer
  */
-export function useActiveHabit(habits) {
+export function useActiveHabit(habits, customHabits = []) {
   const [activeData, setActiveData] = useState({
     activeHabit: null,
     timeRemaining: 0,
     totalDuration: 0,
     progress: 0,
-    seconds: 0
+    seconds: 0,
+    isCustomHabit: false
   });
 
   useEffect(() => {
@@ -19,8 +23,19 @@ export function useActiveHabit(habits) {
       const now = new Date();
       const currentTime = now.getHours() * 60 + now.getMinutes();
       const currentSeconds = now.getSeconds();
+      const todayKey = formatDateKey(now);
 
-      for (const habit of habits) {
+      // Combine regular habits with custom habits that apply to today
+      const customHabitsForToday = customHabits.filter(habit => 
+        todayKey >= habit.dateFrom && todayKey <= habit.dateTo
+      );
+      
+      const allHabits = [
+        ...habits.map(h => ({ ...h, isCustomHabit: false })),
+        ...customHabitsForToday.map(h => ({ ...h, isCustomHabit: true }))
+      ];
+
+      for (const habit of allHabits) {
         if (!habit.startTime || !habit.endTime) continue;
 
         const [startHours, startMinutes] = habit.startTime.split(':').map(Number);
@@ -70,7 +85,8 @@ export function useActiveHabit(habits) {
             timeRemaining,
             totalDuration,
             progress,
-            seconds: 60 - currentSeconds // Seconds until next minute
+            seconds: 60 - currentSeconds, // Seconds until next minute
+            isCustomHabit: habit.isCustomHabit || false
           });
           return;
         }
@@ -82,7 +98,8 @@ export function useActiveHabit(habits) {
         timeRemaining: 0,
         totalDuration: 0,
         progress: 0,
-        seconds: 0
+        seconds: 0,
+        isCustomHabit: false
       });
     };
 
@@ -93,7 +110,7 @@ export function useActiveHabit(habits) {
     const interval = setInterval(calculateActiveHabit, 1000);
 
     return () => clearInterval(interval);
-  }, [habits]);
+  }, [habits, customHabits]);
 
   const formatTimeRemaining = (minutes, seconds) => {
     // Format as MM:SS
@@ -107,3 +124,4 @@ export function useActiveHabit(habits) {
     formattedTimeRemaining: formatTimeRemaining(activeData.timeRemaining, activeData.seconds)
   };
 }
+

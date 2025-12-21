@@ -58,7 +58,8 @@ export function ProductivityHeatmap({ habits = [], completions = {}, dataVersion
            }
         }
         
-        const dateKey = currentDate.toISOString().split('T')[0];
+        // Use local date formatting to avoid timezone issues
+        const dateKey = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(currentDate.getDate()).padStart(2, '0')}`;
         
         // 1. Calculate Stopwatch Hours
         const dayLaps = history.filter(lap => {

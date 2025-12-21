@@ -140,7 +140,7 @@ function App() {
   const { settings, updateSettings } = useSettings();
 
   // Get active habit with countdown timer
-  const activeData = useActiveHabit(habits);
+  const activeData = useActiveHabit(habits, customHabits);
 
   // Get week dates based on start-of-week preference
   const weekDates = getWeekDates(currentDate, settings.startOfWeek);
