@@ -324,7 +324,6 @@ function App() {
       <main className="app-main">
         <div className="app-container">
 
-
           {/* Active Habit Tracker */}
           <ActiveHabitTracker
             activeData={activeData}
@@ -342,19 +341,19 @@ function App() {
             getToday={getToday}
           />
 
-          <div className="view-toggle-container" style={{ display: 'flex', justifyContent: 'center', marginBottom: 'var(--spacing-lg)', marginTop: 'var(--spacing-xl)', gap: 'var(--spacing-md)' }}>
+          <div className="view-toggle-container" style={{ display: 'flex', justifyContent: 'center', marginBottom: 'var(--spacing-lg)', marginTop: 'var(--spacing-xl)', gap: 'var(--spacing-sm)' }}>
             <button 
               className={`view-toggle-btn ${currentView === 'week' ? 'active' : ''}`}
               onClick={() => setCurrentView('week')}
               style={{ 
-                fontSize: '1.2rem', 
-                padding: '1rem 3rem', 
-                fontWeight: '700',
-                background: currentView === 'week' ? 'linear-gradient(135deg, var(--neon-orange), var(--neon-orange-dark))' : 'var(--bg-secondary)',
+                fontSize: '0.9rem', 
+                padding: '0.75rem 1.5rem', 
+                fontWeight: '600',
+                background: currentView === 'week' ? 'var(--gradient-primary)' : 'var(--bg-elevated)',
                 color: currentView === 'week' ? '#fff' : 'var(--text-secondary)',
-                border: '1px solid var(--neon-orange)',
+                border: currentView === 'week' ? 'none' : '1px solid var(--border-color)',
                 borderRadius: 'var(--radius-md)',
-                boxShadow: currentView === 'week' ? 'var(--glow-orange)' : 'none',
+                boxShadow: currentView === 'week' ? 'var(--glow-primary)' : 'none',
                 cursor: 'pointer'
               }}
             >
@@ -364,14 +363,14 @@ function App() {
               className={`view-toggle-btn ${currentView === 'daily' ? 'active' : ''}`}
               onClick={() => setCurrentView('daily')}
               style={{ 
-                fontSize: '1.2rem', 
-                padding: '1rem 3rem', 
-                fontWeight: '700',
-                background: currentView === 'daily' ? 'linear-gradient(135deg, var(--neon-orange), var(--neon-orange-dark))' : 'var(--bg-secondary)',
+                fontSize: '0.9rem', 
+                padding: '0.75rem 1.5rem', 
+                fontWeight: '600',
+                background: currentView === 'daily' ? 'var(--gradient-primary)' : 'var(--bg-elevated)',
                 color: currentView === 'daily' ? '#fff' : 'var(--text-secondary)',
-                border: '1px solid var(--neon-orange)',
+                border: currentView === 'daily' ? 'none' : '1px solid var(--border-color)',
                 borderRadius: 'var(--radius-md)',
-                boxShadow: currentView === 'daily' ? 'var(--glow-orange)' : 'none',
+                boxShadow: currentView === 'daily' ? 'var(--glow-primary)' : 'none',
                 cursor: 'pointer'
               }}
             >
@@ -381,22 +380,20 @@ function App() {
               className={`view-toggle-btn ${currentView === 'custom' ? 'active' : ''}`}
               onClick={() => setCurrentView('custom')}
               style={{ 
-                fontSize: '1.2rem', 
-                padding: '1rem 3rem', 
-                fontWeight: '700',
-                background: currentView === 'custom' ? 'linear-gradient(135deg, var(--neon-orange), var(--neon-orange-dark))' : 'var(--bg-secondary)',
+                fontSize: '0.9rem', 
+                padding: '0.75rem 1.5rem', 
+                fontWeight: '600',
+                background: currentView === 'custom' ? 'var(--gradient-primary)' : 'var(--bg-elevated)',
                 color: currentView === 'custom' ? '#fff' : 'var(--text-secondary)',
-                border: '1px solid var(--neon-orange)',
+                border: currentView === 'custom' ? 'none' : '1px solid var(--border-color)',
                 borderRadius: 'var(--radius-md)',
-                boxShadow: currentView === 'custom' ? 'var(--glow-orange)' : 'none',
+                boxShadow: currentView === 'custom' ? 'var(--glow-primary)' : 'none',
                 cursor: 'pointer'
               }}
             >
               Custom Date
             </button>
           </div>
-
-
 
           {currentView === 'week' && (
             <>

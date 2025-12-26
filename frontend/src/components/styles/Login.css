@@ -1,3 +1,7 @@
+/* ========================================
+   Login Page - Premium Glassmorphism Design
+   ======================================== */
+
 .login-container {
     min-height: 100vh;
     display: flex;
@@ -9,97 +13,87 @@
     overflow: hidden;
 }
 
-/* Animated Background */
-.login-background {
+/* Gradient Overlay for depth */
+.login-gradient-overlay {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
+    background: var(--gradient-mesh);
+    z-index: 1;
+    pointer-events: none;
+}
+
+/* ========================================
+   Login Card - Glassmorphism
+   ======================================== */
+
+.login-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border-radius: var(--radius-2xl);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--shadow-glass);
+    max-width: 480px;
+    width: 100%;
+    padding: var(--spacing-2xl);
+    position: relative;
+    z-index: 2;
     overflow: hidden;
-    z-index: 0;
 }
 
-.neon-circle {
+/* Animated border gradient */
+.login-card-border {
     position: absolute;
-    border-radius: 50%;
-    filter: blur(80px);
-    opacity: 0.3;
-    animation: float 20s infinite ease-in-out;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    border-radius: calc(var(--radius-2xl) + 2px);
+    background: var(--gradient-animated);
+    background-size: 300% 300%;
+    z-index: -1;
+    opacity: 0.5;
+    animation: gradientShift 8s ease infinite;
 }
 
-.neon-circle-1 {
-    width: 400px;
-    height: 400px;
-    background: radial-gradient(circle, var(--neon-orange), transparent);
-    top: -200px;
-    left: -200px;
-    animation-delay: 0s;
-}
-
-.neon-circle-2 {
-    width: 500px;
-    height: 500px;
-    background: radial-gradient(circle, var(--neon-purple), transparent);
-    bottom: -250px;
-    right: -250px;
-    animation-delay: 5s;
-}
-
-.neon-circle-3 {
-    width: 350px;
-    height: 350px;
-    background: radial-gradient(circle, var(--neon-blue), transparent);
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    animation-delay: 10s;
-}
-
-@keyframes float {
+@keyframes gradientShift {
 
     0%,
     100% {
-        transform: translate(0, 0) scale(1);
+        background-position: 0% 50%;
     }
 
-    33% {
-        transform: translate(50px, -50px) scale(1.1);
-    }
-
-    66% {
-        transform: translate(-50px, 50px) scale(0.9);
+    50% {
+        background-position: 100% 50%;
     }
 }
 
-/* Login Card */
-.login-card {
-    background: var(--bg-card);
-    border-radius: 24px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5),
-        0 0 0 1px var(--border-color);
-    max-width: 480px;
-    width: 100%;
-    padding: var(--spacing-xl);
-    animation: slideUp 0.6s ease-out;
-    position: relative;
-    z-index: 1;
-    backdrop-filter: blur(10px);
-}
-
-@keyframes slideUp {
+/* Card entrance animation */
+@keyframes cardEntrance {
     from {
         opacity: 0;
-        transform: translateY(30px);
+        transform: translateY(40px) scale(0.95);
+        filter: blur(10px);
     }
 
     to {
         opacity: 1;
-        transform: translateY(0);
+        transform: translateY(0) scale(1);
+        filter: blur(0);
     }
 }
 
-/* Header */
+.animate-card-entrance {
+    animation: cardEntrance 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* ========================================
+   Header Section
+   ======================================== */
+
 .login-header {
     text-align: center;
     margin-bottom: var(--spacing-xl);
@@ -110,167 +104,92 @@
     align-items: center;
     justify-content: center;
     gap: var(--spacing-md);
-    margin-bottom: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
+    position: relative;
+}
+
+/* Logo glow effect */
+.login-logo-glow {
+    position: absolute;
+    width: 120px;
+    height: 120px;
+    background: radial-gradient(circle, rgba(255, 107, 53, 0.4), transparent 70%);
+    filter: blur(30px);
+    animation: logoGlow 3s ease-in-out infinite;
+    z-index: -1;
+}
+
+@keyframes logoGlow {
+
+    0%,
+    100% {
+        transform: scale(1);
+        opacity: 0.4;
+    }
+
+    50% {
+        transform: scale(1.2);
+        opacity: 0.6;
+    }
 }
 
 .login-logo {
-    width: 60px;
-    height: 60px;
+    width: 70px;
+    height: 70px;
     object-fit: contain;
     filter: drop-shadow(0 0 20px rgba(255, 107, 53, 0.6));
-    animation: pulse-glow 3s ease-in-out infinite;
+    animation: logoFloat 4s ease-in-out infinite;
+}
+
+@keyframes logoFloat {
+
+    0%,
+    100% {
+        transform: translateY(0) rotate(0deg);
+    }
+
+    25% {
+        transform: translateY(-5px) rotate(2deg);
+    }
+
+    75% {
+        transform: translateY(-5px) rotate(-2deg);
+    }
 }
 
 .login-title {
-    font-size: 2.5rem;
+    font-size: var(--font-size-4xl);
     font-weight: 800;
-    background: linear-gradient(135deg, var(--neon-orange), var(--neon-orange-bright));
+    background: linear-gradient(135deg, var(--neon-orange), var(--neon-orange-bright), var(--neon-yellow));
+    background-size: 200% auto;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
     margin: 0;
-    filter: drop-shadow(0 0 10px rgba(255, 107, 53, 0.5));
-    animation: pulse-glow 3s ease-in-out infinite;
+    animation: titleShine 3s ease-in-out infinite;
 }
 
-@keyframes pulse-glow {
+@keyframes titleShine {
 
     0%,
     100% {
-        filter: drop-shadow(0 0 10px rgba(255, 107, 53, 0.5));
+        background-position: 0% center;
     }
 
     50% {
-        filter: drop-shadow(0 0 20px rgba(255, 107, 53, 0.8));
+        background-position: 100% center;
     }
 }
 
 .login-subtitle {
-    font-size: 1rem;
+    font-size: var(--font-size-base);
     color: var(--text-secondary);
     font-weight: 500;
+    opacity: 0;
+    animation: fadeInUp 0.6s ease-out 0.3s forwards;
 }
 
-/* Google Sign-In Button */
-.google-signin-button {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: var(--spacing-md);
-    padding: 1rem 2rem;
-    font-size: 1rem;
-    font-weight: 600;
-    background: white;
-    color: #3c4043;
-    border: 2px solid var(--border-color);
-    border-radius: 12px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    position: relative;
-    overflow: visible;
-    margin-bottom: var(--spacing-lg);
-}
-
-.google-signin-button::before {
-    display: none;
-}
-
-.google-signin-button:hover:not(:disabled) {
-    background: #f8f9fa;
-    border-color: var(--neon-orange);
-    box-shadow: 0 0 20px rgba(255, 107, 53, 0.3);
-    transform: translateY(-2px);
-}
-
-.google-signin-button:active:not(:disabled) {
-    transform: translateY(0);
-}
-
-.google-signin-button:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-}
-
-.google-icon {
-    flex-shrink: 0;
-}
-
-/* Divider */
-.divider {
-    display: flex;
-    align-items: center;
-    margin: var(--spacing-xl) 0;
-    position: relative;
-}
-
-.divider::before,
-.divider::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, var(--border-color), transparent);
-}
-
-.divider-text {
-    padding: 0 var(--spacing-md);
-    color: var(--text-tertiary);
-    font-size: 0.875rem;
-    font-weight: 600;
-    letter-spacing: 0.5px;
-}
-
-/* Tabs */
-.auth-tabs {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: var(--spacing-sm);
-    margin-bottom: var(--spacing-lg);
-    background: var(--bg-hover);
-    padding: 4px;
-    border-radius: 12px;
-}
-
-.auth-tab {
-    padding: 0.75rem 1.5rem;
-    font-size: 1rem;
-    font-weight: 600;
-    background: transparent;
-    color: var(--text-secondary);
-    border: none;
-    border-radius: 10px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    position: relative;
-    overflow: visible;
-}
-
-.auth-tab::before {
-    display: none;
-}
-
-.auth-tab.active {
-    background: linear-gradient(135deg, var(--neon-orange), var(--neon-orange-dark));
-    color: white;
-    box-shadow: 0 4px 12px rgba(255, 107, 53, 0.4);
-}
-
-.auth-tab:not(.active):hover:not(:disabled) {
-    color: var(--text-primary);
-    background: var(--bg-secondary);
-}
-
-.auth-tab:disabled {
-    cursor: not-allowed;
-    opacity: 0.5;
-}
-
-/* Form */
-.auth-form {
-    animation: fadeIn 0.3s ease-out;
-}
-
-@keyframes fadeIn {
+@keyframes fadeInUp {
     from {
         opacity: 0;
         transform: translateY(10px);
@@ -282,70 +201,139 @@
     }
 }
 
-.form-group {
-    margin-bottom: var(--spacing-lg);
+/* ========================================
+   Feature Highlights
+   ======================================== */
+
+.login-features {
+    display: flex;
+    justify-content: center;
+    gap: var(--spacing-lg);
+    margin-bottom: var(--spacing-xl);
+    flex-wrap: wrap;
 }
 
-.form-group label {
-    display: block;
-    font-size: 0.875rem;
-    font-weight: 600;
+.login-feature {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-full);
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    opacity: 0;
+    animation: fadeInUp 0.5s ease-out forwards;
+    transition: all var(--transition-fast);
+}
+
+.login-feature:nth-child(1) {
+    animation-delay: 0.4s;
+}
+
+.login-feature:nth-child(2) {
+    animation-delay: 0.5s;
+}
+
+.login-feature:nth-child(3) {
+    animation-delay: 0.6s;
+}
+
+.login-feature:hover {
+    background: rgba(255, 107, 53, 0.1);
+    border-color: rgba(255, 107, 53, 0.3);
     color: var(--text-primary);
-    margin-bottom: var(--spacing-sm);
+    transform: translateY(-2px);
 }
 
-.form-group input {
+.login-feature-icon {
+    font-size: 1.1rem;
+}
+
+.login-feature-text {
+    font-weight: 500;
+}
+
+/* ========================================
+   Google Sign-In Button
+   ======================================== */
+
+.google-signin-button {
     width: 100%;
-    padding: 0.875rem 1rem;
-    font-size: 1rem;
-    background: var(--bg-hover);
-    border: 2px solid var(--border-color);
-    border-radius: 10px;
-    color: var(--text-primary);
-    transition: all 0.3s ease;
-}
-
-.form-group input::placeholder {
-    color: var(--text-tertiary);
-}
-
-.form-group input:focus {
-    outline: none;
-    border-color: var(--neon-orange);
-    box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1),
-        0 0 20px rgba(255, 107, 53, 0.2);
-    background: var(--bg-card);
-}
-
-.form-group input:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-}
-
-/* Submit Button */
-.submit-button {
-    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-md);
     padding: 1rem 2rem;
-    font-size: 1rem;
-    font-weight: 700;
-    margin-top: var(--spacing-md);
-    border-radius: 12px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+    font-size: var(--font-size-base);
+    font-weight: 600;
+    background: rgba(255, 255, 255, 0.95);
+    color: #3c4043;
+    border: 2px solid transparent;
+    border-radius: var(--radius-xl);
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+    overflow: hidden;
+    margin-bottom: var(--spacing-lg);
+    opacity: 0;
+    animation: fadeInUp 0.5s ease-out 0.7s forwards;
 }
 
-.submit-button:disabled {
+.google-signin-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg,
+            transparent,
+            rgba(255, 107, 53, 0.1),
+            transparent);
+    transition: left 0.5s ease;
+}
+
+.google-signin-button:hover::before {
+    left: 100%;
+}
+
+.google-signin-button:hover:not(:disabled) {
+    background: white;
+    border-color: var(--neon-orange);
+    box-shadow: 0 0 30px rgba(255, 107, 53, 0.3),
+        0 10px 40px rgba(0, 0, 0, 0.2);
+    transform: translateY(-3px);
+}
+
+.google-signin-button:active:not(:disabled) {
+    transform: translateY(-1px);
+}
+
+.google-signin-button:disabled {
     opacity: 0.6;
     cursor: not-allowed;
-    transform: none !important;
 }
 
-/* Loading Spinner */
+.google-icon {
+    flex-shrink: 0;
+    transition: transform 0.3s ease;
+}
+
+.google-signin-button:hover .google-icon {
+    transform: scale(1.1);
+}
+
+/* ========================================
+   Loading Spinner
+   ======================================== */
+
 .loading-spinner {
     width: 20px;
     height: 20px;
-    border: 3px solid rgba(255, 255, 255, 0.3);
-    border-top: 3px solid white;
+    border: 3px solid rgba(255, 107, 53, 0.3);
+    border-top: 3px solid var(--neon-orange);
     border-radius: 50%;
     animation: spin 1s linear infinite;
     display: inline-block;
@@ -361,18 +349,21 @@
     }
 }
 
-/* Error Message */
+/* ========================================
+   Error Message
+   ======================================== */
+
 .login-error {
     margin-top: var(--spacing-lg);
     padding: var(--spacing-md);
-    background: rgba(239, 68, 68, 0.1);
-    border: 1px solid rgba(239, 68, 68, 0.3);
-    border-radius: 10px;
-    color: #ef4444;
+    background: rgba(255, 0, 85, 0.1);
+    border: 1px solid rgba(255, 0, 85, 0.3);
+    border-radius: var(--radius-lg);
+    color: var(--accent-red);
     text-align: center;
-    font-size: 0.875rem;
+    font-size: var(--font-size-sm);
     font-weight: 500;
-    animation: shake 0.5s ease-out;
+    animation: shake 0.5s ease-out, fadeIn 0.3s ease-out;
 }
 
 @keyframes shake {
@@ -391,16 +382,29 @@
     }
 }
 
-/* Footer */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+/* ========================================
+   Footer
+   ======================================== */
+
 .login-footer {
     text-align: center;
     padding-top: var(--spacing-xl);
     margin-top: var(--spacing-xl);
-    border-top: 1px solid var(--border-color);
+    border-top: 1px solid var(--glass-border);
 }
 
 .login-footer-text {
-    font-size: 0.875rem;
+    font-size: var(--font-size-sm);
     color: var(--text-tertiary);
     display: flex;
     align-items: center;
@@ -408,27 +412,46 @@
     gap: var(--spacing-xs);
 }
 
-/* Responsive */
+/* ========================================
+   Responsive
+   ======================================== */
+
 @media (max-width: 640px) {
     .login-card {
-        padding: var(--spacing-lg);
+        padding: var(--spacing-xl);
+        margin: var(--spacing-md);
     }
 
     .login-title {
-        font-size: 2rem;
+        font-size: var(--font-size-3xl);
     }
 
-    .neon-circle {
-        filter: blur(60px);
+    .login-logo {
+        width: 50px;
+        height: 50px;
+    }
+
+    .login-features {
+        flex-direction: column;
+        align-items: center;
+        gap: var(--spacing-sm);
+    }
+
+    .login-feature {
+        width: 100%;
+        justify-content: center;
     }
 }
 
-/* Dark mode specific (already default) */
+/* ========================================
+   Dark mode specific (already default)
+   ======================================== */
+
 .dark .google-signin-button {
-    background: white;
+    background: rgba(255, 255, 255, 0.95);
     color: #3c4043;
 }
 
 .dark .google-signin-button:hover:not(:disabled) {
-    background: #f8f9fa;
+    background: white;
 }

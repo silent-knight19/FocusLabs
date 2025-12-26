@@ -1,13 +1,34 @@
+/* ========================================
+   App Layout - Enhanced with Animations
+   ======================================== */
+
 .app {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   background-color: var(--bg-primary);
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Mesh gradient background overlay */
+.app::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--gradient-mesh);
+  pointer-events: none;
+  z-index: 0;
 }
 
 .app-main {
   flex: 1;
   padding: var(--spacing-xl) 0;
+  position: relative;
+  z-index: 1;
 }
 
 .app-container {
@@ -24,14 +45,243 @@
   flex-wrap: wrap;
 }
 
+/* ========================================
+   Dashboard Grid Layout
+   ======================================== */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: var(--spacing-xl);
+  align-items: start;
+  width: 100%;
+  margin-bottom: var(--spacing-2xl);
+}
+
+.dashboard-main-col {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
+.dashboard-side-col {
+  position: sticky;
+  top: 100px;
+}
+
+@media (max-width: 1024px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-lg);
+  }
+
+  .dashboard-side-col {
+    position: static;
+  }
+}
+
+/* ========================================
+   Heatmaps Container
+   ======================================== */
+
 .heatmaps-container {
   display: flex;
-  gap: var(--spacing-lg);
-  margin-top: var(--spacing-xl);
+  gap: var(--spacing-xl);
+  margin-top: var(--spacing-2xl);
   width: 100%;
 }
 
-/* Mobile responsive */
+.heatmaps-container>* {
+  flex: 1;
+  animation: fadeSlideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  opacity: 0;
+}
+
+.heatmaps-container>*:nth-child(1) {
+  animation-delay: 0.3s;
+}
+
+.heatmaps-container>*:nth-child(2) {
+  animation-delay: 0.4s;
+}
+
+@keyframes fadeSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ========================================
+   View Toggle Container
+   ======================================== */
+
+.view-toggle-container {
+  display: flex;
+  justify-content: center;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-xl);
+  margin-top: var(--spacing-2xl);
+  animation: fadeIn 0.5s ease-out;
+}
+
+.view-toggle-btn {
+  font-size: 1.1rem !important;
+  padding: 0.875rem 2.5rem !important;
+  font-weight: 600 !important;
+  border-radius: var(--radius-xl) !important;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  position: relative;
+  overflow: hidden;
+}
+
+.view-toggle-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg,
+      transparent,
+      rgba(255, 255, 255, 0.1),
+      transparent);
+  transition: left 0.5s ease;
+}
+
+.view-toggle-btn:hover::before {
+  left: 100%;
+}
+
+.view-toggle-btn.active {
+  background: var(--gradient-primary) !important;
+  color: white !important;
+  box-shadow: var(--glow-orange) !important;
+  transform: translateY(-2px);
+}
+
+.view-toggle-btn:not(.active) {
+  background: var(--glass-bg) !important;
+  border: 1px solid var(--glass-border) !important;
+  backdrop-filter: blur(10px);
+}
+
+.view-toggle-btn:not(.active):hover {
+  background: var(--bg-hover) !important;
+  border-color: var(--glass-border-hover) !important;
+  transform: translateY(-2px);
+}
+
+/* ========================================
+   Section Animations
+   ======================================== */
+
+.active-habit-tracker,
+.daily-overview,
+.habit-grid-container,
+.progress-section,
+.daily-planner {
+  animation: sectionEntrance 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  opacity: 0;
+}
+
+.active-habit-tracker {
+  animation-delay: 0.1s;
+}
+
+.daily-overview {
+  animation-delay: 0.2s;
+}
+
+.habit-grid-container {
+  animation-delay: 0.3s;
+}
+
+.progress-section {
+  animation-delay: 0.4s;
+}
+
+.daily-planner {
+  animation-delay: 0.2s;
+}
+
+@keyframes sectionEntrance {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ========================================
+   Glass Card Base Styles
+   ======================================== */
+
+.glass-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-xl);
+  transition: all var(--transition-fast);
+}
+
+.glass-card:hover {
+  border-color: var(--glass-border-hover);
+  box-shadow: 0 0 30px rgba(255, 107, 53, 0.1);
+}
+
+/* ========================================
+   Scroll Animations (for future use)
+   ======================================== */
+
+[data-animate="fade-up"] {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+[data-animate="fade-up"].visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ========================================
+   Loading States
+   ======================================== */
+
+.skeleton-loader {
+  background: linear-gradient(90deg,
+      var(--bg-secondary) 25%,
+      var(--bg-hover) 50%,
+      var(--bg-secondary) 75%);
+  background-size: 200% 100%;
+  animation: skeletonShimmer 1.5s ease-in-out infinite;
+  border-radius: var(--radius-md);
+}
+
+@keyframes skeletonShimmer {
+  0% {
+    background-position: -200% 0;
+  }
+
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* ========================================
+   Mobile Responsive
+   ======================================== */
+
 @media (max-width: 1200px) {
   .heatmaps-container {
     flex-direction: column;
@@ -45,5 +295,29 @@
 
   .app-container {
     padding: 0 var(--spacing-md);
+  }
+
+  .view-toggle-container {
+    flex-wrap: wrap;
+  }
+
+  .view-toggle-btn {
+    font-size: 0.95rem !important;
+    padding: 0.75rem 1.5rem !important;
+  }
+}
+
+/* ========================================
+   Reduced Motion Support
+   ======================================== */
+
+@media (prefers-reduced-motion: reduce) {
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }

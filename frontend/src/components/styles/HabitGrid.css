@@ -1,9 +1,17 @@
 .habit-grid-container {
-    background-color: var(--bg-card);
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-md);
-    border: 2px solid var(--border-color);
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-glass);
+    border: 1px solid var(--glass-border);
     overflow: hidden;
+    transition: all var(--transition-fast);
+}
+
+.habit-grid-container:hover {
+    border-color: var(--glass-border-hover);
+    box-shadow: 0 0 30px rgba(255, 107, 53, 0.08);
 }
 
 .habit-grid-body {
@@ -17,29 +25,25 @@
 }
 
 .habit-grid-body::-webkit-scrollbar-track {
-    background: var(--bg-primary);
-}
-
-.habit-grid-body::-webkit-scrollbar-thumb {
-    background: var(--border-color);
+    background: rgba(0, 0, 0, 0.2);
     border-radius: 4px;
 }
 
+.habit-grid-body::-webkit-scrollbar-thumb {
+    background: var(--glass-border-hover);
+    border-radius: 4px;
+    transition: background 0.2s;
+}
+
 .habit-grid-body::-webkit-scrollbar-thumb:hover {
-    background: var(--border-hover);
+    background: var(--neon-orange);
 }
 
 .habit-grid {
-    background-color: var(--bg-card);
+    background: transparent;
     border-radius: var(--radius-lg);
     padding: var(--spacing-lg);
-    box-shadow: var(--shadow-md);
-    border: 2px solid var(--border-color);
-    transition: border-color var(--transition-base);
-}
-
-.habit-grid:hover {
-    border-color: var(--border-hover);
+    transition: all var(--transition-base);
 }
 
 /* Empty State */

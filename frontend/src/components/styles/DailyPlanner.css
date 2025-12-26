@@ -9,16 +9,21 @@
 .planner-header {
     display: flex;
     justify-content: center;
-    /* Center the date navigation */
     align-items: center;
     margin-bottom: var(--spacing-xl);
     padding: var(--spacing-lg);
-    background: #0A0A0A;
-    border-radius: var(--radius-lg);
-    border: 2px solid var(--neon-orange);
-    box-shadow: none;
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border-radius: var(--radius-xl);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--shadow-glass);
     position: relative;
-    /* For absolute positioning of children */
+    transition: all var(--transition-fast);
+}
+
+.planner-header:hover {
+    border-color: var(--glass-border-hover);
 }
 
 .date-navigation {
@@ -28,25 +33,26 @@
 }
 
 .nav-btn {
-    background: #111111;
-    border: 1px solid #262626;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
     color: var(--text-primary);
     padding: var(--spacing-sm);
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-lg);
     cursor: pointer;
     transition: all var(--transition-fast);
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 40px;
-    height: 40px;
+    width: 42px;
+    height: 42px;
 }
 
 .nav-btn:hover {
     border-color: var(--neon-orange);
     color: var(--neon-orange);
-    background: #171717;
-    transform: translateY(-1px);
+    background: rgba(255, 107, 53, 0.1);
+    transform: translateY(-2px);
+    box-shadow: 0 0 20px rgba(255, 107, 53, 0.2);
 }
 
 .nav-btn:active {
@@ -61,6 +67,7 @@
 
 .calendar-icon {
     color: var(--neon-orange);
+    filter: drop-shadow(0 0 5px rgba(255, 107, 53, 0.5));
 }
 
 .selected-date {
@@ -73,24 +80,35 @@
 .today-badge {
     background: linear-gradient(135deg, var(--neon-orange), var(--neon-orange-dark));
     color: white;
-    padding: 4px 12px;
-    border-radius: var(--radius-md);
+    padding: 4px 14px;
+    border-radius: var(--radius-full);
     font-size: var(--font-size-sm);
     font-weight: 600;
     box-shadow: var(--glow-orange);
+    animation: todayPulse 2s ease-in-out infinite;
+}
+
+@keyframes todayPulse {
+
+    0%,
+    100% {
+        box-shadow: var(--glow-orange);
+    }
+
+    50% {
+        box-shadow: var(--glow-orange-intense);
+    }
 }
 
 .today-btn {
-    background: #111111;
-    border: 1px solid #262626;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
     color: var(--text-primary);
     padding: var(--spacing-sm) var(--spacing-lg);
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-lg);
     cursor: pointer;
     transition: all var(--transition-fast);
     font-weight: 600;
-
-    /* Absolute positioning to right */
     position: absolute;
     right: var(--spacing-lg);
     top: 50%;
@@ -100,7 +118,7 @@
 .today-btn:hover:not(.disabled) {
     border-color: var(--neon-orange);
     color: var(--neon-orange);
-    background: #171717;
+    background: rgba(255, 107, 53, 0.1);
 }
 
 .today-btn.disabled {
@@ -110,12 +128,19 @@
 
 /* Overall progress section */
 .overall-progress {
-    background: #0A0A0A;
-    border-radius: var(--radius-lg);
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border-radius: var(--radius-xl);
     padding: var(--spacing-lg);
     margin-bottom: var(--spacing-xl);
-    border: 2px solid var(--neon-orange);
-    box-shadow: none;
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--shadow-glass);
+    transition: all var(--transition-fast);
+}
+
+.overall-progress:hover {
+    border-color: var(--glass-border-hover);
 }
 
 .progress-stats {

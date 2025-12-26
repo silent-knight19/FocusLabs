@@ -255,28 +255,27 @@ export function Stopwatch({ isOpen, onClose, onDataUpdate }) {
           </div>
         )}
 
-        {isRunning && (
-          <div className="category-selector">
-            <div className="category-label">Category:</div>
-            <div className="category-buttons">
-              {categories.map(cat => (
-                <button
-                  key={cat.value}
-                  className={`category-btn ${selectedCategory === cat.value ? 'active' : ''}`}
-                  onClick={() => setSelectedCategory(cat.value)}
-                  style={{
-                    borderColor: selectedCategory === cat.value ? cat.color : 'transparent',
-                    backgroundColor: selectedCategory === cat.value ? `${cat.color}20` : 'transparent'
-                  }}
-                >
-                  {cat.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
 
-        <div className="stopwatch-controls">
+
+        <div className="stopwatch-center-layout">
+          {isRunning && (
+            <div className="category-selector-centered">
+              <span className="category-label-small">Session Category</span>
+              <div className="category-pills">
+                {categories.map(cat => (
+                  <button
+                    key={cat.value}
+                    className={`category-pill ${selectedCategory === cat.value ? 'active' : ''}`}
+                    onClick={() => setSelectedCategory(cat.value)}
+                  >
+                    {cat.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="stopwatch-controls">
           <button 
             className={`control-btn secondary ${isRunning ? 'lap' : 'reset'}`}
             onClick={isRunning ? () => {
@@ -295,6 +294,8 @@ export function Stopwatch({ isOpen, onClose, onDataUpdate }) {
           </button>
         </div>
 
+        </div> {/* End stopwatch-center-layout */}
+        
         <div className="laps-list">
           {laps.map((lapItem, index) => {
             const lapFormatted = formatTime(lapItem.time);

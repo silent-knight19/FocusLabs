@@ -22,19 +22,37 @@ export function Login() {
 
   return (
     <div className="login-container">
-      <div className="login-background">
-        <div className="neon-circle neon-circle-1"></div>
-        <div className="neon-circle neon-circle-2"></div>
-        <div className="neon-circle neon-circle-3"></div>
-      </div>
 
-      <div className="login-card">
+      {/* Gradient Overlay */}
+      <div className="login-gradient-overlay"></div>
+
+      <div className="login-card animate-card-entrance">
+        {/* Animated border */}
+        <div className="login-card-border"></div>
+        
         <div className="login-header">
           <div className="login-logo-container">
+            <div className="login-logo-glow"></div>
             <img src="/logo.png" alt="FocusLabs Logo" className="login-logo" />
             <h1 className="login-title">FocusLabs</h1>
           </div>
           <p className="login-subtitle">Track your habits, achieve your goals</p>
+        </div>
+
+        {/* Feature highlights */}
+        <div className="login-features">
+          <div className="login-feature">
+            <span className="login-feature-icon">🎯</span>
+            <span className="login-feature-text">Daily Habit Tracking</span>
+          </div>
+          <div className="login-feature">
+            <span className="login-feature-icon">📊</span>
+            <span className="login-feature-text">Visual Analytics</span>
+          </div>
+          <div className="login-feature">
+            <span className="login-feature-icon">⚡</span>
+            <span className="login-feature-text">Streak Motivation</span>
+          </div>
         </div>
 
         {/* Google Sign-In Button */}
@@ -89,3 +107,4 @@ export function Login() {
     </div>
   );
 }
+
