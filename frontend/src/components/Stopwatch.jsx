@@ -107,6 +107,24 @@ export function Stopwatch({ isOpen, onClose, onDataUpdate }) {
     }
   }, [editingLapId]);
 
+  // Warn user before closing page/browser if stopwatch is running
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      if (isRunning) {
+        e.preventDefault();
+        // Modern browsers require returnValue to be set
+        e.returnValue = 'You have an active stopwatch session with unsaved progress. Are you sure you want to leave?';
+        return e.returnValue;
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [isRunning]);
+
   if (!isOpen) return null;
 
   const formatted = formatTime(time);
