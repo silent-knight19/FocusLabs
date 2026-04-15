@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import confetti from 'canvas-confetti';
-import { PremiumTimeBackground } from './components/PremiumTimeBackground';
+import { ScrambledBackground } from './components/ScrambledBackground';
 import { TopNav } from './components/TopNav';
 import { HabitGrid } from './components/HabitGrid';
 import { AddHabitButton } from './components/AddHabitButton';
@@ -366,8 +366,8 @@ function App() {
 
   return (
     <div className="app perspective-root">
-      {/* Premium Time-themed 3D Background */}
-      <PremiumTimeBackground />
+      {/* Scrambled 4x4 Overlapping Image Background */}
+      <ScrambledBackground />
 
       <TopNav
         onSettingsClick={() => setIsSettingsPanelOpen(true)}

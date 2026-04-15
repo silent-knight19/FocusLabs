@@ -45,7 +45,7 @@
     padding: var(--spacing-lg);
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 12px;
     transition: all var(--transition-base);
 }
 

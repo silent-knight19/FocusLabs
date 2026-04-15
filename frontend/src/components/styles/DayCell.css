@@ -194,3 +194,22 @@
     transform: none;
     box-shadow: none;
 }
+
+/* Before Creation - date is before the habit was created */
+.day-cell.before-creation {
+    background: rgba(100, 100, 100, 0.05);
+    border: 1px solid rgba(100, 100, 100, 0.15);
+    cursor: not-allowed;
+    opacity: 0.4;
+}
+
+.day-cell.before-creation .day-number {
+    color: var(--text-tertiary);
+    opacity: 0.5;
+}
+
+.day-cell.before-creation:hover {
+    transform: none;
+    box-shadow: none;
+    border-color: rgba(100, 100, 100, 0.15);
+}

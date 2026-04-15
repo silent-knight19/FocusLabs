@@ -5,6 +5,21 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
 /**
+ * Check if date is before the habit creation date
+ * @param {Date} date - The date to check
+ * @param {string} createdAt - ISO string of habit creation date
+ * @returns {boolean} True if date is before creation
+ */
+function isDateBeforeCreation(date, createdAt) {
+  if (!createdAt) return false;
+  const creationDate = new Date(createdAt);
+  creationDate.setHours(0, 0, 0, 0);
+  const checkDate = new Date(date);
+  checkDate.setHours(0, 0, 0, 0);
+  return checkDate < creationDate;
+}
+
+/**
  * Individual habit row with name, time, and day cells
  */
 export function HabitRow({ habit, weekDates, onToggle, onEdit, onDelete, getStatus, isDateBlockedByCustom }) {
@@ -86,15 +101,18 @@ export function HabitRow({ habit, weekDates, onToggle, onEdit, onDelete, getStat
       <div className="habit-days">
         {weekDates.map((date, index) => {
           const isBlocked = isDateBlockedByCustom && isDateBlockedByCustom(date);
+          const isBeforeCreation = isDateBeforeCreation(date, habit.createdAt);
+          const isDisabled = isBlocked || isBeforeCreation;
           return (
             <DayCell
               key={index}
               date={date}
-              status={isBlocked ? null : getStatus(habit.id, date)}
-              onClick={isBlocked ? undefined : () => onToggle(habit.id, date)}
+              status={isDisabled ? null : getStatus(habit.id, date)}
+              onClick={isDisabled ? undefined : () => onToggle(habit.id, date)}
               showNumber={true}
               blockedByCustom={isBlocked}
-              disabled={isBlocked}
+              disabled={isDisabled}
+              beforeCreation={isBeforeCreation}
             />
           );
         })}
