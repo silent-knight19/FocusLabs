@@ -30,7 +30,7 @@ export function HabitGrid({
   if (habits.length === 0) {
     return (
       <div className="habit-grid-empty">
-        <div className="empty-state">
+        <div className="empty-state glass-3d float-3d">
           <div className="empty-icon">📋</div>
           <h3>No habits yet</h3>
           <p className="text-secondary">Click "Add Habit" to create your first habit</p>
@@ -55,8 +55,8 @@ export function HabitGrid({
   return (
     <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
       <SortableContext items={sortedHabits.map(h => h.id)}>
-        <div className="habit-grid-container">
-          <div 
+        <div className="habit-grid-container glass-3d">
+          <div
             className="habit-grid-body"
             style={{ '--days-count': weekDates.length }}
           >

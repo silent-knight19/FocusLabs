@@ -179,7 +179,7 @@ export function ActiveHabitTracker({
   const progressOffset = circumference * (progress / 100);
 
   return (
-    <div className="active-tracker-container">
+    <div className="active-tracker-container glass-3d">
       {/* Header */}
       <div className="tracker-header">
         <span className="active-badge">ACTIVE NOW</span>

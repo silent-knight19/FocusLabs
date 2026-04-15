@@ -64,11 +64,7 @@ export function ProgressSection({
   const [showAllStreaks, setShowAllStreaks] = useState(false);
   const [expandedHabit, setExpandedHabit] = useState(null);
 
-  if (habits.length === 0) {
-    return null;
-  }
-
-  // Get last completion date for a habit
+  // Get last completion date for a habit - must be defined before useMemo
   const getLastCompletionDate = (habitId) => {
     const habitCompletions = completions[habitId] || {};
     const completedDates = Object.keys(habitCompletions)
@@ -105,7 +101,7 @@ export function ProgressSection({
       const lastDate = getLastCompletionDate(habit.id);
       const status = getStreakStatus(current, lastDate, todayKey);
       const isCompletedToday = completions[habit.id]?.[todayKey] === 'completed';
-      
+
       return {
         id: habit.id,
         name: habit.name,
@@ -132,7 +128,7 @@ export function ProgressSection({
   const displayStreaks = showAllStreaks ? habitStreaks : habitStreaks.slice(0, 5);
 
   return (
-    <section className="progress-section-redesigned">
+    <section className="progress-section-redesigned card-3d-wrapper">
       <div className="progress-header">
         <h2>Today's Progress</h2>
         <span className="progress-count">{completedToday} / {totalHabits} habits</span>
@@ -140,7 +136,7 @@ export function ProgressSection({
 
       <div className="progress-main-grid">
         {/* Today's Progress - Circular */}
-        <div className="progress-card today-card">
+        <div className="progress-card today-card glass-3d hover-lift-3d">
           <div className="card-header">
             <Target size={20} />
             <h3>Today's Progress</h3>
@@ -185,8 +181,8 @@ export function ProgressSection({
         </div>
 
         {/* Focus Hours - 10 Day Average (Concentric Pie) */}
-        <div 
-          className="progress-card weekly-card"
+        <div
+          className="progress-card weekly-card glass-3d hover-lift-3d"
           onClick={onOpenAnalytics}
           role={onOpenAnalytics ? 'button' : undefined}
           tabIndex={onOpenAnalytics ? 0 : undefined}
@@ -215,7 +211,7 @@ export function ProgressSection({
         </div>
 
         {/* Enhanced Streaks Section */}
-        <div className="progress-card streaks-card">
+        <div className="progress-card streaks-card glass-3d hover-lift-3d">
           <div className="card-header">
             <div className="streaks-header-left">
               <Flame size={20} />
@@ -240,12 +236,19 @@ export function ProgressSection({
             )}
           </div>
           <div className={`streaks-list ${showAllStreaks ? 'expanded' : ''}`}>
-            {displayStreaks.map((habit) => (
-              <div 
-                key={habit.id} 
-                className={`streak-item ${habit.status.type} ${expandedHabit === habit.id ? 'expanded' : ''}`}
-                onClick={() => setExpandedHabit(expandedHabit === habit.id ? null : habit.id)}
-              >
+            {displayStreaks.length === 0 ? (
+              <div className="streak-empty-state" style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)', opacity: 0.6 }}>
+                <Flame size={32} style={{ marginBottom: '0.75rem', opacity: 0.4 }} />
+                <p style={{ margin: 0, fontSize: '0.9rem' }}>No habits yet</p>
+                <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.75rem' }}>Add habits to start tracking streaks!</p>
+              </div>
+            ) : (
+              displayStreaks.map((habit) => (
+                <div
+                  key={habit.id}
+                  className={`streak-item ${habit.status.type} ${expandedHabit === habit.id ? 'expanded' : ''}`}
+                  onClick={() => setExpandedHabit(expandedHabit === habit.id ? null : habit.id)}
+                >
                 <div className="streak-main">
                   <div className="streak-info">
                     <div 
@@ -319,7 +322,8 @@ export function ProgressSection({
                   </div>
                 )}
               </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
       </div>

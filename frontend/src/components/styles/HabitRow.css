@@ -1,20 +1,27 @@
 .habit-row {
     display: grid;
     grid-template-columns: 350px 1fr;
-    /* Increased from 250px */
     gap: var(--spacing-md);
-    padding: var(--spacing-sm) var(--spacing-lg);
-    /* Reduced vertical padding */
-    background-color: var(--bg-card);
-    border-bottom: 1px solid var(--border-color);
+    padding: var(--spacing-md) var(--spacing-lg);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: var(--radius-md);
     align-items: center;
-    /* Vertically center everything */
-    transition: all var(--transition-fast);
+    transition: all 0.25s var(--ease-standard);
     position: relative;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Alternating row backgrounds - subtle variation */
+.habit-row:nth-child(even) {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.02) 100%);
 }
 
 .habit-row:hover {
-    background-color: var(--bg-hover);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.04) 100%);
+    border-color: rgba(245, 158, 11, 0.2);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3), 0 0 20px rgba(245, 158, 11, 0.08);
+    transform: translateX(2px);
 }
 
 /* Habit Info Section */

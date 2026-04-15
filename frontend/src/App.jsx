@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import confetti from 'canvas-confetti';
+import { PremiumTimeBackground } from './components/PremiumTimeBackground';
 import { TopNav } from './components/TopNav';
 import { HabitGrid } from './components/HabitGrid';
 import { AddHabitButton } from './components/AddHabitButton';
@@ -39,6 +40,7 @@ import {
 import { useLockBodyScroll } from './hooks/useLockBodyScroll';
 
 import './App.css';
+import './styles/three-d-effects.css';
 import './components/styles/CalendarOverlay.css';
 
 const CATEGORIES = ['study', 'productive', 'self growth'];
@@ -363,7 +365,10 @@ function App() {
   }, []);
 
   return (
-    <div className="app">
+    <div className="app perspective-root">
+      {/* Premium Time-themed 3D Background */}
+      <PremiumTimeBackground />
+
       <TopNav
         onSettingsClick={() => setIsSettingsPanelOpen(true)}
         onStopwatchClick={() => setIsStopwatchOpen(true)}
@@ -372,8 +377,8 @@ function App() {
         currentDate={currentDate}
       />
 
-      <main className="app-main">
-        <div className="app-container">
+      <main className="app-main" style={{ transformStyle: 'preserve-3d' }}>
+        <div className="app-container" style={{ transformStyle: 'preserve-3d' }}>
 
           {/* Active Habit Tracker */}
           <ActiveHabitTracker
@@ -393,8 +398,8 @@ function App() {
           />
 
           <div className="view-toggle-container" style={{ display: 'flex', justifyContent: 'center', marginBottom: 'var(--spacing-lg)', marginTop: 'var(--spacing-xl)', gap: 'var(--spacing-sm)' }}>
-            <button 
-              className={`view-toggle-btn ${currentView === 'week' ? 'active' : ''}`}
+            <button
+              className={`view-toggle-btn btn-3d ${currentView === 'week' ? 'active' : ''}`}
               onClick={() => setCurrentView('week')}
               style={{ 
                 fontSize: '0.9rem', 
@@ -410,8 +415,8 @@ function App() {
             >
               Month View
             </button>
-            <button 
-              className={`view-toggle-btn ${currentView === 'daily' ? 'active' : ''}`}
+            <button
+              className={`view-toggle-btn btn-3d ${currentView === 'daily' ? 'active' : ''}`}
               onClick={() => setCurrentView('daily')}
               style={{ 
                 fontSize: '0.9rem', 
@@ -427,8 +432,8 @@ function App() {
             >
               Daily Planner
             </button>
-            <button 
-              className={`view-toggle-btn ${currentView === 'custom' ? 'active' : ''}`}
+            <button
+              className={`view-toggle-btn btn-3d ${currentView === 'custom' ? 'active' : ''}`}
               onClick={() => setCurrentView('custom')}
               style={{ 
                 fontSize: '0.9rem', 
@@ -446,88 +451,99 @@ function App() {
             </button>
           </div>
 
-          {currentView === 'week' && (
-            <>
-              <HabitGrid
-                habits={filteredHabits}
-                weekDates={getCurrentMonthDates(currentDate)}
-                onToggle={handleToggle}
-                onEditHabit={handleEditHabit}
-                onDeleteHabit={handleDeleteHabit}
-                getCompletionStatus={getCompletionStatus}
-                reorderHabits={reorderHabits}
-                isDateBlockedByCustom={isDateBlockedByCustom}
+          {/* Main content area with 70/30 split */}
+          <div className="main-content-split" style={{ display: 'flex', gap: '1.5rem', alignItems: 'flex-start' }}>
+            {/* Left column - 70% */}
+            <div className="main-column" style={{ flex: '0 0 70%', maxWidth: '70%' }}>
+              {currentView === 'week' && (
+                <HabitGrid
+                  habits={filteredHabits}
+                  weekDates={getCurrentMonthDates(currentDate)}
+                  onToggle={handleToggle}
+                  onEditHabit={handleEditHabit}
+                  onDeleteHabit={handleDeleteHabit}
+                  getCompletionStatus={getCompletionStatus}
+                  reorderHabits={reorderHabits}
+                  isDateBlockedByCustom={isDateBlockedByCustom}
+                />
+              )}
+
+              {currentView === 'daily' && (
+                <DailyPlanner
+                  habits={filteredHabits}
+                  selectedDate={selectedPlannerDate}
+                  onDateChange={setSelectedPlannerDate}
+                  getDailyTasks={getDailyTasks}
+                  onAddTask={addDailyTask}
+                  onToggleTask={toggleDailyTask}
+                  onUpdateTask={updateDailyTask}
+                  onDeleteTask={deleteDailyTask}
+                  getDailyCompletion={getDailyCompletion}
+                  getDateCompletion={getDateCompletion}
+                  onAddHabit={handleAddHabit}
+                  // Custom habits props
+                  customHabits={customHabits}
+                  customCompletions={customCompletions}
+                  toggleCustomCompletion={toggleCustomCompletion}
+                  getCustomCompletionStatus={getCustomCompletionStatus}
+                  onAddCustomHabit={handleAddCustomHabit}
+                  // Custom subtask props
+                  getCustomSubtasks={getCustomSubtasks}
+                  addCustomSubtask={addCustomSubtask}
+                  deleteCustomSubtask={deleteCustomSubtask}
+                  toggleCustomSubtaskCompletion={toggleCustomSubtaskCompletion}
+                  getCustomSubtaskStatus={getCustomSubtaskStatus}
+                  getCustomSubtaskCompletionPercentage={getCustomSubtaskCompletionPercentage}
+                />
+              )}
+
+              {currentView === 'study' && (
+                <StudyView />
+              )}
+
+              {currentView === 'custom' && (
+                <CustomDateView
+                  customHabits={customHabits}
+                  weekDates={getCurrentMonthDates(currentDate)}
+                  onToggleCustom={toggleCustomCompletion}
+                  onEditCustomHabit={handleEditCustomHabit}
+                  onDeleteCustomHabit={handleDeleteCustomHabit}
+                  getCustomCompletionStatus={getCustomCompletionStatus}
+                  onAddCustomHabit={handleAddCustomHabit}
+                  formatDateRange={formatDateRange}
+                />
+              )}
+            </div>
+
+            {/* Right column - 30% with ProgressSection */}
+            <div className="sidebar-column parallax-layer-2" style={{ flex: '0 0 30%', maxWidth: '30%' }}>
+              <ProgressSection
+                habits={habits}
+                getCurrentStreak={getCurrentStreak}
+                getLongestStreak={getLongestStreak}
+                completions={completions}
+                customHabits={customHabits}
+                customCompletions={customCompletions}
+                onOpenAnalytics={() => setIsAnalyticsOpen(true)}
+                onToggleCompletion={toggleCompletion}
               />
-            </>
-          )}
+            </div>
+          </div>
 
-          {currentView === 'daily' && (
-            <DailyPlanner
-              habits={filteredHabits}
-              selectedDate={selectedPlannerDate}
-              onDateChange={setSelectedPlannerDate}
-              getDailyTasks={getDailyTasks}
-              onAddTask={addDailyTask}
-              onToggleTask={toggleDailyTask}
-              onUpdateTask={updateDailyTask}
-              onDeleteTask={deleteDailyTask}
-              getDailyCompletion={getDailyCompletion}
-              getDateCompletion={getDateCompletion}
-              onAddHabit={handleAddHabit}
-              // Custom habits props
-              customHabits={customHabits}
-              customCompletions={customCompletions}
-              toggleCustomCompletion={toggleCustomCompletion}
-              getCustomCompletionStatus={getCustomCompletionStatus}
-              onAddCustomHabit={handleAddCustomHabit}
-              // Custom subtask props
-              getCustomSubtasks={getCustomSubtasks}
-              addCustomSubtask={addCustomSubtask}
-              deleteCustomSubtask={deleteCustomSubtask}
-              toggleCustomSubtaskCompletion={toggleCustomSubtaskCompletion}
-              getCustomSubtaskStatus={getCustomSubtaskStatus}
-              getCustomSubtaskCompletionPercentage={getCustomSubtaskCompletionPercentage}
-            />
-          )}
-
-          {currentView === 'study' && (
-            <StudyView />
-          )}
-
-          {currentView === 'custom' && (
-            <CustomDateView
-              customHabits={customHabits}
-              weekDates={getCurrentMonthDates(currentDate)}
-              onToggleCustom={toggleCustomCompletion}
-              onEditCustomHabit={handleEditCustomHabit}
-              onDeleteCustomHabit={handleDeleteCustomHabit}
-              getCustomCompletionStatus={getCustomCompletionStatus}
-              onAddCustomHabit={handleAddCustomHabit}
-              formatDateRange={formatDateRange}
-            />
-          )}
-
-          <ProgressSection
-            habits={habits}
-            getCurrentStreak={getCurrentStreak}
-            getLongestStreak={getLongestStreak}
-            completions={completions}
-            customHabits={customHabits}
-            customCompletions={customCompletions}
-            onOpenAnalytics={() => setIsAnalyticsOpen(true)}
-            onToggleCompletion={toggleCompletion}
-          />
-
-          <div className="heatmaps-container">
+          <div className="heatmaps-container grid-3d">
             {/* Study Activity Heatmap */}
-            <StudyHeatmap dataVersion={dataVersion} />
+            <div className="glass-3d hover-lift-3d">
+              <StudyHeatmap dataVersion={dataVersion} />
+            </div>
 
             {/* Productivity & Growth Heatmap */}
-            <ProductivityHeatmap 
-              habits={habits}
-              completions={completions}
-              dataVersion={dataVersion}
-            />
+            <div className="glass-3d hover-lift-3d">
+              <ProductivityHeatmap
+                habits={habits}
+                completions={completions}
+                dataVersion={dataVersion}
+              />
+            </div>
           </div>
         </div>
       </main>

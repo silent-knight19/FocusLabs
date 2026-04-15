@@ -43,6 +43,9 @@
     background: transparent;
     border-radius: var(--radius-lg);
     padding: var(--spacing-lg);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
     transition: all var(--transition-base);
 }
 

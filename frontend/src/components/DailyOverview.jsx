@@ -50,7 +50,7 @@ export function DailyOverview({ habits, getCompletionStatus, getToday }) {
   };
 
   return (
-    <div className="daily-overview-container">
+    <div className="daily-overview-container glass-3d">
       <div className="overview-left">
         {nextHabit ? (
           <>
