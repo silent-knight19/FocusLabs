@@ -8,12 +8,11 @@
   flex-direction: column;
   background-color: transparent;
   position: relative;
-  overflow-x: hidden;
 }
 
 .app-main {
   flex: 1;
-  padding: var(--spacing-xl) 0;
+  padding: calc(64px + var(--spacing-xl)) 0 var(--spacing-xl) 0;
   position: relative;
   z-index: 1;
 }

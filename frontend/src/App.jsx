@@ -365,10 +365,11 @@ function App() {
   }, []);
 
   return (
-    <div className="app perspective-root">
+    <>
       {/* Video Background with 40% blur - 8 sec loop */}
       <VideoBackground />
 
+      {/* TopNav - outside perspective-root for fixed positioning */}
       <TopNav
         onSettingsClick={() => setIsSettingsPanelOpen(true)}
         onStopwatchClick={() => setIsStopwatchOpen(true)}
@@ -377,7 +378,8 @@ function App() {
         currentDate={currentDate}
       />
 
-      <main className="app-main" style={{ transformStyle: 'preserve-3d' }}>
+      <div className="app perspective-root">
+        <main className="app-main" style={{ transformStyle: 'preserve-3d' }}>
         <div className="app-container" style={{ transformStyle: 'preserve-3d' }}>
 
           {/* Active Habit Tracker */}
@@ -620,7 +622,8 @@ function App() {
         confirmText={confirmationModal.confirmText}
         type={confirmationModal.type}
       />
-    </div>
+      </div>
+    </>
   );
 }
 

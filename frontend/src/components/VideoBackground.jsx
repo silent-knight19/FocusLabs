@@ -64,7 +64,7 @@ export function VideoBackground() {
           width: '120%',
           height: '120%',
           objectFit: 'cover',
-          filter: 'blur(40px) brightness(0.7)',
+          filter: 'blur(0.5px) brightness(0.7)',
           opacity: loaded ? 1 : 0,
           transition: 'opacity 0.5s ease',
         }}

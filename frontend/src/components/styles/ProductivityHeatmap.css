@@ -147,7 +147,7 @@
 
 .productivity-heatmap-container .heatmap-cell:not(.empty):hover {
     transform: scale(1.4);
-    z-index: 10;
+    z-index: 1;
     border-radius: 4px;
 }
 

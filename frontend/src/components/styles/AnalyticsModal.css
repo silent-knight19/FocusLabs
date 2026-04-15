@@ -1,9 +1,6 @@
 .analytics-overlay {
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
+    inset: 0;
     background: rgba(0, 0, 0, 0.7);
     backdrop-filter: blur(10px);
     z-index: 9999;
@@ -13,6 +10,8 @@
     animation: fadeIn 0.2s ease-out;
     /* Break out of 3D transform context */
     transform-style: flat;
+    /* Ensure proper stacking */
+    isolation: isolate;
 }
 
 .analytics-modal {
@@ -27,6 +26,9 @@
     animation: slideUp 0.3s ease-out;
     position: relative;
     z-index: 10000;
+    /* Prevent margin collapse issues */
+    margin: auto;
+    flex-shrink: 0;
 }
 
 @keyframes fadeIn {
