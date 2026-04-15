@@ -3,8 +3,9 @@ import { useTooltip } from '../hooks/useTooltip';
 import { Tooltip } from './Tooltip';
 
 /**
- * Wrapper component that adds 1-second delayed tooltip to any button
- * @param {React.ReactElement} children - The button element to wrap
+ * Wrapper component that adds 1-second delayed tooltip to any clickable element
+ * Works with buttons, divs, or any element with onClick
+ * @param {React.ReactElement} children - The element to wrap (button, div, etc.)
  * @param {string} tooltipText - The tooltip text to display
  */
 export function ButtonWithTooltip({ children, tooltipText }) {
@@ -30,5 +31,8 @@ export function ButtonWithTooltip({ children, tooltipText }) {
     </>
   );
 }
+
+// Alias for clarity when used with non-button elements
+export const WithTooltip = ButtonWithTooltip;
 
 export default ButtonWithTooltip;

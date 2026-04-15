@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useFirestore } from '../hooks/useFirestore';
 import { doc, deleteDoc, getDoc } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { useAuth } from '../contexts/AuthContext';
 import { downloadDataAsJson, importData, clearAllData } from '../utils/storageHelpers';
 import { useLockBodyScroll } from '../hooks/useLockBodyScroll';
+import { ButtonWithTooltip } from './ButtonWithTooltip';
 import './styles/SettingsPanel.css';
 
 /**
@@ -279,14 +280,16 @@ export function SettingsPanel({ isOpen, onClose, settings, onUpdateSettings }) {
       <div className="modal-content settings-panel" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <h2>Settings</h2>
-          <button
-            type="button"
-            className="modal-close"
-            onClick={onClose}
-            aria-label="Close settings"
-          >
-            ✕
-          </button>
+          <ButtonWithTooltip tooltipText="Close settings panel">
+            <button
+              type="button"
+              className="modal-close"
+              onClick={onClose}
+              aria-label="Close settings"
+            >
+              ✕
+            </button>
+          </ButtonWithTooltip>
         </div>
 
         <div className="settings-content">
@@ -336,9 +339,11 @@ export function SettingsPanel({ isOpen, onClose, settings, onUpdateSettings }) {
                   Download all your habits and data as JSON
                 </p>
               </div>
-              <button type="button" onClick={handleExport}>
-                📥 Export
-              </button>
+              <ButtonWithTooltip tooltipText="Download all data as JSON file">
+                <button type="button" onClick={handleExport}>
+                  📥 Export
+                </button>
+              </ButtonWithTooltip>
             </div>
 
             <div className="setting-item">
@@ -348,15 +353,17 @@ export function SettingsPanel({ isOpen, onClose, settings, onUpdateSettings }) {
                   Import habits from a JSON backup file
                 </p>
               </div>
-              <label className="file-input-label">
-                📤 Import
-                <input
-                  type="file"
-                  accept=".json"
-                  onChange={handleImport}
-                  style={{ display: 'none' }}
-                />
-              </label>
+              <ButtonWithTooltip tooltipText="Import data from JSON backup file">
+                <label className="file-input-label">
+                  📤 Import
+                  <input
+                    type="file"
+                    accept=".json"
+                    onChange={handleImport}
+                    style={{ display: 'none' }}
+                  />
+                </label>
+              </ButtonWithTooltip>
             </div>
 
             {importError && (

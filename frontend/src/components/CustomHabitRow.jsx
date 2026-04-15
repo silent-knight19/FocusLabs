@@ -3,6 +3,7 @@ import { DayCell } from './DayCell';
 import { Calendar } from 'lucide-react';
 import './styles/CustomHabitRow.css';
 import { formatDateKey } from '../utils/dateHelpers';
+import { ButtonWithTooltip } from './ButtonWithTooltip';
 
 const CATEGORY_COLORS = {
   'Health': '#10B981',
@@ -47,14 +48,15 @@ export function CustomHabitRow({
             style={{ backgroundColor: barColor }}
             title={habit.category || 'Category'}
           />
-          <button
-            type="button"
-            className="habit-name-button"
-            onClick={() => onEdit(habit)}
-            title="Click to edit custom habit"
-          >
-            {habit.name}
-          </button>
+          <ButtonWithTooltip tooltipText="Edit this custom habit">
+            <button
+              type="button"
+              className="habit-name-button"
+              onClick={() => onEdit(habit)}
+            >
+              {habit.name}
+            </button>
+          </ButtonWithTooltip>
           
           {/* Date range badge */}
           <span className="date-range-badge">
@@ -63,28 +65,30 @@ export function CustomHabitRow({
           </span>
           
           <div className="habit-inline-actions">
-            <button
-              type="button"
-              className="action-button edit-button"
-              onClick={(e) => { 
-                e.stopPropagation(); 
-                onEdit(habit); 
-              }}
-              title="Edit custom habit"
-            >
-              ✎
-            </button>
-            <button
-              type="button"
-              className="action-button delete-button"
-              onClick={(e) => { 
-                e.stopPropagation(); 
-                onDelete(habit.id); 
-              }}
-              title="Delete custom habit"
-            >
-              🗑
-            </button>
+            <ButtonWithTooltip tooltipText="Edit this custom habit">
+              <button
+                type="button"
+                className="action-button edit-button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEdit(habit);
+                }}
+              >
+                ✎
+              </button>
+            </ButtonWithTooltip>
+            <ButtonWithTooltip tooltipText="Delete this custom habit permanently">
+              <button
+                type="button"
+                className="action-button delete-button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete(habit.id);
+                }}
+              >
+                🗑
+              </button>
+            </ButtonWithTooltip>
           </div>
         </div>
         
