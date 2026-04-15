@@ -20,6 +20,19 @@ function isDateBeforeCreation(date, createdAt) {
 }
 
 /**
+ * Check if date is in the future (after today)
+ * @param {Date} date - The date to check
+ * @returns {boolean} True if date is in the future
+ */
+function isDateInFuture(date) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const checkDate = new Date(date);
+  checkDate.setHours(0, 0, 0, 0);
+  return checkDate > today;
+}
+
+/**
  * Individual habit row with name, time, and day cells
  */
 export function HabitRow({ habit, weekDates, onToggle, onEdit, onDelete, getStatus, isDateBlockedByCustom }) {
@@ -102,7 +115,8 @@ export function HabitRow({ habit, weekDates, onToggle, onEdit, onDelete, getStat
         {weekDates.map((date, index) => {
           const isBlocked = isDateBlockedByCustom && isDateBlockedByCustom(date);
           const isBeforeCreation = isDateBeforeCreation(date, habit.createdAt);
-          const isDisabled = isBlocked || isBeforeCreation;
+          const isFuture = isDateInFuture(date);
+          const isDisabled = isBlocked || isBeforeCreation || isFuture;
           return (
             <DayCell
               key={index}
@@ -113,6 +127,7 @@ export function HabitRow({ habit, weekDates, onToggle, onEdit, onDelete, getStat
               blockedByCustom={isBlocked}
               disabled={isDisabled}
               beforeCreation={isBeforeCreation}
+              isFuture={isFuture}
             />
           );
         })}

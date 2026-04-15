@@ -8,8 +8,9 @@ import './styles/DayCell.css';
  * @param {boolean} blockedByCustom - If true, this date has custom habits so regular habits are blocked
  * @param {boolean} disabled - If true, cell is non-interactive
  * @param {boolean} beforeCreation - If true, date is before habit was created
+ * @param {boolean} isFuture - If true, date is in the future
  */
-export function DayCell({ status, onClick, date, showNumber, isCustomDate, blockedByCustom, disabled, beforeCreation }) {
+export function DayCell({ status, onClick, date, showNumber, isCustomDate, blockedByCustom, disabled, beforeCreation, isFuture }) {
   const getIcon = () => {
     if (status === 'completed') return '✓';
     if (status === 'failed') return '✕';
@@ -25,6 +26,7 @@ export function DayCell({ status, onClick, date, showNumber, isCustomDate, block
     if (blockedByCustom) classes += ' blocked-by-custom';
     if (disabled) classes += ' disabled';
     if (beforeCreation) classes += ' before-creation';
+    if (isFuture) classes += ' is-future';
     return classes;
   };
 

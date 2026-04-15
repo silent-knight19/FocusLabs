@@ -252,21 +252,27 @@ export function Stopwatch({ isOpen, onClose, onDataUpdate }) {
 
         {/* Alarm notification */}
         {isAlarmRinging && (
-          <div className="alarm-notification">
-            <Bell className="alarm-icon" size={24} />
-            <div className="alarm-content">
-              <span className="alarm-title">Time's Up!</span>
-              <span className="alarm-subtitle">{alarmDuration} minutes reached</span>
-            </div>
-            <button className="alarm-dismiss-btn" onClick={() => {
-              // Stop the current alarm sound and mark this alarm occurrence as handled
-              // so it doesn't immediately retrigger while time is still beyond the threshold.
+          <>
+            <div className="alarm-notification-overlay" onClick={() => {
               stopAlarm();
               setHasAlarmTriggered(true);
-            }}>
-              Dismiss
-            </button>
-          </div>
+            }} />
+            <div className="alarm-notification">
+              <Bell className="alarm-icon" size={48} />
+              <div className="alarm-content">
+                <span className="alarm-title">Time's Up!</span>
+                <span className="alarm-subtitle">{alarmDuration} minutes reached</span>
+              </div>
+              <button className="alarm-dismiss-btn" onClick={() => {
+                // Stop the current alarm sound and mark this alarm occurrence as handled
+                // so it doesn't immediately retrigger while time is still beyond the threshold.
+                stopAlarm();
+                setHasAlarmTriggered(true);
+              }}>
+                Dismiss
+              </button>
+            </div>
+          </>
         )}
 
 
