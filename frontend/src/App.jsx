@@ -513,6 +513,16 @@ function App() {
                   formatDateRange={formatDateRange}
                 />
               )}
+
+              {/* Heatmaps - positioned right below habits */}
+              <div className="heatmaps-container-compact">
+                <StudyHeatmap dataVersion={dataVersion} />
+                <ProductivityHeatmap
+                  habits={habits}
+                  completions={completions}
+                  dataVersion={dataVersion}
+                />
+              </div>
             </div>
 
             {/* Right column - 30% with ProgressSection */}
@@ -530,21 +540,6 @@ function App() {
             </div>
           </div>
 
-          <div className="heatmaps-container grid-3d">
-            {/* Study Activity Heatmap */}
-            <div className="glass-3d hover-lift-3d">
-              <StudyHeatmap dataVersion={dataVersion} />
-            </div>
-
-            {/* Productivity & Growth Heatmap */}
-            <div className="glass-3d hover-lift-3d">
-              <ProductivityHeatmap
-                habits={habits}
-                completions={completions}
-                dataVersion={dataVersion}
-              />
-            </div>
-          </div>
         </div>
       </main>
 

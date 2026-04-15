@@ -2,19 +2,19 @@
     position: fixed;
     top: 0;
     left: 0;
-    right: 0;
-    bottom: 0;
+    width: 100vw;
+    height: 100vh;
     background-color: rgba(0, 0, 0, 0.6);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 1000;
+    z-index: 9999;
     padding: var(--spacing-md);
     animation: overlayFadeIn 0.3s ease-out;
-    /* Ensure proper centering even with 3D transforms in parent */
-    transform: translateZ(0);
+    /* Break out of any 3D transform contexts */
+    transform-style: flat;
 }
 
 @keyframes overlayFadeIn {
@@ -67,9 +67,6 @@
     max-height: 90vh;
     overflow-y: auto;
     animation: modalSlideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-    /* Ensure proper centering */
-    margin: auto;
-    transform: translateZ(0);
 }
 
 .modal-header {

@@ -1,5 +1,7 @@
 .settings-panel {
     max-width: 600px;
+    margin: auto;
+    width: 100%;
 }
 
 .settings-content {

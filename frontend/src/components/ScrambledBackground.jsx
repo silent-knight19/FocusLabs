@@ -210,7 +210,7 @@ export function ScrambledBackground() {
           height: '140%',
           opacity: loaded ? 1 : 0,
           transition: 'opacity 1s ease',
-          filter: 'blur(20px) brightness(0.5) saturate(0.7)',
+          filter: 'blur(8px) brightness(0.6) saturate(0.8)',
         }}
       >
         {images.map((src, index) => {
@@ -246,7 +246,7 @@ export function ScrambledBackground() {
                   e.target.parentElement.style.display = 'none';
                 }}
               />
-              {/* Individual image overlay */}
+              {/* Individual image overlay - subtle tint */}
               <div
                 style={{
                   position: 'absolute',
@@ -254,13 +254,12 @@ export function ScrambledBackground() {
                   background: `
                     linear-gradient(
                       ${135 + index * 20}deg,
-                      rgba(255, 107, 53, 0.15) 0%,
-                      transparent 40%,
-                      rgba(139, 92, 246, 0.1) 100%
-                    ),
-                    rgba(13, 10, 15, 0.4)
+                      rgba(255, 107, 53, 0.1) 0%,
+                      transparent 50%,
+                      rgba(139, 92, 246, 0.08) 100%
+                    )
                   `,
-                  mixBlendMode: 'multiply',
+                  mixBlendMode: 'soft-light',
                 }}
               />
             </div>
@@ -268,25 +267,14 @@ export function ScrambledBackground() {
         })}
       </div>
 
-      {/* Heavy glass morphism overlay for readability */}
+      {/* Light glass morphism overlay - images should be visible */}
       <div
         style={{
           position: 'absolute',
           inset: 0,
-          background: 'rgba(13, 10, 15, 0.85)',
-          backdropFilter: 'blur(100px) saturate(110%)',
-          WebkitBackdropFilter: 'blur(100px) saturate(110%)',
-        }}
-      />
-
-      {/* Additional blur layer for extra subtlety */}
-      <div
-        style={{
-          position: 'absolute',
-          inset: 0,
-          backdropFilter: 'blur(40px)',
-          WebkitBackdropFilter: 'blur(40px)',
-          pointerEvents: 'none',
+          background: 'rgba(13, 10, 15, 0.4)',
+          backdropFilter: 'blur(20px) saturate(120%)',
+          WebkitBackdropFilter: 'blur(20px) saturate(120%)',
         }}
       />
 
