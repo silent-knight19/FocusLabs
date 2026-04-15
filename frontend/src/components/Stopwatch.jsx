@@ -303,14 +303,14 @@ export function Stopwatch({ isOpen, onClose, onDataUpdate }) {
               if (onDataUpdate) onDataUpdate();
             } : reset}
           >
-            {isRunning ? 'Lap' : 'Reset'}
+            {isRunning ? <><Flag size={18} /><span>Lap</span></> : <><RotateCcw size={18} /><span>Reset</span></>}
           </button>
           
           <button 
             className={`control-btn primary ${isRunning ? 'stop' : 'start'}`}
             onClick={isRunning ? pause : start}
           >
-            {isRunning ? 'Stop' : 'Start'}
+            {isRunning ? <><Square size={18} fill="currentColor" /><span>Stop</span></> : <><Play size={18} fill="currentColor" /><span>Start</span></>}
           </button>
         </div>
 

@@ -1,9 +1,9 @@
 import React, { useState, useRef } from 'react';
 import { useFirestore } from '../hooks/useFirestore';
-import { doc, deleteDoc, getDoc } from 'firebase/firestore';
+import { doc, deleteDoc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { useAuth } from '../contexts/AuthContext';
-import { downloadDataAsJson, importData, clearAllData } from '../utils/storageHelpers';
+import { downloadDataAsJson, clearAllData } from '../utils/storageHelpers';
 import { useLockBodyScroll } from '../hooks/useLockBodyScroll';
 import { ButtonWithTooltip } from './ButtonWithTooltip';
 import './styles/SettingsPanel.css';
@@ -91,19 +91,19 @@ export function SettingsPanel({ isOpen, onClose, settings, onUpdateSettings }) {
         appName: 'FocusLabs',
         userId: userId || 'anonymous',
         data: {
-          // Firestore data (prioritized)
-          habits: firestoreData.habits?.data || JSON.parse(localData.habits),
-          completions: firestoreData.completions?.data || JSON.parse(localData.completions),
-          subtasks: firestoreData.subtasks?.data || {},
-          subtaskCompletions: firestoreData.subtask_completions?.data || {},
-          stopwatchHistory: firestoreData.stopwatch_history?.data || [],
-          dailyTasks: firestoreData.daily_tasks?.data || JSON.parse(localData.dailyTasks),
-          notes: firestoreData.notes?.data || [],
-          customHabits: firestoreData.custom_habits?.data || JSON.parse(localData.customHabits),
-          customCompletions: firestoreData.custom_completions?.data || JSON.parse(localData.customCompletions),
-          studySessions: firestoreData.study_sessions?.data || JSON.parse(localData.studySessions),
-          productivitySessions: firestoreData.productivity_sessions?.data || JSON.parse(localData.productivitySessions),
-          settings: firestoreData.settings?.data || JSON.parse(localData.settings),
+          // Firestore data (prioritized) — stored under 'value' key by useFirestore hook
+          habits: firestoreData.habits?.value || JSON.parse(localData.habits),
+          completions: firestoreData.completions?.value || JSON.parse(localData.completions),
+          subtasks: firestoreData.subtasks?.value || {},
+          subtaskCompletions: firestoreData.subtask_completions?.value || {},
+          stopwatchHistory: firestoreData.stopwatch_history?.value || [],
+          dailyTasks: firestoreData.daily_tasks?.value || JSON.parse(localData.dailyTasks),
+          notes: firestoreData.notes?.value || [],
+          customHabits: firestoreData.custom_habits?.value || JSON.parse(localData.customHabits),
+          customCompletions: firestoreData.custom_completions?.value || JSON.parse(localData.customCompletions),
+          studySessions: firestoreData.study_sessions?.value || JSON.parse(localData.studySessions),
+          productivitySessions: firestoreData.productivity_sessions?.value || JSON.parse(localData.productivitySessions),
+          settings: firestoreData.settings?.value || JSON.parse(localData.settings),
           
           // LocalStorage only data
           stopwatchLaps: JSON.parse(localData.stopwatchLaps),
@@ -111,10 +111,10 @@ export function SettingsPanel({ isOpen, onClose, settings, onUpdateSettings }) {
           customSubtasks: JSON.parse(localData.customSubtasks)
         },
         exportSummary: {
-          totalHabits: (firestoreData.habits?.data || JSON.parse(localData.habits)).length,
-          totalCustomHabits: (firestoreData.custom_habits?.data || JSON.parse(localData.customHabits)).length,
-          totalStudySessions: (firestoreData.study_sessions?.data || JSON.parse(localData.studySessions)).length,
-          totalProductivitySessions: (firestoreData.productivity_sessions?.data || JSON.parse(localData.productivitySessions)).length,
+          totalHabits: (firestoreData.habits?.value || JSON.parse(localData.habits)).length,
+          totalCustomHabits: (firestoreData.custom_habits?.value || JSON.parse(localData.customHabits)).length,
+          totalStudySessions: (firestoreData.study_sessions?.value || JSON.parse(localData.studySessions)).length,
+          totalProductivitySessions: (firestoreData.productivity_sessions?.value || JSON.parse(localData.productivitySessions)).length,
           totalStopwatchLaps: JSON.parse(localData.stopwatchLaps).length
         }
       };
@@ -145,16 +145,73 @@ export function SettingsPanel({ isOpen, onClose, settings, onUpdateSettings }) {
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = (event) => {
-      const result = importData(event.target.result);
-      if (result.success) {
+    reader.onload = async (event) => {
+      try {
+        const parsed = JSON.parse(event.target.result);
+        const importedData = parsed.data || parsed;
+
+        // Basic validation
+        if (!importedData || typeof importedData !== 'object') {
+          setImportError('Invalid JSON structure.');
+          return;
+        }
+
+        setSuccessMessage('Importing data...');
+
+        if (userId) {
+          // Map exported JSON keys → Firestore collection names
+          const firestoreMapping = {
+            habits: 'habits',
+            completions: 'completions',
+            subtasks: 'subtasks',
+            subtaskCompletions: 'subtask_completions',
+            stopwatchHistory: 'stopwatch_history',
+            dailyTasks: 'daily_tasks',
+            notes: 'notes',
+            customHabits: 'custom_habits',
+            customCompletions: 'custom_completions',
+            studySessions: 'study_sessions',
+            productivitySessions: 'productivity_sessions',
+            settings: 'settings'
+          };
+
+          // Write each collection to Firestore with { value: data } structure
+          const writePromises = Object.entries(firestoreMapping).map(
+            async ([jsonKey, firestoreCollection]) => {
+              const dataToWrite = importedData[jsonKey];
+              if (dataToWrite === undefined || dataToWrite === null) return;
+
+              try {
+                const docRef = doc(db, 'users', userId, 'data', firestoreCollection);
+                await setDoc(docRef, { value: dataToWrite }, { merge: true });
+              } catch (err) {
+                console.error(`Error importing ${firestoreCollection}:`, err);
+              }
+            }
+          );
+
+          await Promise.all(writePromises);
+        }
+
+        // Also write localStorage-only data as fallback
+        if (importedData.stopwatchLaps) {
+          localStorage.setItem('stopwatch_laps', JSON.stringify(importedData.stopwatchLaps));
+        }
+        if (importedData.stopwatchCategories) {
+          localStorage.setItem('stopwatch_categories', JSON.stringify(importedData.stopwatchCategories));
+        }
+        if (importedData.customSubtasks) {
+          localStorage.setItem('custom_subtasks', JSON.stringify(importedData.customSubtasks));
+        }
+
         setImportError('');
         setSuccessMessage('Data imported successfully! Refreshing page...');
         setTimeout(() => {
           window.location.reload();
-        }, 1000);
-      } else {
-        setImportError(result.error);
+        }, 1500);
+      } catch (err) {
+        console.error('Import error:', err);
+        setImportError('Invalid JSON format. Please check the file.');
         setSuccessMessage('');
       }
     };
