@@ -54,12 +54,12 @@
     height: 36px;
     width: auto;
     object-fit: contain;
-    filter: drop-shadow(0 0 8px rgba(99, 102, 241, 0.3));
+    filter: drop-shadow(0 0 10px rgba(255, 122, 89, 0.4));
     transition: all var(--transition-fast);
 }
 
 .app-logo-img:hover {
-    filter: drop-shadow(0 0 12px rgba(99, 102, 241, 0.5));
+    filter: drop-shadow(0 0 16px rgba(255, 122, 89, 0.6));
 }
 
 .app-logo-text {
@@ -94,7 +94,7 @@
 
 .date-time-display:hover {
     border-color: var(--glass-border-hover);
-    box-shadow: 0 0 20px rgba(255, 107, 53, 0.1);
+    box-shadow: 0 0 24px rgba(255, 122, 89, 0.15);
 }
 
 .nav-date {
@@ -107,7 +107,7 @@
 .nav-time {
     font-size: 1.15rem;
     font-weight: 700;
-    background: linear-gradient(135deg, var(--neon-orange), var(--neon-orange-bright));
+    background: linear-gradient(135deg, #FF7A59, #FF6B9D, #C084FC);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -144,7 +144,7 @@
     width: 0;
     height: 0;
     border-radius: 50%;
-    background: rgba(255, 107, 53, 0.2);
+    background: rgba(255, 122, 89, 0.25);
     transform: translate(-50%, -50%);
     transition: width 0.4s ease, height 0.4s ease;
 }
@@ -173,7 +173,7 @@
 
 .nav-icon-btn:hover svg {
     transform: scale(1.1);
-    color: var(--neon-orange);
+    color: var(--accent-primary);
 }
 
 .nav-icon-btn:active {
@@ -188,7 +188,7 @@
     background: var(--gradient-primary);
     border: none;
     color: white;
-    box-shadow: var(--glow-orange);
+    box-shadow: 0 4px 15px rgba(255, 122, 89, 0.35), 0 0 20px rgba(255, 107, 157, 0.15);
     width: auto;
     padding: 10px 18px;
     gap: 8px;
@@ -201,9 +201,9 @@
 }
 
 .nav-icon-btn.add-habit-btn:hover {
-    background: linear-gradient(135deg, var(--neon-orange-bright), var(--neon-orange));
+    background: linear-gradient(135deg, #FF9B82, #FF7A59);
     transform: translateY(-3px) scale(1.02);
-    box-shadow: var(--glow-orange-intense);
+    box-shadow: 0 8px 25px rgba(255, 122, 89, 0.45), 0 0 30px rgba(255, 107, 157, 0.25);
     border-color: transparent;
     color: white;
 }
@@ -253,12 +253,12 @@
 }
 
 .user-profile-btn:hover {
-    border-color: var(--neon-orange);
+    border-color: var(--accent-primary);
     transform: scale(1.05);
 }
 
 .user-profile-btn:hover::after {
-    border-color: rgba(255, 107, 53, 0.3);
+    border-color: rgba(255, 122, 89, 0.35);
 }
 
 .user-avatar {
@@ -310,7 +310,7 @@
     align-items: center;
     gap: var(--spacing-md);
     border-bottom: 1px solid var(--glass-border);
-    background: rgba(255, 107, 53, 0.05);
+    background: linear-gradient(135deg, rgba(255, 122, 89, 0.08), rgba(192, 132, 252, 0.05));
 }
 
 .user-menu-avatar {
@@ -318,8 +318,8 @@
     height: 50px;
     border-radius: 50%;
     object-fit: cover;
-    border: 2px solid var(--neon-orange);
-    box-shadow: var(--glow-orange);
+    border: 2px solid var(--accent-primary);
+    box-shadow: 0 0 15px rgba(255, 122, 89, 0.35);
 }
 
 .user-menu-info {
@@ -388,8 +388,8 @@
     width: 50px;
     height: 50px;
     font-size: 1.2rem;
-    border: 2px solid var(--neon-orange);
-    box-shadow: var(--glow-orange);
+    border: 2px solid var(--accent-primary);
+    box-shadow: 0 0 15px rgba(255, 122, 89, 0.35);
 }
 
 /* ========================================

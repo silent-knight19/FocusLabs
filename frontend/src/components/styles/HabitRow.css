@@ -49,20 +49,18 @@
     border: none;
     padding: 0;
     font-size: 1.1rem;
-    /* Slightly smaller but still big */
     font-weight: 700;
-    color: var(--neon-orange);
-    /* Neon Orange */
+    color: var(--accent-primary);
     cursor: pointer;
     text-align: left;
     transition: all var(--transition-fast);
-    text-shadow: 0 0 10px rgba(255, 107, 53, 0.2);
+    text-shadow: 0 0 12px rgba(255, 122, 89, 0.25);
     line-height: 1.2;
 }
 
 .habit-name-button:hover {
-    text-shadow: 0 0 15px rgba(255, 107, 53, 0.4);
-    transform: translateX(2px);
+    text-shadow: 0 0 18px rgba(255, 122, 89, 0.45);
+    transform: translateX(3px);
 }
 
 .habit-inline-actions {
@@ -172,8 +170,8 @@
 
 .action-button:hover {
     background-color: var(--bg-hover);
-    border-color: var(--neon-orange);
-    color: var(--neon-orange);
+    border-color: var(--accent-primary);
+    color: var(--accent-primary);
 }
 
 .edit-button:hover {

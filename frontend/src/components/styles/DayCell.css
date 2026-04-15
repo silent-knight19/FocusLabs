@@ -24,33 +24,33 @@
     transform: translateY(0);
 }
 
-/* Completed State */
+/* Completed State - Teal Glow */
 .day-cell.completed {
     background-color: var(--status-completed);
     border-color: var(--status-completed);
     color: #000;
     font-weight: 700;
-    box-shadow: var(--glow-green);
+    box-shadow: 0 0 15px rgba(34, 211, 166, 0.4);
 }
 
 .day-cell.completed:hover {
     background-color: var(--status-completed);
     border-color: var(--status-completed);
-    box-shadow: 0 0 15px rgba(0, 255, 159, 0.8), 0 0 30px rgba(0, 255, 159, 0.5);
+    box-shadow: 0 0 20px rgba(34, 211, 166, 0.6), 0 0 35px rgba(45, 212, 191, 0.3);
 }
 
-/* Failed State */
+/* Failed State - Soft Red Glow */
 .day-cell.failed {
     background-color: var(--status-failed);
     border-color: var(--status-failed);
     color: white;
-    box-shadow: var(--glow-red);
+    box-shadow: 0 0 15px rgba(248, 113, 113, 0.4);
 }
 
 .day-cell.failed:hover {
     background-color: var(--status-failed);
     border-color: var(--status-failed);
-    box-shadow: 0 0 15px rgba(255, 0, 85, 0.8), 0 0 30px rgba(255, 0, 85, 0.5);
+    box-shadow: 0 0 20px rgba(248, 113, 113, 0.6), 0 0 35px rgba(251, 113, 133, 0.3);
 }
 
 /* Icon */
@@ -135,29 +135,29 @@
 
 /* Custom Date Styles - distinct visual for custom date habits */
 .day-cell.custom {
-    border: 2px dashed var(--accent-orange, #FF6B35);
-    background: rgba(255, 107, 53, 0.08);
+    border: 2px dashed var(--accent-primary);
+    background: rgba(255, 122, 89, 0.08);
 }
 
 .day-cell.custom:hover {
-    border-color: var(--accent-orange, #FF6B35);
-    background: rgba(255, 107, 53, 0.15);
-    box-shadow: 0 0 8px rgba(255, 107, 53, 0.4);
+    border-color: var(--accent-primary);
+    background: rgba(255, 122, 89, 0.15);
+    box-shadow: 0 0 12px rgba(255, 122, 89, 0.35);
 }
 
 .day-cell.custom.completed {
     background: var(--status-completed);
-    border: 2px solid var(--accent-orange, #FF6B35);
-    box-shadow: 0 0 10px rgba(255, 107, 53, 0.5), 0 0 5px rgba(0, 255, 159, 0.3);
+    border: 2px solid var(--accent-primary);
+    box-shadow: 0 0 12px rgba(255, 122, 89, 0.4), 0 0 8px rgba(34, 211, 166, 0.3);
 }
 
 .day-cell.custom.completed:hover {
-    box-shadow: 0 0 15px rgba(255, 107, 53, 0.7), 0 0 10px rgba(0, 255, 159, 0.5);
+    box-shadow: 0 0 18px rgba(255, 122, 89, 0.5), 0 0 12px rgba(34, 211, 166, 0.4);
 }
 
 .day-cell.custom.failed {
     background: var(--status-failed);
-    border: 2px solid var(--accent-orange, #FF6B35);
+    border: 2px solid var(--accent-primary);
 }
 
 /* Disabled State - for dates outside custom habit range */
@@ -177,11 +177,11 @@
 /* Blocked by Custom - date has custom habits, so regular habits are blocked */
 .day-cell.blocked-by-custom {
     background: repeating-linear-gradient(45deg,
-            rgba(255, 107, 53, 0.1),
-            rgba(255, 107, 53, 0.1) 2px,
+            rgba(255, 122, 89, 0.1),
+            rgba(255, 122, 89, 0.1) 2px,
             transparent 2px,
             transparent 6px);
-    border: 1px dashed rgba(255, 107, 53, 0.5);
+    border: 1px dashed rgba(255, 122, 89, 0.5);
     cursor: not-allowed;
     color: var(--text-secondary);
 }
