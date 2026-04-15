@@ -24,10 +24,6 @@ export function SettingsPanel({ isOpen, onClose, settings, onUpdateSettings }) {
   const [focusDeleteRange, setFocusDeleteRange] = useState(null); // 10 | 30 | 60 | 120 | 180 | 'day'
   const [showFocusConfirm, setShowFocusConfirm] = useState(false);
 
-  const handleThemeToggle = () => {
-    onUpdateSettings({ theme: settings.theme === 'light' ? 'dark' : 'light' });
-  };
-
   const handleStartOfWeekChange = (value) => {
     onUpdateSettings({ startOfWeek: value });
   };
@@ -189,31 +185,6 @@ export function SettingsPanel({ isOpen, onClose, settings, onUpdateSettings }) {
         </div>
 
         <div className="settings-content">
-          {/* Theme Toggle */}
-          <div className="setting-section">
-            <h3>Appearance</h3>
-            <div className="setting-item">
-              <div className="setting-info">
-                <label>Theme</label>
-                <p className="setting-description">
-                  Choose between light and dark mode
-                </p>
-              </div>
-              <button
-                type="button"
-                className={`toggle-button ${settings.theme === 'dark' ? 'active' : ''}`}
-                onClick={handleThemeToggle}
-              >
-                <span className="toggle-icon">
-                  {settings.theme === 'light' ? '☀️' : '🌙'}
-                </span>
-                <span className="toggle-text">
-                  {settings.theme === 'light' ? 'Light' : 'Dark'}
-                </span>
-              </button>
-            </div>
-          </div>
-
           {/* Week Start */}
           <div className="setting-section">
             <h3>Calendar</h3>

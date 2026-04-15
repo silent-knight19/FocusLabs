@@ -48,7 +48,6 @@ export function TopNav({ onSettingsClick, onStopwatchClick, onCalendarClick, onA
       <div className="nav-left">
         <div className="app-logo-container">
           <img src="/logo.png" alt="FocusLabs Logo" className="app-logo-img" />
-          <span className="app-logo-text">FocusLabs</span>
         </div>
       </div>
       

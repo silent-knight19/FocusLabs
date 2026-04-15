@@ -50,7 +50,6 @@
     gap: 16px;
 }
 
-.collapse-btn,
 .close-btn {
     width: 44px;
     height: 44px;
@@ -66,17 +65,11 @@
     transition: all 0.2s ease;
 }
 
-.collapse-btn:hover,
 .close-btn:hover {
     background: var(--bg-hover);
-    color: var(--text-primary);
-    border-color: var(--border-hover);
-    transform: translateY(-2px);
-}
-
-.close-btn:hover {
     color: var(--accent-danger);
     border-color: rgba(239, 68, 68, 0.3);
+    transform: translateY(-2px);
 }
 
 /* ==========================================================================
@@ -521,18 +514,22 @@
 }
 
 .alarm-btn {
-    width: 44px;
-    height: 44px;
+    width: auto;
+    min-width: 50px;
+    height: auto;
+    padding: 8px 12px;
     background: var(--bg-elevated);
     border: 1px solid var(--border-color);
     color: var(--text-secondary);
     border-radius: 12px;
     display: flex;
+    flex-direction: column;
     align-items: center;
-    justify-content: center;
+    gap: 2px;
     cursor: pointer;
     transition: all 0.2s;
-    position: relative;
+    font-size: 0.75rem;
+    font-weight: 600;
 }
 
 .alarm-btn:hover {
@@ -546,14 +543,12 @@
     background: rgba(99, 102, 241, 0.1);
 }
 
-.alarm-time-badge {
-    position: absolute;
-    top: -5px;
-    right: -5px;
-    background: var(--accent-primary);
-    color: white;
-    font-size: 0.6rem;
-    padding: 2px 5px;
-    border-radius: 4px;
+.alarm-duration-label {
+    font-size: 0.7rem;
     font-weight: 700;
+    color: var(--accent-primary);
+    background: rgba(255, 122, 89, 0.15);
+    padding: 1px 6px;
+    border-radius: 6px;
+    margin-top: 2px;
 }

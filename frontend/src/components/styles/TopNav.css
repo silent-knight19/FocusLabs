@@ -7,7 +7,7 @@
     backdrop-filter: blur(20px) saturate(120%);
     -webkit-backdrop-filter: blur(20px) saturate(120%);
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    padding: var(--spacing-sm) var(--spacing-lg);
+    padding: 4px var(--spacing-lg);
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -53,7 +53,7 @@
 }
 
 .app-logo-img {
-    height: 36px;
+    height: 72px;
     width: auto;
     object-fit: contain;
     filter: drop-shadow(0 0 10px rgba(255, 122, 89, 0.4));
@@ -62,18 +62,6 @@
 
 .app-logo-img:hover {
     filter: drop-shadow(0 0 16px rgba(255, 122, 89, 0.6));
-}
-
-.app-logo-text {
-    font-weight: 700;
-    margin-left: 10px;
-    font-size: 1.5rem;
-    background: linear-gradient(135deg, var(--text-primary), var(--text-secondary));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    display: inline-block;
-    vertical-align: middle;
 }
 
 /* ========================================
