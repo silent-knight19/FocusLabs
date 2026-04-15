@@ -3,7 +3,7 @@ import { FileText } from 'lucide-react';
 import { DailyTaskItem } from './DailyTaskItem';
 import { HabitNoteModal } from './HabitNoteModal';
 import { useHabitNotes } from '../hooks/useHabitNotes';
-import { formatDateKey } from '../utils/dateHelpers';
+import { formatDateKey, isFutureDate } from '../utils/dateHelpers';
 import './styles/DailyTaskPanel.css';
 
 /**
@@ -109,6 +109,7 @@ export function DailyTaskPanel({
                 onToggle={onToggleTask}
                 onUpdate={onUpdateTask}
                 onDelete={onDeleteTask}
+                disabled={isFutureDate(date)}
               />
             ))}
           </div>
@@ -128,6 +129,7 @@ export function DailyTaskPanel({
               className="add-task-btn"
               onClick={handleAdd}
               disabled={!newTaskTitle.trim()}
+              title="Add task"
             >
               + Add
             </button>

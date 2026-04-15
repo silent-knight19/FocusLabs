@@ -189,7 +189,7 @@ export function ProgressSection({
         >
           <div className="card-header">
             <Calendar size={20} />
-            <h3>Focus Balance (10-day avg)</h3>
+            <h3>Session Analytics (10-Day Average)</h3>
           </div>
           <div className="circular-progress-container">
             <ConcentricPieChart data={focusAverages} />
@@ -260,15 +260,17 @@ export function ProgressSection({
                     />
                     <div className="streak-name-section">
                       <span className="streak-name">{habit.name}</span>
-                      <span 
-                        className="streak-status-badge"
-                        style={{ color: habit.status.color, borderColor: habit.status.color }}
-                      >
-                        {habit.status.type === 'active' && <Flame size={12} />}
-                        {habit.status.type === 'at-risk' && <AlertTriangle size={12} />}
-                        {habit.status.type === 'broken' && habit.current > 0 && <CheckCircle2 size={12} />}
-                        {habit.status.label}
-                      </span>
+                      {habit.status.label !== 'Start Fresh' && (
+                        <span 
+                          className="streak-status-badge"
+                          style={{ color: habit.status.color, borderColor: habit.status.color }}
+                        >
+                          {habit.status.type === 'active' && <Flame size={12} />}
+                          {habit.status.type === 'at-risk' && <AlertTriangle size={12} />}
+                          {habit.status.type === 'broken' && habit.current > 0 && <CheckCircle2 size={12} />}
+                          {habit.status.label}
+                        </span>
+                      )}
                     </div>
                   </div>
                   <div className="streak-stats">

@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Search, X, Trash2, Edit2, Check, ChevronDown, ChevronRight } from 'lucide-react';
-import { getMonthDates, getMonthName, isSameDay, getTwoYearsAgo, isWithinTwoYears, formatDateKey } from '../utils/dateHelpers';
+import { getMonthDates, getMonthName, isSameDay, getTwoYearsAgo, isWithinTwoYears, formatDateKey, isFutureDate } from '../utils/dateHelpers';
 import { ConfirmationModal } from './ConfirmationModal';
 import './styles/CalendarView.css';
 
-const TaskItem = ({ task, onToggle, onDelete, onUpdate }) => {
+const TaskItem = ({ task, onToggle, onDelete, onUpdate, disabled = false }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState(task.title);
 
@@ -26,11 +26,12 @@ const TaskItem = ({ task, onToggle, onDelete, onUpdate }) => {
   return (
     <div className="sidebar-item task group">
       <div 
-        className={`task-checkbox ${task.completed ? 'checked' : ''}`} 
+        className={`task-checkbox ${task.completed ? 'checked' : ''} ${disabled ? 'disabled' : ''}`} 
         onClick={(e) => {
           e.stopPropagation();
-          onToggle();
+          if (!disabled) onToggle();
         }}
+        title={disabled ? 'Cannot mark tasks for future dates' : task.completed ? 'Mark as incomplete' : 'Mark as complete'}
       >
         {task.completed && <Check size={10} color="white" strokeWidth={4} />}
       </div>
@@ -77,7 +78,7 @@ const TaskItem = ({ task, onToggle, onDelete, onUpdate }) => {
   );
 };
 
-const HabitItem = ({ habit, isCompleted, subtasks, subtaskCompletions, dailyTasks, dateKey, onToggleTask, onDeleteTask, onUpdateTask }) => {
+const HabitItem = ({ habit, isCompleted, subtasks, subtaskCompletions, dailyTasks, dateKey, onToggleTask, onDeleteTask, onUpdateTask, disabled = false }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
   return (
@@ -138,6 +139,7 @@ const HabitItem = ({ habit, isCompleted, subtasks, subtaskCompletions, dailyTask
                     });
                   }}
                   onUpdate={(title) => onUpdateTask(task.id, { title })}
+                  disabled={disabled}
                 />
               ))}
             </div>
@@ -157,10 +159,16 @@ export function CalendarView({ habits, completions, subtasks = [], subtaskComple
   const [calendarDays, setCalendarDays] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [matchingDates, setMatchingDates] = useState(new Set());
+  const [searchResults, setSearchResults] = useState([]);
   const [searchSuggestions, setSearchSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const searchRef = useRef(null);
   
-  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return today;
+  });
 
   // Confirmation Modal State
   const [confirmationModal, setConfirmationModal] = useState({
@@ -211,6 +219,17 @@ export function CalendarView({ habits, completions, subtasks = [], subtaskComple
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [selectedDate, currentDate]);
+
+  // Close suggestions on click outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (searchRef.current && !searchRef.current.contains(e.target)) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // Generate search suggestions
   useEffect(() => {
@@ -270,28 +289,35 @@ export function CalendarView({ habits, completions, subtasks = [], subtaskComple
     setShowSuggestions(uniqueSuggestions.length > 0);
   }, [searchTerm, habits, subtasks, dailyTasks]);
 
-  // Search for habits, subtasks, and daily tasks
+  // Search for habits, subtasks, and daily tasks — build matching dates + detailed results
   useEffect(() => {
     if (!searchTerm.trim()) {
       setMatchingDates(new Set());
+      setSearchResults([]);
       return;
     }
 
     const matches = new Set();
+    const results = [];
     const searchLower = searchTerm.toLowerCase();
 
     // 1. Search Habit History (Completed Habits)
-    // Structure: { habitId: { dateKey: status } }
     Object.keys(completions).forEach(habitId => {
       const habit = habits.find(h => h.id === habitId);
       if (!habit) return;
 
-      // If habit name matches, find all completed dates
       if (habit.name.toLowerCase().includes(searchLower)) {
         const habitDates = completions[habitId] || {};
         Object.entries(habitDates).forEach(([dateKey, status]) => {
           if (status === 'completed') {
             matches.add(dateKey);
+            results.push({
+              type: 'habit',
+              name: habit.name,
+              color: habit.color,
+              date: dateKey,
+              status: 'completed'
+            });
           }
         });
       }
@@ -305,29 +331,59 @@ export function CalendarView({ habits, completions, subtasks = [], subtaskComple
 
     matchingSubtasks.forEach(subtask => {
       const habitId = subtask.habitId;
+      const parentHabit = habits.find(h => h.id === habitId);
       const habitCompletions = subtaskCompletions[habitId] || {};
 
-      // Check all dates for this habit
       Object.entries(habitCompletions).forEach(([dateKey, dateData]) => {
         if (dateData[subtask.id] === true) {
           matches.add(dateKey);
+          results.push({
+            type: 'subtask',
+            name: subtask.title,
+            habitName: parentHabit?.name,
+            color: parentHabit?.color,
+            date: dateKey,
+            status: 'completed'
+          });
         }
       });
     });
 
-    // 3. Search Daily Tasks (All tasks, regardless of completion)
-    // User requested: "item am searching for can be of past present or futore dates"
+    // 3. Search Daily Tasks (All tasks — past, present, future)
     const matchingDailyTasks = dailyTasks.filter(task => {
       const parentHabitExists = habits.some(h => h.id === task.habitId);
       return parentHabitExists && task.title.toLowerCase().includes(searchLower);
     });
 
     matchingDailyTasks.forEach(task => {
-      // task.date is already in YYYY-MM-DD format
       matches.add(task.date);
+      const parentHabit = habits.find(h => h.id === task.habitId);
+      results.push({
+        type: 'task',
+        name: task.title,
+        habitName: parentHabit?.name,
+        color: parentHabit?.color,
+        date: task.date,
+        status: task.completed ? 'completed' : 'pending'
+      });
     });
 
+    // Sort results by date (newest first)
+    results.sort((a, b) => b.date.localeCompare(a.date));
+
     setMatchingDates(matches);
+    setSearchResults(results);
+
+    // Auto-navigate to the most recent matching month
+    if (results.length > 0) {
+      const mostRecentDate = new Date(results[0].date + 'T00:00:00');
+      if (
+        mostRecentDate.getMonth() !== currentDate.getMonth() ||
+        mostRecentDate.getFullYear() !== currentDate.getFullYear()
+      ) {
+        setCurrentDate(new Date(mostRecentDate.getFullYear(), mostRecentDate.getMonth(), 1));
+      }
+    }
   }, [searchTerm, completions, habits, subtasks, subtaskCompletions, dailyTasks]);
 
   const handlePrevMonth = () => {
@@ -347,6 +403,7 @@ export function CalendarView({ habits, completions, subtasks = [], subtaskComple
 
   const handleToday = () => {
     const today = new Date();
+    today.setHours(0, 0, 0, 0);
     setCurrentDate(today);
     setSelectedDate(today);
   };
@@ -354,10 +411,15 @@ export function CalendarView({ habits, completions, subtasks = [], subtaskComple
   const getDayCompletionStats = (date) => {
     const dateStr = formatDateKey(date);
     
-    // Filter habits active on this day (simplified check)
+    // Normalize the comparison date to midnight
+    const compareDate = new Date(date);
+    compareDate.setHours(0, 0, 0, 0);
+    
+    // Filter habits active on this day (normalize created date to midnight for comparison)
     const activeHabits = habits.filter(h => {
       const created = new Date(h.createdAt);
-      return created <= date;
+      created.setHours(0, 0, 0, 0);
+      return created <= compareDate;
     });
 
     if (activeHabits.length === 0) return { count: 0, total: 0, percentage: 0 };
@@ -376,7 +438,10 @@ export function CalendarView({ habits, completions, subtasks = [], subtaskComple
 
   // Update selected date when clicking a day
   const handleDateClick = (date) => {
-    setSelectedDate(date);
+    // Normalize date to midnight for consistent comparison
+    const normalizedDate = new Date(date);
+    normalizedDate.setHours(0, 0, 0, 0);
+    setSelectedDate(normalizedDate);
   };
 
   // Handle double click to open modal
@@ -384,13 +449,14 @@ export function CalendarView({ habits, completions, subtasks = [], subtaskComple
     if (onDateDoubleClick) onDateDoubleClick(date);
   };
 
-  // Get data for the selected date
-  const getSelectedDateData = () => {
+  // Get data for the selected date - useMemo to ensure reactivity
+  const selectedDateData = useMemo(() => {
     const dateKey = formatDateKey(selectedDate);
     
-    // All habits active on this day
+    // All habits active on this day (normalize created date to midnight for comparison)
     const activeHabits = habits.filter(h => {
       const created = new Date(h.createdAt);
+      created.setHours(0, 0, 0, 0);
       return created <= selectedDate;
     });
 
@@ -413,9 +479,9 @@ export function CalendarView({ habits, completions, subtasks = [], subtaskComple
     });
     
     return { activeHabits, tasksByHabit, standaloneTasks, dateKey };
-  };
+  }, [selectedDate, habits, dailyTasks]);
 
-  const { activeHabits, tasksByHabit, standaloneTasks, dateKey } = getSelectedDateData();
+  const { activeHabits, tasksByHabit, standaloneTasks, dateKey } = selectedDateData;
 
   const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
@@ -439,27 +505,33 @@ export function CalendarView({ habits, completions, subtasks = [], subtaskComple
           </div>
           
           {/* Search Bar */}
-          <div className="calendar-search">
+          <div className="calendar-search" ref={searchRef}>
             <div className="search-input-wrapper">
               <Search size={16} className="search-icon" />
               <input
                 type="text"
-                placeholder="Search..."
+                placeholder="Search habits, tasks..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 onFocus={() => searchTerm && setShowSuggestions(true)}
                 className="calendar-search-input"
               />
               {searchTerm && (
-                <button 
-                  onClick={() => {
-                    setSearchTerm('');
-                    setShowSuggestions(false);
-                  }}
-                  className="clear-search-btn"
-                >
-                  <X size={14} />
-                </button>
+                <>
+                  {matchingDates.size > 0 && (
+                    <span className="search-result-count">{matchingDates.size}</span>
+                  )}
+                  <button 
+                    onClick={() => {
+                      setSearchTerm('');
+                      setShowSuggestions(false);
+                      setSearchResults([]);
+                    }}
+                    className="clear-search-btn"
+                  >
+                    <X size={14} />
+                  </button>
+                </>
               )}
               
               {/* Autocomplete Dropdown */}
@@ -480,9 +552,10 @@ export function CalendarView({ habits, completions, subtasks = [], subtaskComple
                       />
                       <div className="suggestion-content">
                         <span className="suggestion-text">{suggestion.text}</span>
-                        {suggestion.type === 'subtask' && (
+                        {(suggestion.type === 'subtask' || suggestion.type === 'daily_task') && (
                           <span className="suggestion-meta">in {suggestion.habitName}</span>
                         )}
+                        <span className="suggestion-type-badge">{suggestion.type === 'habit' ? 'Habit' : suggestion.type === 'subtask' ? 'Checklist' : 'Task'}</span>
                       </div>
                     </div>
                   ))}
@@ -499,44 +572,45 @@ export function CalendarView({ habits, completions, subtasks = [], subtaskComple
         </div>
 
         <div className="calendar-grid">
-          {calendarDays.map((date, index) => {
-            const stats = getDayCompletionStats(date);
-            const isToday = isSameDay(date, new Date());
-            const isSelected = isSameDay(date, selectedDate);
-            const isCurrentMonth = date.getMonth() === currentDate.getMonth();
-            const dateStr = formatDateKey(date);
-            const isMatching = matchingDates.has(dateStr);
-            
-            return (
-              <div 
-                key={index} 
-                className={`calendar-day ${!isCurrentMonth ? 'other-month' : ''} ${isToday ? 'today' : ''} ${isSelected ? 'selected' : ''} ${isMatching ? 'search-match' : ''}`}
-                onClick={() => handleDateClick(date)}
-                onDoubleClick={() => handleDateDoubleClick(date)}
-              >
-                <div className="day-number">{date.getDate()}</div>
-                
-                <div className="day-content">
-                  {stats.total > 0 && (
-                    <div className="event-dots">
-                      {habits.slice(0, 4).map(habit => {
-                        const isCompleted = completions[habit.id]?.[dateStr] === 'completed';
-                        if (!isCompleted) return null;
-                        return (
-                          <div 
-                            key={habit.id} 
-                            className="event-dot"
-                            style={{ backgroundColor: habit.color }}
-                          />
-                        );
-                      })}
-                      {stats.count > 4 && <span className="more-events-dot" />}
-                    </div>
-                  )}
+          {calendarDays
+            .filter(date => date.getMonth() === currentDate.getMonth())
+            .map((date, index) => {
+              const stats = getDayCompletionStats(date);
+              const isToday = isSameDay(date, new Date());
+              const isSelected = isSameDay(date, selectedDate);
+              const dateStr = formatDateKey(date);
+              const isMatching = matchingDates.has(dateStr);
+              
+              return (
+                <div 
+                  key={index} 
+                  className={`calendar-day ${isToday ? 'today' : ''} ${isSelected ? 'selected' : ''} ${isMatching ? 'search-match' : ''}`}
+                  onClick={() => handleDateClick(date)}
+                  onDoubleClick={() => handleDateDoubleClick(date)}
+                >
+                  <div className="day-number">{date.getDate()}</div>
+                  
+                  <div className="day-content">
+                    {stats.total > 0 && (
+                      <div className="event-dots">
+                        {habits.slice(0, 4).map(habit => {
+                          const isCompleted = completions[habit.id]?.[dateStr] === 'completed';
+                          if (!isCompleted) return null;
+                          return (
+                            <div 
+                              key={habit.id} 
+                              className="event-dot"
+                              style={{ backgroundColor: habit.color }}
+                            />
+                          );
+                        })}
+                        {stats.count > 4 && <span className="more-events-dot" />}
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
         </div>
       </div>
 
@@ -553,63 +627,115 @@ export function CalendarView({ habits, completions, subtasks = [], subtaskComple
         </div>
 
         <div className="sidebar-content">
-          <div className="sidebar-section">
-            <h3 className="sidebar-section-title">Habits</h3>
-            {activeHabits.length > 0 ? (
-              <div className="sidebar-list">
-                {activeHabits.map(habit => {
-                  const isCompleted = completions[habit.id]?.[dateKey] === 'completed';
-                  const habitSubtasks = subtasks.filter(st => st.habitId === habit.id);
-                  const habitDailyTasks = tasksByHabit[habit.id] || [];
-                  
-                  return (
-                    <HabitItem 
-                      key={habit.id}
-                      habit={habit}
-                      isCompleted={isCompleted}
-                      subtasks={habitSubtasks}
-                      subtaskCompletions={subtaskCompletions}
-                      dailyTasks={habitDailyTasks}
-                      dateKey={dateKey}
-                      onToggleTask={onToggleTask}
-                      onUpdateTask={onUpdateTask}
-                      onDeleteTask={onDeleteTask}
-                    />
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="sidebar-empty">No habits for this day</div>
-            )}
-          </div>
-
-          <div className="sidebar-section">
-            <h3 className="sidebar-section-title">Other Tasks</h3>
-            {standaloneTasks.length > 0 ? (
-              <div className="sidebar-list">
-                {standaloneTasks.map(task => (
-                  <TaskItem 
-                    key={task.id} 
-                    task={task} 
-                    onToggle={() => onToggleTask(task.id)}
-                    onDelete={() => {
-                      setConfirmationModal({
-                        isOpen: true,
-                        title: 'Delete Task',
-                        message: 'Are you sure you want to delete this task?',
-                        confirmText: 'Delete',
-                        type: 'danger',
-                        onConfirm: () => onDeleteTask(task.id)
-                      });
+          {/* Show search results when actively searching */}
+          {searchTerm.trim() && searchResults.length > 0 ? (
+            <div className="sidebar-section">
+              <h3 className="sidebar-section-title">Search Results ({searchResults.length})</h3>
+              <div className="sidebar-list search-results-list">
+                {searchResults.slice(0, 25).map((result, idx) => (
+                  <div 
+                    key={idx} 
+                    className="search-result-item"
+                    onClick={() => {
+                      const resultDate = new Date(result.date + 'T00:00:00');
+                      setSelectedDate(resultDate);
+                      if (
+                        resultDate.getMonth() !== currentDate.getMonth() ||
+                        resultDate.getFullYear() !== currentDate.getFullYear()
+                      ) {
+                        setCurrentDate(new Date(resultDate.getFullYear(), resultDate.getMonth(), 1));
+                      }
                     }}
-                    onUpdate={(title) => onUpdateTask(task.id, { title })}
-                  />
+                  >
+                    <span className="search-result-dot" style={{ backgroundColor: result.color }} />
+                    <div className="search-result-info">
+                      <span className="search-result-name">{result.name}</span>
+                      {result.habitName && result.type !== 'habit' && (
+                        <span className="search-result-habit">in {result.habitName}</span>
+                      )}
+                      <span className="search-result-date">
+                        {new Date(result.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                      </span>
+                    </div>
+                    <span className={`search-result-badge ${result.status}`}>
+                      {result.status === 'completed' ? '✓' : '○'}
+                    </span>
+                  </div>
                 ))}
+                {searchResults.length > 25 && (
+                  <div className="sidebar-empty">+{searchResults.length - 25} more results</div>
+                )}
               </div>
-            ) : (
-              <div className="sidebar-empty">No other tasks</div>
-            )}
-          </div>
+            </div>
+          ) : searchTerm.trim() && searchResults.length === 0 ? (
+            <div className="sidebar-section">
+              <h3 className="sidebar-section-title">Search Results</h3>
+              <div className="sidebar-empty">No results found for "{searchTerm}"</div>
+            </div>
+          ) : (
+            /* Default: show habits and tasks for selected date */
+            <>
+              <div className="sidebar-section">
+                <h3 className="sidebar-section-title">Habits</h3>
+                {activeHabits.length > 0 ? (
+                  <div className="sidebar-list">
+                    {activeHabits.map(habit => {
+                      const habitDateKey = formatDateKey(selectedDate);
+                      const isCompleted = completions[habit.id]?.[habitDateKey] === 'completed';
+                      const habitSubtasks = subtasks.filter(st => st.habitId === habit.id);
+                      const habitDailyTasks = tasksByHabit[habit.id] || [];
+                      
+                      return (
+                        <HabitItem 
+                          key={`${habit.id}-${habitDateKey}`}
+                          habit={habit}
+                          isCompleted={isCompleted}
+                          subtasks={habitSubtasks}
+                          dailyTasks={habitDailyTasks}
+                          dateKey={habitDateKey}
+                          onToggleTask={onToggleTask}
+                          onUpdateTask={onUpdateTask}
+                          onDeleteTask={onDeleteTask}
+                          disabled={isFutureDate(selectedDate)}
+                        />
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="sidebar-empty">No habits for this day</div>
+                )}
+              </div>
+
+              <div className="sidebar-section">
+                <h3 className="sidebar-section-title">Other Tasks</h3>
+                {standaloneTasks.length > 0 ? (
+                  <div className="sidebar-list">
+                    {standaloneTasks.map(task => (
+                      <TaskItem 
+                        key={`${task.id}-${dateKey}`} 
+                        task={task} 
+                        onToggle={() => onToggleTask(task.id)}
+                        onDelete={() => {
+                          setConfirmationModal({
+                            isOpen: true,
+                            title: 'Delete Task',
+                            message: 'Are you sure you want to delete this task?',
+                            confirmText: 'Delete',
+                            type: 'danger',
+                            onConfirm: () => onDeleteTask(task.id)
+                          });
+                        }}
+                        onUpdate={(title) => onUpdateTask(task.id, { title })}
+                        disabled={isFutureDate(selectedDate)}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="sidebar-empty">No other tasks</div>
+                )}
+              </div>
+            </>
+          )}
         </div>
       </div>
 

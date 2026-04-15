@@ -1,16 +1,18 @@
 /* Daily Task Panel - Individual habit panel */
 .daily-task-panel {
-    background: #0A0A0A;
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
     border-radius: var(--radius-lg);
-    border: 2px solid var(--neon-orange);
-    box-shadow: none;
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--shadow-glass);
     overflow: hidden;
     transition: all var(--transition-fast);
 }
 
 .daily-task-panel:hover {
-    box-shadow: none;
-    border-color: var(--neon-orange);
+    border-color: var(--glass-border-hover);
+    box-shadow: 0 0 40px rgba(255, 122, 89, 0.12);
 }
 
 /* Panel header */
@@ -117,18 +119,21 @@
 /* Panel content */
 .panel-content {
     padding: var(--spacing-lg);
-    animation: slideDown 0.2s ease-in-out;
+    animation: premiumAccordionDown 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    transform-origin: top;
 }
 
-@keyframes slideDown {
+@keyframes premiumAccordionDown {
     from {
         opacity: 0;
         max-height: 0;
+        transform: translateY(-10px);
     }
 
     to {
         opacity: 1;
         max-height: 1000px;
+        transform: translateY(0);
     }
 }
 
@@ -182,6 +187,19 @@
 
 .task-input::placeholder {
     color: var(--text-tertiary);
+}
+
+.task-input.disabled {
+    background: var(--bg-secondary);
+    border-color: var(--border-color);
+    color: var(--text-tertiary);
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.task-input.disabled::placeholder {
+    color: var(--text-muted);
+    font-style: italic;
 }
 
 .add-task-btn {

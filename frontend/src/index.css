@@ -428,8 +428,7 @@ h3 {
   z-index: 1;
 }
 
-/* Import Premium Animations */
-@import url('./styles/premium-animations.css');
+
 
 /* Animations */
 @keyframes fadeIn {

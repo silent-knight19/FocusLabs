@@ -160,3 +160,28 @@
         /* Always visible on mobile */
     }
 }
+
+/* Disabled state for future dates */
+.daily-task-item.disabled {
+    opacity: 0.6;
+}
+
+.daily-task-item.disabled .task-checkbox {
+    cursor: not-allowed;
+    border-style: dashed;
+    opacity: 0.5;
+}
+
+.daily-task-item.disabled .task-checkbox:hover {
+    border-color: var(--border-color);
+    transform: none;
+}
+
+.daily-task-item.disabled .task-title {
+    cursor: not-allowed;
+    color: var(--text-tertiary);
+}
+
+.daily-task-item.disabled .task-title:hover {
+    background: none;
+}

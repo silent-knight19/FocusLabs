@@ -184,6 +184,18 @@ export function getToday() {
 }
 
 /**
+ * Check if a date is in the future (after today)
+ * @param {Date} date
+ * @returns {boolean}
+ */
+export function isFutureDate(date) {
+  const today = getToday();
+  const checkDate = new Date(date);
+  checkDate.setHours(0, 0, 0, 0);
+  return checkDate > today;
+}
+
+/**
  * Convert 24h time string (HH:MM) to 12h format (h:MM AM/PM)
  * @param {string} timeStr - "14:30"
  * @returns {string} - "2:30 PM"

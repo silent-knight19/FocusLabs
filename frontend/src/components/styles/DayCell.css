@@ -6,7 +6,7 @@
     justify-content: center;
     border: 1px solid var(--border-color);
     border-radius: var(--radius-sm);
-    background-color: var(--status-empty);
+    background-color: rgba(255, 255, 255, 0.1);
     cursor: pointer;
     transition: all var(--transition-fast);
     padding: 0;
@@ -97,8 +97,15 @@
     min-height: 28px;
     font-size: 12px;
     font-weight: 500;
-    color: var(--text-secondary);
+    color: #FFFFFF;
+    background-color: rgba(255, 255, 255, 0.15);
     padding: 0;
+}
+
+.day-cell.numbered .day-number {
+    color: #FFFFFF !important;
+    font-weight: 600;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 1), 0 0 20px rgba(255, 255, 255, 0.6);
 }
 
 .day-number {
@@ -107,6 +114,8 @@
     justify-content: center;
     width: 100%;
     height: 100%;
+    color: #FFFFFF !important;
+    text-shadow: 0 0 8px rgba(255, 255, 255, 0.8), 0 0 12px rgba(255, 255, 255, 0.4);
 }
 
 .day-cell.numbered.completed {
@@ -123,6 +132,7 @@
 
 .day-cell.numbered:hover {
     color: var(--text-primary);
+    text-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
 }
 
 .day-cell.numbered.completed:hover {
@@ -162,10 +172,10 @@
 
 /* Disabled State - for dates outside custom habit range */
 .day-cell.disabled {
-    opacity: 0.25;
+    opacity: 0.7;
     cursor: not-allowed;
     pointer-events: none;
-    background: transparent;
+    background: rgba(255, 255, 255, 0.05);
     border-color: var(--border-color);
 }
 
@@ -177,17 +187,17 @@
 /* Blocked by Custom - date has custom habits, so regular habits are blocked */
 .day-cell.blocked-by-custom {
     background: repeating-linear-gradient(45deg,
-            rgba(255, 122, 89, 0.1),
-            rgba(255, 122, 89, 0.1) 2px,
+            rgba(255, 122, 89, 0.15),
+            rgba(255, 122, 89, 0.15) 2px,
             transparent 2px,
             transparent 6px);
     border: 1px dashed rgba(255, 122, 89, 0.5);
     cursor: not-allowed;
-    color: var(--text-secondary);
+    color: #FFFFFF;
 }
 
 .day-cell.blocked-by-custom .day-number {
-    opacity: 0.5;
+    opacity: 0.9;
 }
 
 .day-cell.blocked-by-custom:hover {
@@ -197,34 +207,41 @@
 
 /* Before Creation - date is before the habit was created */
 .day-cell.before-creation {
-    background: rgba(100, 100, 100, 0.05);
-    border: 1px solid rgba(100, 100, 100, 0.15);
+    background: repeating-linear-gradient(
+        45deg,
+        rgba(255, 255, 255, 0.03),
+        rgba(255, 255, 255, 0.03) 2px,
+        transparent 2px,
+        transparent 4px
+    );
+    border: 1px dashed rgba(255, 255, 255, 0.15);
     cursor: not-allowed;
-    opacity: 0.4;
+    opacity: 0.6;
 }
 
 .day-cell.before-creation .day-number {
-    color: var(--text-tertiary);
-    opacity: 0.5;
+    color: rgba(255, 255, 255, 0.4);
+    opacity: 0.6;
+    font-style: italic;
 }
 
 .day-cell.before-creation:hover {
     transform: none;
     box-shadow: none;
-    border-color: rgba(100, 100, 100, 0.15);
+    border-color: rgba(255, 255, 255, 0.2);
 }
 
 /* Future Date - date is in the future */
 .day-cell.is-future {
-    background: rgba(100, 100, 100, 0.05);
-    border: 1px solid rgba(100, 100, 100, 0.15);
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     cursor: not-allowed;
-    opacity: 0.4;
+    opacity: 0.7;
 }
 
 .day-cell.is-future .day-number {
-    color: var(--text-tertiary);
-    opacity: 0.5;
+    color: #FFFFFF;
+    opacity: 0.9;
 }
 
 .day-cell.is-future:hover {

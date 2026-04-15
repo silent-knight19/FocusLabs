@@ -5,7 +5,7 @@ import './styles/DailyTaskItem.css';
  * Single daily task item component
  * Features: checkbox, title (editable), delete button
  */
-export function DailyTaskItem({ task, onToggle, onUpdate, onDelete }) {
+export function DailyTaskItem({ task, onToggle, onUpdate, onDelete, disabled = false }) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedTitle, setEditedTitle] = useState(task.title);
 
@@ -26,12 +26,13 @@ export function DailyTaskItem({ task, onToggle, onUpdate, onDelete }) {
   };
 
   return (
-    <div className={`daily-task-item ${task.completed ? 'completed' : ''}`}>
+    <div className={`daily-task-item ${task.completed ? 'completed' : ''} ${disabled ? 'disabled' : ''}`}>
       <button
         type="button"
-        className={`task-checkbox ${task.completed ? 'checked' : ''}`}
-        onClick={() => onToggle(task.id)}
-        title={task.completed ? 'Mark as incomplete' : 'Mark as complete'}
+        className={`task-checkbox ${task.completed ? 'checked' : ''} ${disabled ? 'disabled' : ''}`}
+        onClick={() => !disabled && onToggle(task.id)}
+        disabled={disabled}
+        title={disabled ? 'Cannot mark tasks for future dates' : task.completed ? 'Mark as incomplete' : 'Mark as complete'}
       >
         {task.completed && <span className="check-mark">✓</span>}
       </button>

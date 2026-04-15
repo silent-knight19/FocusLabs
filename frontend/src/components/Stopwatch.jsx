@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useStopwatch } from '../hooks/useStopwatch';
 import { Bell, X, ChevronDown, Clock, Play, Pause, Square, Flag, RotateCcw } from 'lucide-react';
 import { useLockBodyScroll } from '../hooks/useLockBodyScroll';
@@ -32,23 +33,73 @@ export function Stopwatch({ isOpen, onClose, onDataUpdate }) {
   const editInputRef = useRef(null);
   const alarmAudioRef = useRef(null);
 
+  /**
+   * Plays an alarm sound using Web Audio API.
+   * Creates a repeating 3-tone ascending beep pattern.
+   */
   const playAlarm = () => {
-    // Play alarm.mp3 from public folder
-    const audio = new Audio('/alarm.mp3');
-    audio.loop = true;
-    
-    audio.play().catch(e => console.error("Error playing alarm:", e));
-    
-    alarmAudioRef.current = { audio };
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return;
+
+    try {
+      const ctx = new AudioCtx();
+      let isPlaying = true;
+      let timeoutId = null;
+
+      const playBeep = (frequency, startTime, duration) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        
+        // 'square' wave creates a harsh, loud, piercing sound like a real digital alarm clock
+        osc.type = 'square'; 
+        osc.frequency.setValueAtTime(frequency, startTime);
+        
+        // Max volume (1.0) for a sharp, attention-grabbing attack
+        gain.gain.setValueAtTime(0, startTime);
+        gain.gain.setValueAtTime(1, startTime + 0.01);
+        gain.gain.setValueAtTime(1, startTime + duration - 0.01);
+        gain.gain.linearRampToValueAtTime(0, startTime + duration);
+        
+        osc.start(startTime);
+        osc.stop(startTime + duration);
+      };
+
+      const schedulePattern = () => {
+        if (!isPlaying || ctx.state === 'closed') return;
+        const now = ctx.currentTime;
+        
+        // Standard piercing digital alarm clock pattern: 3 quick high-pitched beeps
+        const freq = 3136; // High treble pitch typical of piezo buzzers (approx G7)
+        playBeep(freq, now, 0.1);
+        playBeep(freq, now + 0.2, 0.1);
+        playBeep(freq, now + 0.4, 0.1);
+        
+        // Repeat every 1 second
+        timeoutId = setTimeout(schedulePattern, 1000);
+      };
+
+      schedulePattern();
+
+      alarmAudioRef.current = {
+        stop: () => {
+          isPlaying = false;
+          if (timeoutId) clearTimeout(timeoutId);
+          if (ctx.state !== 'closed') ctx.close().catch(() => {});
+        }
+      };
+    } catch (e) {
+      console.error('Failed to play alarm sound:', e);
+    }
   };
 
+  /**
+   * Stops the alarm sound and resets the ringing state.
+   */
   const stopAlarm = () => {
     if (alarmAudioRef.current) {
-      const { audio } = alarmAudioRef.current;
-      if (audio) {
-        audio.pause();
-        audio.currentTime = 0;
-      }
+      alarmAudioRef.current.stop();
       alarmAudioRef.current = null;
     }
     setIsAlarmRinging(false);
@@ -101,6 +152,16 @@ export function Stopwatch({ isOpen, onClose, onDataUpdate }) {
     }
   }, [alarmTargetTime, time, isAlarmRinging]);
 
+  // Clean up alarm audio on component unmount
+  useEffect(() => {
+    return () => {
+      if (alarmAudioRef.current) {
+        alarmAudioRef.current.stop();
+        alarmAudioRef.current = null;
+      }
+    };
+  }, []);
+
   useEffect(() => {
     if (editingLapId && editInputRef.current) {
       editInputRef.current.focus();
@@ -125,7 +186,29 @@ export function Stopwatch({ isOpen, onClose, onDataUpdate }) {
     };
   }, [isRunning]);
 
-  if (!isOpen) return null;
+  // Alarm notification portal — renders to document.body so it appears on ANY page
+  const alarmNotificationPortal = isAlarmRinging ? createPortal(
+    <>
+      <div className="alarm-notification-overlay" />
+      <div className="alarm-notification">
+        <Bell className="alarm-icon" size={48} />
+        <div className="alarm-content">
+          <span className="alarm-title">Time's Up!</span>
+          <span className="alarm-subtitle">{alarmDuration} minutes reached</span>
+        </div>
+        <button className="alarm-dismiss-btn" onClick={() => {
+          stopAlarm();
+          setHasAlarmTriggered(true);
+        }}>
+          Dismiss
+        </button>
+      </div>
+    </>,
+    document.body
+  ) : null;
+
+  // When stopwatch overlay is closed, only render the alarm notification if ringing
+  if (!isOpen) return alarmNotificationPortal;
 
   const formatted = formatTime(time);
   
@@ -250,31 +333,8 @@ export function Stopwatch({ isOpen, onClose, onDataUpdate }) {
           <span className="time-part small">{formatted.centiseconds}</span>
         </div>
 
-        {/* Alarm notification */}
-        {isAlarmRinging && (
-          <>
-            <div className="alarm-notification-overlay" onClick={() => {
-              stopAlarm();
-              setHasAlarmTriggered(true);
-            }} />
-            <div className="alarm-notification">
-              <Bell className="alarm-icon" size={48} />
-              <div className="alarm-content">
-                <span className="alarm-title">Time's Up!</span>
-                <span className="alarm-subtitle">{alarmDuration} minutes reached</span>
-              </div>
-              <button className="alarm-dismiss-btn" onClick={() => {
-                // Stop the current alarm sound and mark this alarm occurrence as handled
-                // so it doesn't immediately retrigger while time is still beyond the threshold.
-                stopAlarm();
-                setHasAlarmTriggered(true);
-              }}>
-                Dismiss
-              </button>
-            </div>
-          </>
-        )}
-
+        {/* Global alarm notification — rendered via portal to document.body */}
+        {alarmNotificationPortal}
 
 
         <div className="stopwatch-center-layout">

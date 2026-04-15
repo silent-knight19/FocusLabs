@@ -423,6 +423,57 @@
 }
 
 /* ========================================
+   MODAL & OVERLAY ANIMATIONS
+   ======================================== */
+.premium-overlay-enter {
+  animation: premiumOverlayEnter 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes premiumOverlayEnter {
+  from {
+    opacity: 0;
+    backdrop-filter: blur(0px);
+  }
+  to {
+    opacity: 1;
+    backdrop-filter: blur(8px);
+  }
+}
+
+.premium-modal-enter {
+  animation: premiumModalEnter 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes premiumModalEnter {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ========================================
+   PANEL SLIDE ANIMATIONS
+   ======================================== */
+.premium-panel-slide-in {
+  animation: premiumPanelSlideIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes premiumPanelSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* ========================================
    REDUCED MOTION
    ======================================== */
 @media (prefers-reduced-motion: reduce) {

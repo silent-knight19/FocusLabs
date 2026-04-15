@@ -6,6 +6,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { downloadDataAsJson, clearAllData } from '../utils/storageHelpers';
 import { useLockBodyScroll } from '../hooks/useLockBodyScroll';
 import { ButtonWithTooltip } from './ButtonWithTooltip';
+import { LogOut } from 'lucide-react';
 import './styles/SettingsPanel.css';
 
 /**
@@ -13,11 +14,22 @@ import './styles/SettingsPanel.css';
  */
 export function SettingsPanel({ isOpen, onClose, settings, onUpdateSettings }) {
   useLockBodyScroll(isOpen);
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const userId = user?.uid;
   const [history, setHistory] = useFirestore(userId, 'stopwatch_history', []);
 
   const [importError, setImportError] = useState('');
+
+  // Get user initials for fallback avatar
+  const getUserInitials = () => {
+    if (!user?.displayName) return user?.email?.[0]?.toUpperCase() || 'U';
+    return user.displayName
+      .split(' ')
+      .map(n => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
   const [focusCategory, setFocusCategory] = useState('study');
@@ -350,6 +362,41 @@ export function SettingsPanel({ isOpen, onClose, settings, onUpdateSettings }) {
         </div>
 
         <div className="settings-content">
+          {user && (
+            <div className="setting-section">
+              <h3>Account</h3>
+              <div className="setting-item" style={{ alignItems: 'center' }}>
+                <div className="setting-info" style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                  {user.photoURL ? (
+                    <img
+                      src={user.photoURL}
+                      alt={user.displayName || 'User'}
+                      style={{ width: '48px', height: '48px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--accent-primary)' }}
+                      referrerPolicy="no-referrer"
+                    />
+                  ) : (
+                    <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'var(--gradient-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'black', fontWeight: 'bold', fontSize: '1.2rem', boxShadow: '0 4px 15px rgba(255, 122, 89, 0.35)' }}>
+                      {getUserInitials()}
+                    </div>
+                  )}
+                  <div>
+                    <div style={{ fontWeight: '600', color: 'var(--text-primary)', fontSize: '1.05rem', marginBottom: '2px' }}>{user.displayName || 'User'}</div>
+                    <div style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>{user.email}</div>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  className="danger-outline"
+                  onClick={() => signOut()}
+                  style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', background: 'transparent' }}
+                >
+                  <LogOut size={16} />
+                  <span>Sign Out</span>
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Week Start */}
           <div className="setting-section">
             <h3>Calendar</h3>

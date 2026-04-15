@@ -432,7 +432,7 @@ function App() {
                 cursor: 'pointer'
               }}
             >
-              Daily Planner
+              Day Planner
             </button>
             <button
               className={`view-toggle-btn btn-3d ${currentView === 'custom' ? 'active' : ''}`}
