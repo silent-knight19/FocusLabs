@@ -1,10 +1,16 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { 
-  doc, 
-  setDoc, 
+import {
+  doc,
+  setDoc,
   onSnapshot
 } from 'firebase/firestore';
 import { db } from '../config/firebase';
+
+// Debug logging - only enabled in development
+const DEBUG = import.meta.env.DEV;
+const log = DEBUG ? console.log : () => {};
+const warn = DEBUG ? console.warn : () => {};
+const error = DEBUG ? console.error : () => {};
 
 // Global circuit breaker state to persist across remounts
 const globalCircuitBreaker = {
@@ -72,8 +78,8 @@ export function useFirestore(userId, collectionName, initialValue) {
         }
         setLoading(false);
       },
-      (error) => {
-        console.error(`Error loading Firestore "${collectionName}":`, error);
+      (err) => {
+        error(`[FIRESTORE] Error loading "${collectionName}":`, err);
         setLoading(false);
       }
     );
@@ -85,7 +91,7 @@ export function useFirestore(userId, collectionName, initialValue) {
   // Memoized update function with enhanced throttling and debouncing
   const updateValue = useCallback((newValue) => {
     if (!userId) {
-      console.warn('[FIRESTORE] Cannot update: No user logged in');
+      warn('[FIRESTORE] Cannot update: No user logged in');
       return;
     }
 
@@ -106,13 +112,13 @@ export function useFirestore(userId, collectionName, initialValue) {
     }
 
     if (globalCircuitBreaker.broken[collectionName]) {
-      console.warn(`[FIRESTORE] ⚠️ Circuit breaker active for "${collectionName}". Writes paused.`);
+      warn(`[FIRESTORE] Circuit breaker active for "${collectionName}". Writes paused.`);
       return;
     }
 
     // Limit: 20 writes per 60 seconds (Safe limit)
     if (globalCircuitBreaker.writes[collectionName] >= 20) {
-      console.error(`[FIRESTORE] 🔴 Circuit breaker TRIGGERED for "${collectionName}". Too many writes!`);
+      error(`[FIRESTORE] Circuit breaker TRIGGERED for "${collectionName}". Too many writes!`);
       globalCircuitBreaker.broken[collectionName] = true;
       return;
     }
@@ -120,13 +126,13 @@ export function useFirestore(userId, collectionName, initialValue) {
     try {
       // Calculate new value based on current valueRef (not state, to avoid dependency)
       const valueToStore = newValue instanceof Function ? newValue(valueRef.current) : newValue;
-      
+
       // Deep comparison to prevent unnecessary writes
       if (JSON.stringify(valueToStore) !== JSON.stringify(valueRef.current)) {
         // Optimistic update - update local state immediately
         setValue(valueToStore);
         valueRef.current = valueToStore;
-        
+
         // Clear existing timers
         if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
         if (pendingUpdateRef.current) clearTimeout(pendingUpdateRef.current);
@@ -134,7 +140,7 @@ export function useFirestore(userId, collectionName, initialValue) {
         // DEBOUNCE: Wait 2 seconds after LAST update before writing
         debounceTimerRef.current = setTimeout(() => {
           const timeSinceLastWrite = Date.now() - lastWriteRef.current;
-          
+
           // THROTTLE: Ensure minimum 3 seconds between writes
           if (timeSinceLastWrite < 3000) {
             const delayNeeded = 3000 - timeSinceLastWrite;
@@ -142,10 +148,10 @@ export function useFirestore(userId, collectionName, initialValue) {
           } else {
             performWrite(valueToStore);
           }
-        }, 2000); 
+        }, 2000);
       }
-    } catch (error) {
-      console.error(`[FIRESTORE] ❌ Error preparing update for "${collectionName}":`, error);
+    } catch (err) {
+      error(`[FIRESTORE] Error preparing update for "${collectionName}":`, err);
     }
 
     // Internal write function
@@ -153,12 +159,12 @@ export function useFirestore(userId, collectionName, initialValue) {
       try {
         const docRef = doc(db, 'users', userId, 'data', collectionName);
         await setDoc(docRef, { value: val }, { merge: true });
-        
+
         globalCircuitBreaker.writes[collectionName]++;
         lastWriteRef.current = Date.now();
-        console.log(`[FIRESTORE] ✅ Saved "${collectionName}"`);
+        log(`[FIRESTORE] Saved "${collectionName}"`);
       } catch (err) {
-        console.error(`[FIRESTORE] ❌ Error saving "${collectionName}":`, err);
+        error(`[FIRESTORE] Error saving "${collectionName}":`, err);
       }
     };
 

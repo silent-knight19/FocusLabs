@@ -3,6 +3,46 @@
  */
 
 /**
+ * Sanitize a string to prevent XSS - removes HTML tags and encodes special chars
+ * @param {string} str
+ * @returns {string}
+ */
+function sanitizeString(str) {
+  if (typeof str !== 'string') return str;
+  return str
+    .replace(/&/g, '&amp;') // Encode & first to avoid double-encoding
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;')
+    .trim();
+}
+
+/**
+ * Sanitize habit data recursively
+ * @param {object} data
+ * @returns {object}
+ */
+function sanitizeHabitData(data) {
+  if (!data || typeof data !== 'object') return data;
+
+  const sanitized = { ...data };
+
+  // Sanitize string fields
+  if (sanitized.name) sanitized.name = sanitizeString(sanitized.name);
+  if (sanitized.description) sanitized.description = sanitizeString(sanitized.description);
+  if (sanitized.title) sanitized.title = sanitizeString(sanitized.title);
+  if (sanitized.label) sanitized.label = sanitizeString(sanitized.label);
+
+  // Recursively sanitize subtasks
+  if (Array.isArray(sanitized.subtasks)) {
+    sanitized.subtasks = sanitized.subtasks.map(st => sanitizeHabitData(st));
+  }
+
+  return sanitized;
+}
+
+/**
  * Export all HabitGrid data to JSON
  * @returns {string} JSON string of all data
  */
@@ -47,22 +87,37 @@ export function validateImportData(data) {
   if (!data || typeof data !== 'object') {
     return { valid: false, error: 'Invalid JSON data' };
   }
-  
+
+  // Size check - prevent memory issues
+  const dataSize = JSON.stringify(data).length;
+  if (dataSize > 10 * 1024 * 1024) { // 10MB limit
+    return { valid: false, error: 'Import data too large (max 10MB)' };
+  }
+
   if (!Array.isArray(data.habits)) {
     return { valid: false, error: 'Missing or invalid habits array' };
   }
-  
+
+  // Limit number of habits
+  if (data.habits.length > 100) {
+    return { valid: false, error: 'Too many habits (max 100)' };
+  }
+
   if (typeof data.completions !== 'object') {
     return { valid: false, error: 'Missing or invalid completions object' };
   }
-  
+
   // Validate habit structure
   for (const habit of data.habits) {
     if (!habit.id || !habit.name) {
       return { valid: false, error: 'Habit missing required fields (id, name)' };
     }
+    // Check for suspicious content
+    if (typeof habit.name === 'string' && (habit.name.includes('<script') || habit.name.includes('javascript:'))) {
+      return { valid: false, error: 'Potentially unsafe content detected' };
+    }
   }
-  
+
   return { valid: true };
 }
 
@@ -75,21 +130,24 @@ export function importData(jsonString) {
   try {
     const data = JSON.parse(jsonString);
     const validation = validateImportData(data);
-    
+
     if (!validation.valid) {
       return { success: false, error: validation.error };
     }
-    
+
+    // Sanitize all imported data
+    const sanitizedHabits = data.habits.map(h => sanitizeHabitData(h));
+
     // Import data to localStorage
-    localStorage.setItem('habitgrid_habits', JSON.stringify(data.habits));
+    localStorage.setItem('habitgrid_habits', JSON.stringify(sanitizedHabits));
     localStorage.setItem('habitgrid_completions', JSON.stringify(data.completions));
-    
+
     if (data.settings) {
       localStorage.setItem('habitgrid_settings', JSON.stringify(data.settings));
     }
-    
+
     return { success: true };
-  } catch (error) {
+  } catch {
     return { success: false, error: 'Invalid JSON format' };
   }
 }

@@ -1,5 +1,9 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 
+// Debug logging - only enabled in development
+const DEBUG = import.meta.env.DEV;
+const logError = DEBUG ? console.error : () => {};
+
 /**
  * Custom hook for syncing state with LocalStorage
  * Designed to mimic the API of useFirestore for easy migration
@@ -28,7 +32,7 @@ export function useLocalStorage(userId, key, initialValue) {
       const item = window.localStorage.getItem(storageKey);
       return item ? JSON.parse(item) : initialValue;
     } catch (error) {
-      console.error(`[LOCAL_STORAGE] Error reading key "${storageKey}":`, error);
+      logError(`[LOCAL_STORAGE] Error reading key "${storageKey}":`, error);
       return initialValue;
     }
   });
@@ -50,7 +54,7 @@ export function useLocalStorage(userId, key, initialValue) {
         return valueToStore;
       });
     } catch (error) {
-      console.error(`[LOCAL_STORAGE] Error setting key "${storageKey}":`, error);
+      logError(`[LOCAL_STORAGE] Error setting key "${storageKey}":`, error);
     }
   }, [storageKey]);
 
@@ -72,7 +76,7 @@ export function useLocalStorage(userId, key, initialValue) {
             });
           }
         } catch (error) {
-          console.error(`[LOCAL_STORAGE] Error syncing key "${storageKey}":`, error);
+          logError(`[LOCAL_STORAGE] Error syncing key "${storageKey}":`, error);
         }
       }
     };

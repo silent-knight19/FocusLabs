@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { useFirestore } from './useFirestore';
 import { useAuth } from '../contexts/AuthContext';
 import { formatDateKey } from '../utils/dateHelpers';
@@ -208,7 +209,38 @@ export function useHabits() {
       } else {
         updatedHabitCompletions[dateKey] = newStatus;
       }
-      
+
+      return {
+        ...prev,
+        [habitId]: updatedHabitCompletions
+      };
+    });
+    window.dispatchEvent(new Event('habit-data-updated'));
+  };
+
+  /**
+   * Clear completion status for a habit on a specific date
+   * Directly sets status to null (removes the entry)
+   */
+  const clearCompletion = (habitId, date) => {
+    const dateKey = formatDateKey(date);
+    if (!dateKey) return;
+
+    setCompletions(prev => {
+      const habitCompletions = prev[habitId];
+      if (!habitCompletions || !habitCompletions[dateKey]) {
+        return prev;
+      }
+
+      const updatedHabitCompletions = { ...habitCompletions };
+      delete updatedHabitCompletions[dateKey];
+
+      if (Object.keys(updatedHabitCompletions).length === 0) {
+        const updated = { ...prev };
+        delete updated[habitId];
+        return updated;
+      }
+
       return {
         ...prev,
         [habitId]: updatedHabitCompletions
@@ -227,26 +259,40 @@ export function useHabits() {
 
   /**
    * Calculate current streak for a habit
+   * Counts consecutive completed days from most recent completed day backwards
    */
-  const getCurrentStreak = (habitId) => {
+  const getCurrentStreak = useCallback((habitId) => {
     const habitCompletions = completions[habitId] || {};
     let streak = 0;
     const today = new Date();
-    
-    for (let i = 0; i < 365; i++) {
+    const todayKey = formatDateKey(today);
+
+    // Guard against invalid date
+    if (!todayKey) return 0;
+
+    // Find the most recent completed day (could be today or earlier)
+    let startOffset = 0;
+    if (habitCompletions[todayKey] !== 'completed') {
+      // Today not completed, check yesterday and earlier
+      startOffset = 1;
+    }
+
+    for (let i = startOffset; i < 365; i++) {
       const date = new Date(today);
       date.setDate(today.getDate() - i);
       const dateKey = formatDateKey(date);
-      
+
+      if (!dateKey) break; // Stop if we get an invalid date
+
       if (habitCompletions[dateKey] === 'completed') {
         streak++;
       } else {
         break;
       }
     }
-    
+
     return streak;
-  };
+  }, [completions]);
 
   /**
    * Calculate longest streak for a habit
@@ -312,6 +358,7 @@ export function useHabits() {
     updateHabit,
     deleteHabit,
     toggleCompletion,
+    clearCompletion,
     getCompletionStatus,
     getCurrentStreak,
     getLongestStreak,

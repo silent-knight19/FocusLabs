@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { 
+import {
   signInWithPopup,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
@@ -8,6 +8,10 @@ import {
   updateProfile
 } from 'firebase/auth';
 import { auth, googleProvider } from '../config/firebase';
+
+// Debug logging - only enabled in development
+const DEBUG = import.meta.env.DEV;
+const logError = DEBUG ? console.error : () => {};
 
 const AuthContext = createContext({});
 
@@ -41,10 +45,10 @@ export function AuthProvider({ children }) {
       const result = await signInWithPopup(auth, googleProvider);
       setUser(result.user);
       return result.user;
-    } catch (error) {
-      console.error('Error signing in with Google:', error);
-      setError(error.message);
-      throw error;
+    } catch (err) {
+      logError('[Auth] Error signing in with Google:', err);
+      setError(err.message);
+      throw err;
     } finally {
       setLoading(false);
     }
@@ -55,10 +59,10 @@ export function AuthProvider({ children }) {
       setError(null);
       await firebaseSignOut(auth);
       setUser(null);
-    } catch (error) {
-      console.error('Error signing out:', error);
-      setError(error.message);
-      throw error;
+    } catch (err) {
+      logError('[Auth] Error signing out:', err);
+      setError(err.message);
+      throw err;
     }
   };
 
@@ -75,10 +79,10 @@ export function AuthProvider({ children }) {
       
       setUser(result.user);
       return result.user;
-    } catch (error) {
-      console.error('Error signing up:', error);
-      setError(error.message);
-      throw error;
+    } catch (err) {
+      logError('[Auth] Error signing up:', err);
+      setError(err.message);
+      throw err;
     } finally {
       setLoading(false);
     }
@@ -91,10 +95,10 @@ export function AuthProvider({ children }) {
       const result = await signInWithEmailAndPassword(auth, email, password);
       setUser(result.user);
       return result.user;
-    } catch (error) {
-      console.error('Error signing in:', error);
-      setError(error.message);
-      throw error;
+    } catch (err) {
+      logError('[Auth] Error signing in:', err);
+      setError(err.message);
+      throw err;
     } finally {
       setLoading(false);
     }

@@ -1,5 +1,9 @@
 import React from 'react';
 
+// Debug logging - only enabled in development
+const DEBUG = import.meta.env.DEV;
+const error = DEBUG ? console.error : () => {};
+
 class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
@@ -11,9 +15,9 @@ class ErrorBoundary extends React.Component {
     return { hasError: true, error };
   }
 
-  componentDidCatch(error, errorInfo) {
+  componentDidCatch(err, errorInfo) {
     // You can also log the error to an error reporting service
-    console.error("Uncaught error:", error, errorInfo);
+    error('[ErrorBoundary] Uncaught error:', err, errorInfo);
     this.setState({ errorInfo });
   }
 

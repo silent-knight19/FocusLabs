@@ -81,6 +81,7 @@ function App() {
     updateHabit,
     deleteHabit,
     toggleCompletion,
+    clearCompletion,
     getCompletionStatus,
     getCurrentStreak,
     getLongestStreak,
@@ -167,8 +168,13 @@ function App() {
   // Celebrate when all habits are completed for today and when a habit reaches a 10+ day streak
   useEffect(() => {
     const today = getToday();
+    const todayKey = formatDateKey(today);
+
     // Full day celebration
-    const allCompleted = habits.length > 0 && habits.every(habit => getCompletionStatus(habit.id, today) === 'completed');
+    const allCompleted = habits.length > 0 && habits.every(habit =>
+      completions[habit.id]?.[todayKey] === 'completed'
+    );
+
     if (allCompleted) {
       confetti({
         particleCount: 100,
@@ -177,9 +183,30 @@ function App() {
         colors: ['#FF6B35', '#00FF9F', '#0080FF']
       });
     }
+
     // Streak celebration for each habit with 10+ day streak
+    // Only celebrate once per day per habit to avoid spam
+    const celebratedToday = JSON.parse(sessionStorage.getItem('streak_celebrated') || '{}');
+    const todayStr = todayKey;
+
+    // Clean up entries for deleted habits to prevent unbounded growth
+    const validHabitIds = new Set(habits.map(h => h.id));
+    let needsCleanup = false;
+    for (const habitId of Object.keys(celebratedToday)) {
+      if (!validHabitIds.has(habitId)) {
+        delete celebratedToday[habitId];
+        needsCleanup = true;
+      }
+    }
+
     habits.forEach(habit => {
-      if (getCurrentStreak && getCurrentStreak(habit.id) >= 10) {
+      // Use getCurrentStreak from useHabits instead of duplicating logic
+      const streak = getCurrentStreak?.(habit.id) || 0;
+
+      // Only celebrate if streak >= 10 and not celebrated today
+      if (streak >= 10 && celebratedToday[habit.id] !== todayStr) {
+        celebratedToday[habit.id] = todayStr;
+        needsCleanup = true;
         confetti({
           particleCount: 30,
           spread: 30,
@@ -188,7 +215,11 @@ function App() {
         });
       }
     });
-  }, [completions]);
+
+    if (needsCleanup) {
+      sessionStorage.setItem('streak_celebrated', JSON.stringify(celebratedToday));
+    }
+  }, [completions, habits, getCurrentStreak]);
 
   const handleAddHabit = () => {
     setEditingHabit(null);
@@ -270,13 +301,16 @@ function App() {
 
   const handleCompleteAllToday = () => {
     const today = getToday();
+    const todayKey = formatDateKey(today);
+
     habits.forEach(habit => {
-      const currentStatus = getCompletionStatus(habit.id, today);
+      const currentStatus = completions[habit.id]?.[todayKey];
       if (currentStatus !== 'completed') {
-        toggleCompletion(habit.id, today);
-        if (getCompletionStatus(habit.id, today) !== 'completed') {
-          toggleCompletion(habit.id, today);
+        // Clear existing status first (e.g. 'failed' -> null), then toggle to 'completed'
+        if (currentStatus) {
+          clearCompletion(habit.id, today);
         }
+        toggleCompletion(habit.id, today);
       }
     });
   };
@@ -290,12 +324,13 @@ function App() {
       type: 'warning',
       onConfirm: () => {
         const today = getToday();
+        const todayKey = formatDateKey(today);
+
         habits.forEach(habit => {
-          const currentStatus = getCompletionStatus(habit.id, today);
-          if (currentStatus) {
-            while (getCompletionStatus(habit.id, today)) {
-              toggleCompletion(habit.id, today);
-            }
+          const currentStatus = completions[habit.id]?.[todayKey];
+          // Clear any existing status by setting to null
+          if (currentStatus === 'completed' || currentStatus === 'failed') {
+            clearCompletion(habit.id, today);
           }
         });
       }

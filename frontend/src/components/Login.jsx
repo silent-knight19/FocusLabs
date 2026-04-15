@@ -2,6 +2,10 @@ import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import './styles/Login.css';
 
+// Debug logging - only enabled in development
+const DEBUG = import.meta.env.DEV;
+const logError = DEBUG ? console.error : () => {};
+
 export function Login() {
   const { signInWithGoogle, error: authError } = useAuth();
   const [loading, setLoading] = useState(false);
@@ -14,7 +18,7 @@ export function Login() {
       await signInWithGoogle();
     } catch (err) {
       setError('Failed to sign in with Google. Please try again.');
-      console.error(err);
+      logError('[Login] Sign in error:', err);
     } finally {
       setLoading(false);
     }

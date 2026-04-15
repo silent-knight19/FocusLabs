@@ -45,9 +45,21 @@ export function getWeekDates(date = new Date(), startOfWeek = 'sunday') {
  * @param {Date|string} date
  * @returns {string}
  */
+
+// Debug logging - only enabled in development
+const DEBUG = import.meta.env.DEV;
+const error = DEBUG ? console.error : () => {};
+
 export function formatDateKey(date) {
   // Ensure we always work with a real Date instance
   const d = date instanceof Date ? date : new Date(date);
+
+  // Validate date is valid
+  if (isNaN(d.getTime())) {
+    error('[dateHelpers] Invalid date passed to formatDateKey:', date);
+    return null;
+  }
+
   const year = d.getFullYear();
   const month = String(d.getMonth() + 1).padStart(2, '0');
   const day = String(d.getDate()).padStart(2, '0');
@@ -154,11 +166,10 @@ export const getTwoYearsAgo = () => {
 
 export const isWithinTwoYears = (date) => {
   const twoYearsAgo = getTwoYearsAgo();
-  const today = new Date();
   // Allow viewing slightly into the future (e.g. end of current year)
   const nextYear = new Date();
   nextYear.setFullYear(nextYear.getFullYear() + 1);
-  
+
   return date >= twoYearsAgo && date <= nextYear;
 };
 
