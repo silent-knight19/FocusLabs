@@ -4,10 +4,10 @@
 
 .stopwatch-overlay {
     position: fixed;
-    top: 0;
+    top: 64px;
     left: 0;
     width: 100vw;
-    height: 100vh;
+    height: calc(100vh - 64px);
     background: rgba(10, 10, 15, 0.85);
     backdrop-filter: blur(20px);
     z-index: 2000;
@@ -44,7 +44,7 @@
 /* Header Actions */
 .stopwatch-header-actions {
     position: absolute;
-    top: 40px;
+    top: 20px;
     right: 40px;
     display: flex;
     gap: 16px;
@@ -189,24 +189,24 @@
 
 .stopwatch-controls {
     display: flex;
-    gap: 60px;
+    gap: 72px;
     /* Increased gap for better spacing */
     align-items: center;
-    margin-bottom: 80px;
+    margin-bottom: 60px;
     position: relative;
 }
 
-/* Base button style */
+/* Base button style - 20% larger (100px -> 120px) */
 .control-btn {
-    width: 100px !important;
-    height: 100px !important;
-    border-radius: 30px;
+    width: 120px !important;
+    height: 120px !important;
+    border-radius: 36px;
     border: none;
     background: var(--bg-elevated);
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    font-size: 0.9rem;
+    font-size: 1.08rem;
     color: var(--text-primary);
     cursor: pointer;
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
@@ -220,7 +220,7 @@
 .control-btn.start {
     background: var(--gradient-primary);
     box-shadow: var(--glow-primary);
-    font-size: 1.1rem;
+    font-size: 1.32rem;
 }
 
 .control-btn.start:hover {
@@ -232,7 +232,7 @@
 .control-btn.stop {
     background: linear-gradient(135deg, #EF4444, #DC2626);
     box-shadow: 0 0 20px rgba(239, 68, 68, 0.3);
-    font-size: 1.1rem;
+    font-size: 1.32rem;
 }
 
 .control-btn.stop:hover {
@@ -240,14 +240,14 @@
     box-shadow: 0 15px 30px rgba(239, 68, 68, 0.4);
 }
 
-/* Reset/Lap - Secondary - Identical Size */
+/* Reset/Lap - Secondary - Identical Size (20% larger) */
 .control-btn.secondary {
     background: rgba(255, 255, 255, 0.03);
     border: 1px solid var(--border-color);
     color: var(--text-secondary);
-    width: 100px !important;
-    height: 100px !important;
-    font-size: 0.9rem;
+    width: 120px !important;
+    height: 120px !important;
+    font-size: 1.08rem;
 }
 
 .control-btn.secondary:hover {
