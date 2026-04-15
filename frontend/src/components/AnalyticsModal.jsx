@@ -126,10 +126,10 @@ export function AnalyticsModal({ isOpen, onClose }) {
         {/* Chart */}
         <div className="chart-container">
           <h3>{selectedCategory === 'all' ? 'Category Distribution' : 'Time Trend'}</h3>
-          <div style={{ width: '100%', height: 300, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+          <div style={{ width: '100%', height: 225, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
             {selectedCategory === 'all' ? (
               // Concentric Ring Chart for All Categories
-              <div className="concentric-chart-container" style={{ position: 'relative', width: 260, height: 260 }}>
+              <div className="concentric-chart-container" style={{ position: 'relative', width: 195, height: 195 }}>
                 <svg viewBox="0 0 36 36" className="circular-chart">
                   {categories.filter(c => c.value !== 'all').map((cat, index) => {
                     // Calculate percentage for this category based on total time
@@ -166,19 +166,19 @@ export function AnalyticsModal({ isOpen, onClose }) {
                 </svg>
                 
                 {/* Legend for Concentric Chart */}
-                <div className="chart-legend" style={{ 
-                  position: 'absolute', 
-                  bottom: '-40px', 
-                  left: '50%', 
+                <div className="chart-legend" style={{
+                  position: 'absolute',
+                  bottom: '-35px',
+                  left: '50%',
                   transform: 'translateX(-50%)',
                   display: 'flex',
-                  gap: '15px',
+                  gap: '12px',
                   width: 'max-content'
                 }}>
                   {categories.filter(c => c.value !== 'all').map(cat => (
-                    <div key={cat.value} style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
-                      <div style={{ width: '11.2px', height: '11.2px', borderRadius: '50%', backgroundColor: cat.color }}></div>
-                      <span style={{ fontSize: '16.8px', color: '#9ca3af' }}>{cat.label}</span>
+                    <div key={cat.value} style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                      <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: cat.color }}></div>
+                      <span style={{ fontSize: '13px', color: '#9ca3af' }}>{cat.label}</span>
                     </div>
                   ))}
                 </div>

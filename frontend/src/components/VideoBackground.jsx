@@ -64,7 +64,7 @@ export function VideoBackground() {
           width: '120%',
           height: '120%',
           objectFit: 'cover',
-          filter: 'blur(0.5px) brightness(0.7)',
+          filter: 'blur(0px) brightness(0.9)',
           opacity: loaded ? 1 : 0,
           transition: 'opacity 0.5s ease',
         }}
@@ -83,9 +83,9 @@ export function VideoBackground() {
         style={{
           position: 'absolute',
           inset: 0,
-          background: 'rgba(13, 10, 15, 0.5)',
-          backdropFilter: 'blur(20px) saturate(120%)',
-          WebkitBackdropFilter: 'blur(20px) saturate(120%)',
+          background: 'rgba(13, 10, 15, 0.25)',
+          backdropFilter: 'blur(10px) saturate(110%)',
+          WebkitBackdropFilter: 'blur(10px) saturate(110%)',
         }}
       />
 
