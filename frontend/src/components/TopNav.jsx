@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { Calendar, Timer, Settings, LogOut, User, Plus } from 'lucide-react';
 import './styles/TopNav.css';
+import { ButtonWithTooltip } from './ButtonWithTooltip';
 
 /**
  * Top navigation bar with app name and settings
@@ -59,69 +60,74 @@ export function TopNav({ onSettingsClick, onStopwatchClick, onCalendarClick, onA
       </div>
       
       <div className="nav-right">
-        <button
-          type="button"
-          className="nav-icon-btn add-habit-btn"
-          onClick={onAddHabitClick}
-          title="Add Habit"
-        >
-          <Plus size={18} />
-          <span>Add Habit</span>
-        </button>
-        <button
-          type="button"
-          className="nav-icon-btn"
-          onClick={onCalendarClick}
-          title="Calendar"
-        >
-          <Calendar size={20} />
-        </button>
-        <button
-          type="button"
-          className="nav-icon-btn"
-          onClick={onStopwatchClick}
-          title="Stopwatch"
-        >
-          <Timer size={20} />
-        </button>
-        <button
-          type="button"
-          className="nav-icon-btn"
-          onClick={onSettingsClick}
-          title="Settings"
-        >
-          <Settings size={20} />
-        </button>
+        <ButtonWithTooltip tooltipText="Add a new habit to track">
+          <button
+            type="button"
+            className="nav-icon-btn add-habit-btn"
+            onClick={onAddHabitClick}
+          >
+            <Plus size={18} />
+            <span>Add Habit</span>
+          </button>
+        </ButtonWithTooltip>
+        <ButtonWithTooltip tooltipText="View calendar">
+          <button
+            type="button"
+            className="nav-icon-btn"
+            onClick={onCalendarClick}
+          >
+            <Calendar size={20} />
+          </button>
+        </ButtonWithTooltip>
+        <ButtonWithTooltip tooltipText="Open focus timer">
+          <button
+            type="button"
+            className="nav-icon-btn"
+            onClick={onStopwatchClick}
+          >
+            <Timer size={20} />
+          </button>
+        </ButtonWithTooltip>
+        <ButtonWithTooltip tooltipText="Open settings">
+          <button
+            type="button"
+            className="nav-icon-btn"
+            onClick={onSettingsClick}
+          >
+            <Settings size={20} />
+          </button>
+        </ButtonWithTooltip>
 
         {user && (
           <div className="user-profile-container">
-            <button
-              type="button"
-              className="user-profile-btn"
-              onClick={() => setShowUserMenu(!showUserMenu)}
-              title={user.displayName || user.email}
-            >
-              {user.photoURL ? (
-                <img 
-                  src={user.photoURL} 
-                  alt={user.displayName || 'User'} 
-                  className="user-avatar"
-                  referrerPolicy="no-referrer"
-                />
-              ) : (
-                <div className="user-avatar-placeholder">
-                  {getUserInitials()}
-                </div>
-              )}
-            </button>
+            <ButtonWithTooltip tooltipText="Open user menu">
+              <button
+                type="button"
+                className="user-profile-btn"
+                onClick={() => setShowUserMenu(!showUserMenu)}
+              >
+                {user.photoURL ? (
+                  <img
+                    src={user.photoURL}
+                    alt={user.displayName || 'User'}
+                    className="user-avatar"
+                    referrerPolicy="no-referrer"
+                  />
+                ) : (
+                  <div className="user-avatar-placeholder">
+                    {getUserInitials()}
+                  </div>
+                )}
+              </button>
+            </ButtonWithTooltip>
 
             {showUserMenu && (
               <div className="user-menu">
                 <div className="user-menu-header">
                   {user.photoURL ? (
-                    <img 
-                      src={user.photoURL} 
-                      alt={user.displayName || 'User'} 
+                    <img
+                      src={user.photoURL}
+                      alt={user.displayName || 'User'}
                       className="user-menu-avatar"
                       referrerPolicy="no-referrer"
                     />
@@ -135,17 +141,19 @@ export function TopNav({ onSettingsClick, onStopwatchClick, onCalendarClick, onA
                     <div className="user-menu-email">{user.email}</div>
                   </div>
                 </div>
-                <button
-                  type="button"
-                  className="user-menu-signout"
-                  onClick={() => {
-                    setShowUserMenu(false);
-                    signOut();
-                  }}
-                >
-                  <LogOut size={16} style={{ marginRight: '8px' }} />
-                  Sign Out
-                </button>
+                <ButtonWithTooltip tooltipText="Sign out of your account">
+                  <button
+                    type="button"
+                    className="user-menu-signout"
+                    onClick={() => {
+                      setShowUserMenu(false);
+                      signOut();
+                    }}
+                  >
+                    <LogOut size={16} style={{ marginRight: '8px' }} />
+                    Sign Out
+                  </button>
+                </ButtonWithTooltip>
               </div>
             )}
           </div>

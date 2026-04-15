@@ -3,6 +3,7 @@ import { DayCell } from './DayCell';
 import './styles/HabitRow.css';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { ButtonWithTooltip } from './ButtonWithTooltip';
 
 /**
  * Check if date is before the habit creation date
@@ -65,40 +66,43 @@ export function HabitRow({ habit, weekDates, onToggle, onEdit, onDelete, getStat
             style={{ backgroundColor: barColor }}
             title={habit.category || 'Category'}
           />
-          <button
-            type="button"
-            className="habit-name-button"
-            onClick={() => onEdit(habit)}
-            title="Click to edit habit"
-          >
-            {habit.name}
-          </button>
+          <ButtonWithTooltip tooltipText="Click to edit this habit">
+            <button
+              type="button"
+              className="habit-name-button"
+              onClick={() => onEdit(habit)}
+            >
+              {habit.name}
+            </button>
+          </ButtonWithTooltip>
           
           <div className="habit-inline-actions">
-            <button
-              type="button"
-              className="action-button edit-button"
-              onClick={(e) => { 
-                e.stopPropagation(); 
-                onEdit(habit); 
-              }}
-              onPointerDown={(e) => e.stopPropagation()}
-              title="Edit habit"
-            >
-              ✎
-            </button>
-            <button
-              type="button"
-              className="action-button delete-button"
-              onClick={(e) => { 
-                e.stopPropagation(); 
-                onDelete(habit.id); 
-              }}
-              onPointerDown={(e) => e.stopPropagation()}
-              title="Delete habit"
-            >
-              🗑
-            </button>
+            <ButtonWithTooltip tooltipText="Edit this habit">
+              <button
+                type="button"
+                className="action-button edit-button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEdit(habit);
+                }}
+                onPointerDown={(e) => e.stopPropagation()}
+              >
+                ✎
+              </button>
+            </ButtonWithTooltip>
+            <ButtonWithTooltip tooltipText="Delete this habit permanently">
+              <button
+                type="button"
+                className="action-button delete-button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete(habit.id);
+                }}
+                onPointerDown={(e) => e.stopPropagation()}
+              >
+                🗑
+              </button>
+            </ButtonWithTooltip>
           </div>
         </div>
         

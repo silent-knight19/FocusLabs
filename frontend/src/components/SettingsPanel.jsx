@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useFirestore } from '../hooks/useFirestore';
-import { doc, deleteDoc } from 'firebase/firestore';
+import { doc, deleteDoc, getDoc } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { useAuth } from '../contexts/AuthContext';
 import { downloadDataAsJson, importData, clearAllData } from '../utils/storageHelpers';
@@ -28,10 +28,115 @@ export function SettingsPanel({ isOpen, onClose, settings, onUpdateSettings }) {
     onUpdateSettings({ startOfWeek: value });
   };
 
-  const handleExport = () => {
-    downloadDataAsJson();
-    setSuccessMessage('Data exported successfully!');
-    setTimeout(() => setSuccessMessage(''), 3000);
+  const handleExport = async () => {
+    try {
+      setSuccessMessage('Exporting data...');
+      
+      // Fetch all data from Firestore
+      const collections = [
+        'habits', 
+        'completions', 
+        'subtasks', 
+        'subtask_completions', 
+        'stopwatch_history', 
+        'settings', 
+        'daily_tasks',
+        'notes',
+        'custom_habits',
+        'custom_completions',
+        'study_sessions',
+        'productivity_sessions'
+      ];
+      
+      const firestoreData = {};
+      
+      if (userId) {
+        // Fetch from Firestore for logged-in users
+        await Promise.all(collections.map(async (colName) => {
+          try {
+            const docRef = doc(db, 'users', userId, 'data', colName);
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) {
+              firestoreData[colName] = docSnap.data();
+            } else {
+              firestoreData[colName] = null;
+            }
+          } catch (err) {
+            console.error(`Error fetching ${colName}:`, err);
+            firestoreData[colName] = null;
+          }
+        }));
+      }
+      
+      // Also get localStorage data (for anonymous users or fallback)
+      const localData = {
+        habits: localStorage.getItem('habitgrid_habits') || '[]',
+        completions: localStorage.getItem('habitgrid_completions') || '{}',
+        customHabits: localStorage.getItem('custom_habits') || '[]',
+        customCompletions: localStorage.getItem('custom_completions') || '{}',
+        customSubtasks: localStorage.getItem('custom_subtasks') || '{}',
+        dailyTasks: localStorage.getItem('daily_tasks') || '{}',
+        studySessions: localStorage.getItem('study_sessions') || '[]',
+        productivitySessions: localStorage.getItem('productivity_sessions') || '[]',
+        stopwatchLaps: localStorage.getItem('stopwatch_laps') || '[]',
+        stopwatchCategories: localStorage.getItem('stopwatch_categories') || '[]',
+        settings: localStorage.getItem('habitgrid_settings') || '{}'
+      };
+      
+      // Combine all data
+      const exportData = {
+        version: '2.0.0',
+        exportDate: new Date().toISOString(),
+        appName: 'FocusLabs',
+        userId: userId || 'anonymous',
+        data: {
+          // Firestore data (prioritized)
+          habits: firestoreData.habits?.data || JSON.parse(localData.habits),
+          completions: firestoreData.completions?.data || JSON.parse(localData.completions),
+          subtasks: firestoreData.subtasks?.data || {},
+          subtaskCompletions: firestoreData.subtask_completions?.data || {},
+          stopwatchHistory: firestoreData.stopwatch_history?.data || [],
+          dailyTasks: firestoreData.daily_tasks?.data || JSON.parse(localData.dailyTasks),
+          notes: firestoreData.notes?.data || [],
+          customHabits: firestoreData.custom_habits?.data || JSON.parse(localData.customHabits),
+          customCompletions: firestoreData.custom_completions?.data || JSON.parse(localData.customCompletions),
+          studySessions: firestoreData.study_sessions?.data || JSON.parse(localData.studySessions),
+          productivitySessions: firestoreData.productivity_sessions?.data || JSON.parse(localData.productivitySessions),
+          settings: firestoreData.settings?.data || JSON.parse(localData.settings),
+          
+          // LocalStorage only data
+          stopwatchLaps: JSON.parse(localData.stopwatchLaps),
+          stopwatchCategories: JSON.parse(localData.stopwatchCategories),
+          customSubtasks: JSON.parse(localData.customSubtasks)
+        },
+        exportSummary: {
+          totalHabits: (firestoreData.habits?.data || JSON.parse(localData.habits)).length,
+          totalCustomHabits: (firestoreData.custom_habits?.data || JSON.parse(localData.customHabits)).length,
+          totalStudySessions: (firestoreData.study_sessions?.data || JSON.parse(localData.studySessions)).length,
+          totalProductivitySessions: (firestoreData.productivity_sessions?.data || JSON.parse(localData.productivitySessions)).length,
+          totalStopwatchLaps: JSON.parse(localData.stopwatchLaps).length
+        }
+      };
+      
+      // Create and download the JSON file
+      const dataStr = JSON.stringify(exportData, null, 2);
+      const blob = new Blob([dataStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `focuslabs_backup_${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+      setSuccessMessage('Data exported successfully!');
+      setTimeout(() => setSuccessMessage(''), 3000);
+    } catch (error) {
+      console.error('Export error:', error);
+      setImportError('Failed to export data. Please try again.');
+      setTimeout(() => setImportError(''), 3000);
+    }
   };
 
   const handleImport = (e) => {

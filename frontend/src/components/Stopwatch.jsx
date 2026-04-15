@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useStopwatch } from '../hooks/useStopwatch';
-import { Bell, X, ChevronDown, Clock } from 'lucide-react';
+import { Bell, X, ChevronDown, Clock, Play, Pause, Square, Flag, RotateCcw } from 'lucide-react';
 import { useLockBodyScroll } from '../hooks/useLockBodyScroll';
 import './styles/Stopwatch.css';
 import './styles/StopwatchAlarmRedesign.css';
