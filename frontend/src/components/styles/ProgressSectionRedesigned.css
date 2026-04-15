@@ -42,7 +42,9 @@
     border: 1px solid var(--glass-border);
     border-radius: var(--radius-xl);
     padding: var(--spacing-xl);
-    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: transform 0.3s var(--ease-expo-out),
+                box-shadow 0.3s var(--ease-expo-out),
+                border-color 0.25s var(--ease-standard);
     box-shadow: var(--shadow-glass);
     position: relative;
     overflow: hidden;
@@ -51,7 +53,7 @@
 .progress-card:hover {
     border-color: var(--glass-border-hover);
     transform: translateY(-4px);
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3), 0 0 35px rgba(255, 122, 89, 0.15);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3), 0 0 35px rgba(245, 158, 11, 0.15);
 }
 
 
@@ -84,7 +86,7 @@
 .circular-progress {
     width: 100%;
     height: 100%;
-    filter: drop-shadow(0 0 12px rgba(255, 122, 89, 0.35));
+    filter: drop-shadow(0 0 12px rgba(245, 158, 11, 0.35));
 }
 
 .progress-ring {
@@ -96,11 +98,11 @@
 
     0%,
     100% {
-        filter: drop-shadow(0 0 10px rgba(255, 122, 89, 0.45));
+        filter: drop-shadow(0 0 10px rgba(245, 158, 11, 0.45));
     }
 
     50% {
-        filter: drop-shadow(0 0 18px rgba(255, 122, 89, 0.65));
+        filter: drop-shadow(0 0 18px rgba(245, 158, 11, 0.65));
     }
 }
 
@@ -116,7 +118,7 @@
     display: block;
     font-size: 3rem;
     font-weight: 800;
-    background: linear-gradient(135deg, #FF7A59, #FF9B82);
+    background: linear-gradient(135deg, #FF7A59, #F59E0B);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -338,7 +340,10 @@
     padding: var(--spacing-md) var(--spacing-lg);
     display: flex;
     flex-direction: column;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: transform 0.25s var(--ease-standard),
+                box-shadow 0.25s var(--ease-standard),
+                border-color 0.2s var(--ease-standard),
+                background-color 0.2s var(--ease-standard);
     position: relative;
     overflow: hidden;
     cursor: pointer;
@@ -346,8 +351,8 @@
 
 .streak-item:hover {
     background: rgba(255, 255, 255, 0.05);
-    border-color: rgba(255, 255, 255, 0.12);
-    transform: translateY(-1px);
+    border-color: rgba(245, 158, 11, 0.35);
+    transform: translateY(-2px);
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
 }
 
@@ -443,7 +448,7 @@
     font-weight: 800;
     color: var(--accent-primary);
     line-height: 1;
-    text-shadow: 0 0 22px rgba(255, 122, 89, 0.35);
+    text-shadow: 0 0 22px rgba(245, 158, 11, 0.35);
 }
 
 .streak-value.best {
@@ -515,13 +520,13 @@
     font-size: 0.8rem;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.2s;
-    box-shadow: 0 4px 12px rgba(255, 122, 89, 0.3);
+    transition: transform 0.2s var(--ease-spring), box-shadow 0.2s var(--ease-standard);
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
 }
 
 .quick-complete-btn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(255, 122, 89, 0.4);
+    box-shadow: 0 6px 16px rgba(245, 158, 11, 0.4);
 }
 
 .quick-complete-btn:active {

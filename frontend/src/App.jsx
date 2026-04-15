@@ -200,8 +200,24 @@ function App() {
     }
 
     habits.forEach(habit => {
-      // Use getCurrentStreak from useHabits instead of duplicating logic
-      const streak = getCurrentStreak?.(habit.id) || 0;
+      // Calculate streak inline (don't use getCurrentStreak callback to avoid hook issues)
+      const habitCompletions = completions[habit.id] || {};
+      let streak = 0;
+
+      if (habitCompletions[todayKey] === 'completed') {
+        streak = 1;
+        for (let i = 1; i < 365; i++) {
+          const date = new Date(today);
+          date.setDate(today.getDate() - i);
+          const dateKey = formatDateKey(date);
+          if (!dateKey) break;
+          if (habitCompletions[dateKey] === 'completed') {
+            streak++;
+          } else {
+            break;
+          }
+        }
+      }
 
       // Only celebrate if streak >= 10 and not celebrated today
       if (streak >= 10 && celebratedToday[habit.id] !== todayStr) {
@@ -219,7 +235,7 @@ function App() {
     if (needsCleanup) {
       sessionStorage.setItem('streak_celebrated', JSON.stringify(celebratedToday));
     }
-  }, [completions, habits, getCurrentStreak]);
+  }, [completions, habits]);
 
   const handleAddHabit = () => {
     setEditingHabit(null);

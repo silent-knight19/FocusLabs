@@ -149,8 +149,8 @@ export function ProgressSection({
             <svg className="circular-progress" viewBox="0 0 200 200">
               <defs>
                 <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#ff6b35" />
-                  <stop offset="100%" stopColor="#ff8c42" />
+                  <stop offset="0%" stopColor="#FF7A59" />
+                  <stop offset="100%" stopColor="#F59E0B" />
                 </linearGradient>
               </defs>
               {/* Background circle */}
