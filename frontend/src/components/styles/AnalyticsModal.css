@@ -2,13 +2,16 @@
     position: fixed;
     top: 64px;
     left: 0;
-    width: 100vw;
-    height: calc(100vh - 64px);
+    right: 0;
+    bottom: 0;
     background: rgba(0, 0, 0, 0.7);
     backdrop-filter: blur(10px);
     z-index: 9999;
     animation: fadeIn 0.2s ease-out;
     overflow-y: auto;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
     padding: 40px 20px;
 }
 
@@ -24,7 +27,7 @@
     animation: slideUp 0.3s ease-out;
     position: relative;
     z-index: 10000;
-    margin: 0 auto;
+    flex-shrink: 0;
 }
 
 @keyframes fadeIn {

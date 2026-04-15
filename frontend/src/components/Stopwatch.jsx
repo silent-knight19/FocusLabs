@@ -171,7 +171,7 @@ export function Stopwatch({ isOpen, onClose, onDataUpdate }) {
               title={alarmDuration > 0 ? `Alarm set for ${alarmDuration} min` : 'Set alarm'}
             >
               <Bell size={20} />
-              {alarmDuration > 0 && <span className="alarm-time-badge">{alarmDuration}m</span>}
+              {alarmDuration > 0 && <span className="alarm-duration-label">{alarmDuration}m</span>}
             </button>
             
             {showAlarmSettings && (
@@ -230,10 +230,6 @@ export function Stopwatch({ isOpen, onClose, onDataUpdate }) {
               </div>
             )}
           </div>
-          
-          <button className="collapse-btn" onClick={onClose} title="Collapse (Keep Running)">
-            ↙
-          </button>
           <button className="close-btn" onClick={onClose} title="Close">
             <X size={24} />
           </button>

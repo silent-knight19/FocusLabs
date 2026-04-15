@@ -545,6 +545,9 @@ function App() {
         </div>
       </main>
 
+      </div>{/* End perspective-root */}
+
+      {/* All Modals - outside perspective-root for proper fixed positioning */}
       <HabitModal
         isOpen={isHabitModalOpen}
         onClose={() => setIsHabitModalOpen(false)}
@@ -566,14 +569,12 @@ function App() {
         onUpdateSettings={updateSettings}
       />
 
-      {/* Stopwatch */}
-      <Stopwatch 
+      <Stopwatch
         isOpen={isStopwatchOpen}
         onClose={() => setIsStopwatchOpen(false)}
         onDataUpdate={handleDataUpdate}
       />
 
-      {/* Analytics Modal */}
       <AnalyticsModal
         isOpen={isAnalyticsOpen}
         onClose={() => setIsAnalyticsOpen(false)}
@@ -600,7 +601,6 @@ function App() {
         </div>
       )}
 
-      {/* Day History Modal */}
       {selectedDate && (
         <DayHistoryModal
           date={selectedDate}
@@ -622,7 +622,6 @@ function App() {
         confirmText={confirmationModal.confirmText}
         type={confirmationModal.type}
       />
-      </div>
     </>
   );
 }

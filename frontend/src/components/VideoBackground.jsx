@@ -83,7 +83,7 @@ export function VideoBackground() {
         style={{
           position: 'absolute',
           inset: 0,
-          background: 'rgba(13, 10, 15, 0.55)',
+          background: 'rgba(13, 10, 15, 0.425)',
           backdropFilter: 'blur(10px) saturate(110%)',
           WebkitBackdropFilter: 'blur(10px) saturate(110%)',
         }}
