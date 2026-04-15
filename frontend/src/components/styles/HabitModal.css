@@ -13,6 +13,8 @@
     z-index: 1000;
     padding: var(--spacing-md);
     animation: overlayFadeIn 0.3s ease-out;
+    /* Ensure proper centering even with 3D transforms in parent */
+    transform: translateZ(0);
 }
 
 @keyframes overlayFadeIn {
@@ -65,6 +67,9 @@
     max-height: 90vh;
     overflow-y: auto;
     animation: modalSlideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    /* Ensure proper centering */
+    margin: auto;
+    transform: translateZ(0);
 }
 
 .modal-header {
