@@ -499,6 +499,7 @@ function App() {
             customHabits={customHabits}
             customCompletions={customCompletions}
             onOpenAnalytics={() => setIsAnalyticsOpen(true)}
+            onToggleCompletion={toggleCompletion}
           />
 
           <div className="heatmaps-container">

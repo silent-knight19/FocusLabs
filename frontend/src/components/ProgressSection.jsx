@@ -1,5 +1,5 @@
-import React from 'react';
-import { TrendingUp, Target, Flame, Calendar } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { TrendingUp, Target, Flame, Calendar, AlertTriangle, CheckCircle2, ChevronDown, ChevronUp } from 'lucide-react';
 import { getToday, formatDateKey } from '../utils/dateHelpers';
 import { useAnalytics } from '../hooks/useAnalytics';
 import { ConcentricPieChart } from './ConcentricPieChart';
@@ -16,7 +16,8 @@ export function ProgressSection({
   completions,
   customHabits = [],
   customCompletions = {},
-  onOpenAnalytics
+  onOpenAnalytics,
+  onToggleCompletion
 }) {
   // Calculate today's statistics (regular + custom habits)
   const today = getToday();
@@ -60,17 +61,75 @@ export function ProgressSection({
     selfGrowth: parseFloat(getLast10DayAverage('self').toFixed(1))
   };
 
+  const [showAllStreaks, setShowAllStreaks] = useState(false);
+  const [expandedHabit, setExpandedHabit] = useState(null);
+
   if (habits.length === 0) {
     return null;
   }
 
-  // Get streaks for each habit
-  const habitStreaks = habits.map(habit => ({
-    name: habit.name,
-    color: habit.color,
-    current: getCurrentStreak(habit.id),
-    best: getLongestStreak(habit.id)
-  }));
+  // Get last completion date for a habit
+  const getLastCompletionDate = (habitId) => {
+    const habitCompletions = completions[habitId] || {};
+    const completedDates = Object.keys(habitCompletions)
+      .filter(date => habitCompletions[date] === 'completed')
+      .sort((a, b) => new Date(b) - new Date(a));
+    return completedDates[0] || null;
+  };
+
+  // Calculate days since last completion
+  const getDaysSinceLastCompletion = (lastDate) => {
+    if (!lastDate) return Infinity;
+    const last = new Date(lastDate);
+    const today = new Date();
+    const diffTime = Math.abs(today - last);
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  };
+
+  // Get streak status
+  const getStreakStatus = (current, lastDate, todayKey) => {
+    const lastCompletedToday = lastDate === todayKey;
+    const daysSince = getDaysSinceLastCompletion(lastDate);
+    
+    if (current === 0) return { type: 'broken', label: 'Start Fresh', color: '#6B7280' };
+    if (lastCompletedToday) return { type: 'active', label: 'On Fire!', color: '#22D3A6' };
+    if (daysSince === 1) return { type: 'at-risk', label: 'At Risk', color: '#FBBF24' };
+    return { type: 'broken', label: 'Streak Lost', color: '#F87171' };
+  };
+
+  // Get streaks for each habit with enhanced data
+  const habitStreaks = useMemo(() => {
+    return habits.map(habit => {
+      const current = getCurrentStreak(habit.id);
+      const best = getLongestStreak(habit.id);
+      const lastDate = getLastCompletionDate(habit.id);
+      const status = getStreakStatus(current, lastDate, todayKey);
+      const isCompletedToday = completions[habit.id]?.[todayKey] === 'completed';
+      
+      return {
+        id: habit.id,
+        name: habit.name,
+        color: habit.color,
+        current,
+        best,
+        lastDate,
+        status,
+        isCompletedToday,
+        daysSince: getDaysSinceLastCompletion(lastDate)
+      };
+    }).sort((a, b) => {
+      // Sort: Active streaks first, then by streak length
+      if (a.status.type === 'active' && b.status.type !== 'active') return -1;
+      if (b.status.type === 'active' && a.status.type !== 'active') return 1;
+      if (a.status.type === 'at-risk' && b.status.type === 'broken') return -1;
+      if (b.status.type === 'at-risk' && a.status.type === 'broken') return 1;
+      return b.current - a.current;
+    });
+  }, [habits, completions, todayKey, getCurrentStreak, getLongestStreak]);
+
+  const activeStreaks = habitStreaks.filter(h => h.status.type === 'active').length;
+  const atRiskStreaks = habitStreaks.filter(h => h.status.type === 'at-risk').length;
+  const displayStreaks = showAllStreaks ? habitStreaks : habitStreaks.slice(0, 5);
 
   return (
     <section className="progress-section-redesigned">
@@ -155,40 +214,110 @@ export function ProgressSection({
           </div>
         </div>
 
-        {/* Streaks Section */}
+        {/* Enhanced Streaks Section */}
         <div className="progress-card streaks-card">
           <div className="card-header">
-            <Flame size={20} />
-            <h3>Streaks</h3>
-          </div>
-          <div className="streaks-list">
-            {habitStreaks.slice(0, 3).map((habit, idx) => (
-              <div 
-                key={idx} 
-                className="streak-item"
-                title={`Current Streak: ${habit.current} days | Best Streak: ${habit.best} days`}
+            <div className="streaks-header-left">
+              <Flame size={20} />
+              <h3>Streaks</h3>
+              <span className="streaks-summary">
+                {activeStreaks > 0 && (
+                  <span className="streak-badge active">{activeStreaks} Active</span>
+                )}
+                {atRiskStreaks > 0 && (
+                  <span className="streak-badge at-risk">{atRiskStreaks} At Risk</span>
+                )}
+              </span>
+            </div>
+            {habitStreaks.length > 5 && (
+              <button 
+                className="show-all-btn"
+                onClick={() => setShowAllStreaks(!showAllStreaks)}
               >
-                <div className="streak-info">
-                  <div 
-                    className="streak-color-dot" 
-                    style={{ 
-                      backgroundColor: habit.color,
-                      boxShadow: `0 0 10px ${habit.color}, 0 0 20px ${habit.color}`
-                    }}
-                  />
-                  <span className="streak-name">{habit.name}</span>
-                </div>
-                <div className="streak-stats">
-                  <div className="streak-stat">
-                    <span className="streak-value">{habit.current}</span>
-                    <span className="streak-label">Current</span>
+                {showAllStreaks ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                {showAllStreaks ? 'Show Less' : `Show All (${habitStreaks.length})`}
+              </button>
+            )}
+          </div>
+          <div className={`streaks-list ${showAllStreaks ? 'expanded' : ''}`}>
+            {displayStreaks.map((habit) => (
+              <div 
+                key={habit.id} 
+                className={`streak-item ${habit.status.type} ${expandedHabit === habit.id ? 'expanded' : ''}`}
+                onClick={() => setExpandedHabit(expandedHabit === habit.id ? null : habit.id)}
+              >
+                <div className="streak-main">
+                  <div className="streak-info">
+                    <div 
+                      className="streak-color-dot" 
+                      style={{ 
+                        backgroundColor: habit.color,
+                        boxShadow: `0 0 10px ${habit.color}, 0 0 20px ${habit.color}`
+                      }}
+                    />
+                    <div className="streak-name-section">
+                      <span className="streak-name">{habit.name}</span>
+                      <span 
+                        className="streak-status-badge"
+                        style={{ color: habit.status.color, borderColor: habit.status.color }}
+                      >
+                        {habit.status.type === 'active' && <Flame size={12} />}
+                        {habit.status.type === 'at-risk' && <AlertTriangle size={12} />}
+                        {habit.status.type === 'broken' && habit.current > 0 && <CheckCircle2 size={12} />}
+                        {habit.status.label}
+                      </span>
+                    </div>
                   </div>
-                  <div className="streak-divider" />
-                  <div className="streak-stat">
-                    <span className="streak-value best">{habit.best}</span>
-                    <span className="streak-label">Best</span>
+                  <div className="streak-stats">
+                    <div className="streak-stat">
+                      <span className="streak-value" style={{ color: habit.status.color }}>
+                        {habit.current}
+                      </span>
+                      <span className="streak-label">Current</span>
+                    </div>
+                    <div className="streak-divider" />
+                    <div className="streak-stat">
+                      <span className="streak-value best">{habit.best}</span>
+                      <span className="streak-label">Best</span>
+                    </div>
                   </div>
                 </div>
+                
+                {/* Expanded details */}
+                {expandedHabit === habit.id && (
+                  <div className="streak-details">
+                    <div className="streak-detail-row">
+                      <span className="detail-label">Last completed:</span>
+                      <span className="detail-value">
+                        {habit.lastDate 
+                          ? new Date(habit.lastDate).toLocaleDateString('en-US', { 
+                              weekday: 'short', 
+                              month: 'short', 
+                              day: 'numeric' 
+                            })
+                          : 'Never'
+                        }
+                      </span>
+                    </div>
+                    {habit.status.type === 'at-risk' && (
+                      <div className="streak-warning">
+                        Complete today to keep your {habit.current}-day streak alive!
+                      </div>
+                    )}
+                    {onToggleCompletion && !habit.isCompletedToday && habit.status.type !== 'broken' && (
+                      <button 
+                        className="quick-complete-btn"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onToggleCompletion(habit.id, today);
+                        }}
+                      >
+                        <CheckCircle2 size={14} />
+                        Mark Complete Today
+                      </button>
+                    )}
+                  </div>
+                )}
               </div>
             ))}
           </div>
