@@ -8,13 +8,13 @@
   /* Deep Dark Backgrounds with warm undertones */
   --bg-primary: #0D0A0F;
   --bg-secondary: #16121A;
-  --bg-card: rgba(22, 18, 26, 0.85);
+  --bg-card: rgba(22, 18, 26, 1);
   --bg-hover: rgba(255, 90, 31, 0.04);
   --bg-elevated: #1F1A24;
 
   /* Rich Glassmorphism with Claude orange tint */
-  --glass-bg: rgba(22, 18, 26, 0.65);
-  --glass-bg-solid: rgba(22, 18, 26, 0.96);
+  --glass-bg: rgba(22, 18, 26, 0.85);
+  --glass-bg-solid: rgba(22, 18, 26, 1);
   --glass-border: rgba(255, 90, 31, 0.08);
   --glass-border-hover: rgba(255, 90, 31, 0.15);
   --glass-blur: 16px;
