@@ -7,20 +7,26 @@
     background: rgba(0, 0, 0, 0.7);
     backdrop-filter: blur(10px);
     z-index: 9999;
-    display: flex;
-    align-items: center;
-    justify-content: center;
     animation: fadeIn 0.2s ease-out;
     /* Break out of 3D transform context */
     transform-style: flat;
     /* Ensure proper stacking */
     isolation: isolate;
+    /* Enable scrolling if needed */
+    overflow-y: auto;
+    padding: 20px;
+    /* Center content with flexbox */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding-top: 40px;
 }
 
 .analytics-modal {
     width: 85%;
     max-width: 675px;
-    max-height: 85vh;
+    max-height: calc(100vh - 124px);
     background: var(--bg-card);
     border-radius: var(--radius-lg);
     border: 1px solid var(--border-color);
@@ -29,8 +35,7 @@
     animation: slideUp 0.3s ease-out;
     position: relative;
     z-index: 10000;
-    /* Prevent margin collapse issues */
-    margin: auto;
+    /* Fixed positioning */
     flex-shrink: 0;
 }
 
