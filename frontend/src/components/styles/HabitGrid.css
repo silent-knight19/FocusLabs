@@ -11,7 +11,7 @@
 
 .habit-grid-container:hover {
     border-color: var(--glass-border-hover);
-    box-shadow: 0 0 30px rgba(255, 107, 53, 0.08);
+    box-shadow: 0 0 40px rgba(255, 122, 89, 0.12);
 }
 
 .habit-grid-body {
@@ -36,7 +36,7 @@
 }
 
 .habit-grid-body::-webkit-scrollbar-thumb:hover {
-    background: var(--neon-orange);
+    background: var(--accent-primary);
 }
 
 .habit-grid {
@@ -110,7 +110,7 @@
 .custom-habits-section {
     background: var(--bg-card);
     border-radius: var(--radius-lg);
-    border: 2px dashed rgba(255, 107, 53, 0.3);
+    border: 2px dashed rgba(255, 122, 89, 0.35);
     padding: var(--spacing-md);
 }
 
@@ -127,7 +127,7 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    color: var(--accent-orange, #FF6B35);
+    color: var(--accent-primary);
     font-size: 14px;
     font-weight: 600;
 }
@@ -136,9 +136,9 @@
     display: flex;
     align-items: center;
     gap: 6px;
-    background: rgba(255, 107, 53, 0.15);
-    border: 1px dashed var(--accent-orange, #FF6B35);
-    color: var(--accent-orange, #FF6B35);
+    background: rgba(255, 122, 89, 0.15);
+    border: 1px dashed var(--accent-primary);
+    color: var(--accent-primary);
     padding: 6px 12px;
     border-radius: var(--radius-sm);
     font-size: 13px;
@@ -148,9 +148,9 @@
 }
 
 .add-custom-btn:hover {
-    background: rgba(255, 107, 53, 0.25);
+    background: rgba(255, 122, 89, 0.28);
     border-style: solid;
-    box-shadow: 0 0 10px rgba(255, 107, 53, 0.3);
+    box-shadow: 0 0 15px rgba(255, 122, 89, 0.35);
 }
 
 .custom-habits-list {

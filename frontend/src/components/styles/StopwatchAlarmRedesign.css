@@ -26,19 +26,19 @@
 }
 
 .alarm-btn.active {
-    background: linear-gradient(135deg, rgba(255, 107, 53, 0.15), rgba(255, 140, 66, 0.1));
-    border-color: var(--neon-orange);
-    color: var(--neon-orange);
-    box-shadow: 0 0 20px rgba(255, 107, 53, 0.3);
+    background: linear-gradient(135deg, rgba(255, 122, 89, 0.18), rgba(255, 107, 157, 0.12));
+    border-color: var(--accent-primary);
+    color: var(--accent-primary);
+    box-shadow: 0 0 22px rgba(255, 122, 89, 0.35);
 }
 
 .alarm-btn.active:hover {
-    background: linear-gradient(135deg, rgba(255, 107, 53, 0.2), rgba(255, 140, 66, 0.15));
-    box-shadow: 0 0 25px rgba(255, 107, 53, 0.4);
+    background: linear-gradient(135deg, rgba(255, 122, 89, 0.25), rgba(255, 107, 157, 0.18));
+    box-shadow: 0 0 28px rgba(255, 122, 89, 0.45);
 }
 
 .alarm-time-badge {
-    background: rgba(255, 107, 53, 0.2);
+    background: rgba(255, 122, 89, 0.22);
     padding: 2px 8px;
     border-radius: 8px;
     font-size: 0.85rem;
@@ -50,11 +50,11 @@
     top: calc(100% + 12px);
     right: 0;
     background: linear-gradient(135deg, #1a1a2e, #16213e);
-    border: 1px solid rgba(255, 107, 53, 0.2);
+    border: 1px solid rgba(255, 122, 89, 0.25);
     border-radius: 16px;
     padding: 0;
     width: 320px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 107, 53, 0.1);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 122, 89, 0.12);
     z-index: 100;
     animation: slideDown 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
     overflow: hidden;
@@ -78,7 +78,7 @@
     justify-content: space-between;
     align-items: center;
     padding: 16px 20px;
-    background: linear-gradient(135deg, rgba(255, 107, 53, 0.1), rgba(255, 140, 66, 0.05));
+    background: linear-gradient(135deg, rgba(255, 122, 89, 0.12), rgba(255, 107, 157, 0.06));
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
@@ -86,7 +86,7 @@
     margin: 0;
     font-size: 1rem;
     font-weight: 700;
-    color: var(--neon-orange);
+    color: var(--accent-primary);
 }
 
 .panel-close {
@@ -133,15 +133,15 @@
 
 .preset-option:hover {
     background: rgba(255, 255, 255, 0.05);
-    border-color: rgba(255, 107, 53, 0.3);
+    border-color: rgba(255, 122, 89, 0.35);
     transform: translateY(-2px);
 }
 
 .preset-option.selected {
-    background: linear-gradient(135deg, rgba(255, 107, 53, 0.15), rgba(255, 140, 66, 0.1));
-    border-color: var(--neon-orange);
-    color: var(--neon-orange);
-    box-shadow: 0 0 15px rgba(255, 107, 53, 0.2);
+    background: linear-gradient(135deg, rgba(255, 122, 89, 0.18), rgba(255, 107, 157, 0.12));
+    border-color: var(--accent-primary);
+    color: var(--accent-primary);
+    box-shadow: 0 0 18px rgba(255, 122, 89, 0.25);
 }
 
 .preset-option span {
@@ -181,8 +181,8 @@
 
 .custom-input-group input:focus {
     outline: none;
-    border-color: var(--neon-orange);
-    box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 3px rgba(255, 122, 89, 0.12);
     background: rgba(255, 255, 255, 0.08);
 }
 
@@ -191,7 +191,7 @@
 }
 
 .custom-input-group .set-btn {
-    background: linear-gradient(135deg, var(--neon-orange), var(--neon-orange-dark));
+    background: linear-gradient(135deg, var(--accent-primary), var(--accent-primary-dark));
     border: none;
     padding: 10px 20px;
     border-radius: 10px;
@@ -199,12 +199,12 @@
     font-weight: 700;
     cursor: pointer;
     transition: all 0.2s;
-    box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+    box-shadow: 0 4px 15px rgba(255, 122, 89, 0.35);
 }
 
 .custom-input-group .set-btn:hover:not(:disabled) {
     transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(255, 107, 53, 0.4);
+    box-shadow: 0 6px 18px rgba(255, 122, 89, 0.45);
 }
 
 .custom-input-group .set-btn:disabled {

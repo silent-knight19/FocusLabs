@@ -48,11 +48,11 @@
 }
 
 .nav-btn:hover {
-    border-color: var(--neon-orange);
-    color: var(--neon-orange);
-    background: rgba(255, 107, 53, 0.1);
+    border-color: var(--accent-primary);
+    color: var(--accent-primary);
+    background: rgba(255, 122, 89, 0.12);
     transform: translateY(-2px);
-    box-shadow: 0 0 20px rgba(255, 107, 53, 0.2);
+    box-shadow: 0 0 22px rgba(255, 122, 89, 0.25);
 }
 
 .nav-btn:active {
@@ -66,8 +66,8 @@
 }
 
 .calendar-icon {
-    color: var(--neon-orange);
-    filter: drop-shadow(0 0 5px rgba(255, 107, 53, 0.5));
+    color: var(--accent-primary);
+    filter: drop-shadow(0 0 6px rgba(255, 122, 89, 0.55));
 }
 
 .selected-date {
