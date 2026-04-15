@@ -3,28 +3,28 @@
 /* Import Google Fonts */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
-/* CSS Variables - Coral Sunset Theme */
+/* CSS Variables - Claude/Anthropic Orange Theme */
 :root {
   /* Deep Dark Backgrounds with warm undertones */
   --bg-primary: #0D0A0F;
   --bg-secondary: #16121A;
   --bg-card: rgba(22, 18, 26, 0.85);
-  --bg-hover: rgba(255, 122, 89, 0.04);
+  --bg-hover: rgba(255, 90, 31, 0.04);
   --bg-elevated: #1F1A24;
 
-  /* Rich Glassmorphism with warm tint */
+  /* Rich Glassmorphism with Claude orange tint */
   --glass-bg: rgba(22, 18, 26, 0.65);
   --glass-bg-solid: rgba(22, 18, 26, 0.96);
-  --glass-border: rgba(255, 122, 89, 0.08);
-  --glass-border-hover: rgba(255, 122, 89, 0.15);
+  --glass-border: rgba(255, 90, 31, 0.08);
+  --glass-border-hover: rgba(255, 90, 31, 0.15);
   --glass-blur: 16px;
   --glass-blur-heavy: 24px;
 
-  /* Vibrant Coral-Sunset Accent Colors */
-  --accent-primary: #FF7A59;
-  /* Warm Coral */
-  --accent-primary-light: #FF9B82;
-  --accent-primary-dark: #E85D3C;
+  /* Claude/Anthropic Orange Accent Colors */
+  --accent-primary: #FF5A1F;
+  /* Claude Orange */
+  --accent-primary-light: #FF7A4F;
+  --accent-primary-dark: #E84A0F;
 
   --accent-success: #22D3A6;
   /* Teal-green */
@@ -51,31 +51,31 @@
   --border-hover: rgba(255, 255, 255, 0.12);
   --border-active: var(--accent-primary);
 
-  /* Status Colors - Coral Theme */
+  /* Status Colors - Clean Theme */
   --status-completed: #22D3A6;
   --status-failed: #F87171;
   --status-pending: #FBBF24;
   --status-empty: rgba(255, 255, 255, 0.02);
 
-  /* Gradients - Professional Warm Spectrum */
-  --gradient-primary: linear-gradient(135deg, #FF7A59 0%, #F59E0B 50%, #8B5CF6 100%);
+  /* Gradients - Claude Orange Theme */
+  --gradient-primary: linear-gradient(135deg, #FF5A1F 0%, #FF7A4F 50%, #FFB347 100%);
   --gradient-success: linear-gradient(135deg, #22D3A6, #2DD4BF);
-  --gradient-subtle: linear-gradient(135deg, rgba(255, 122, 89, 0.12), rgba(139, 92, 246, 0.08));
+  --gradient-subtle: linear-gradient(135deg, rgba(255, 90, 31, 0.12), rgba(139, 92, 246, 0.08));
   --gradient-mesh:
-    radial-gradient(ellipse at 20% 0%, rgba(255, 122, 89, 0.12), transparent 50%),
+    radial-gradient(ellipse at 20% 0%, rgba(255, 90, 31, 0.12), transparent 50%),
     radial-gradient(ellipse at 80% 100%, rgba(139, 92, 246, 0.08), transparent 50%),
-    radial-gradient(ellipse at 50% 50%, rgba(245, 158, 11, 0.06), transparent 70%);
+    radial-gradient(ellipse at 50% 50%, rgba(255, 90, 31, 0.06), transparent 70%);
 
   /* Shadows - Softer with warm tint */
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
   --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
   --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.5);
   --shadow-xl: 0 24px 48px rgba(0, 0, 0, 0.6);
-  --shadow-glow: 0 0 24px rgba(245, 158, 11, 0.2);
-  --shadow-glass: 0 8px 32px rgba(0, 0, 0, 0.35), inset 0 0 0 1px rgba(245, 158, 11, 0.05);
+  --shadow-glow: 0 0 24px rgba(255, 90, 31, 0.2);
+  --shadow-glass: 0 8px 32px rgba(0, 0, 0, 0.35), inset 0 0 0 1px rgba(255, 90, 31, 0.05);
 
-  /* Glows - Warm and vibrant */
-  --glow-primary: 0 0 24px rgba(245, 158, 11, 0.4);
+  /* Glows - Claude Orange */
+  --glow-primary: 0 0 24px rgba(255, 90, 31, 0.4);
   --glow-success: 0 0 20px rgba(34, 211, 166, 0.35);
   --glow-warning: 0 0 20px rgba(251, 191, 36, 0.35);
 
