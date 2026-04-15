@@ -6,11 +6,13 @@
     height: 100vh;
     background: rgba(0, 0, 0, 0.7);
     backdrop-filter: blur(10px);
-    z-index: 1000;
+    z-index: 9999;
     display: flex;
     align-items: center;
     justify-content: center;
     animation: fadeIn 0.2s ease-out;
+    /* Break out of 3D transform context */
+    transform-style: flat;
 }
 
 .analytics-modal {
@@ -23,6 +25,8 @@
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
     overflow-y: auto;
     animation: slideUp 0.3s ease-out;
+    position: relative;
+    z-index: 10000;
 }
 
 @keyframes fadeIn {

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import confetti from 'canvas-confetti';
-import { ScrambledBackground } from './components/ScrambledBackground';
+import { VideoBackground } from './components/VideoBackground';
 import { TopNav } from './components/TopNav';
 import { HabitGrid } from './components/HabitGrid';
 import { AddHabitButton } from './components/AddHabitButton';
@@ -366,8 +366,8 @@ function App() {
 
   return (
     <div className="app perspective-root">
-      {/* Scrambled 4x4 Overlapping Image Background */}
-      <ScrambledBackground />
+      {/* Video Background with 40% blur - 8 sec loop */}
+      <VideoBackground />
 
       <TopNav
         onSettingsClick={() => setIsSettingsPanelOpen(true)}

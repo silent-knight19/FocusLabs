@@ -91,6 +91,21 @@
   animation-delay: 0.4s;
 }
 
+/* Compact heatmaps - no box wrapper, inside main column */
+.heatmaps-container-compact {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+  margin-top: var(--spacing-xl);
+  width: 100%;
+}
+
+.heatmaps-container-compact>* {
+  width: 100%;
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+}
+
 @keyframes fadeSlideUp {
   from {
     opacity: 0;
