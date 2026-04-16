@@ -1,253 +1,282 @@
-# 🎯 FocusLabs
+# FocusLabs
 
-> *Because "I'll start on Monday" is so last week.*
+A full-stack habit tracking application with time analytics, built for developers who value data-driven self-improvement.
 
-Welcome to **FocusLabs** – your personal productivity command center that's more addictive than doom-scrolling, but actually good for you. We've combined habit tracking, time management, and enough dopamine hits to make your brain think you're winning at life (and you are).
+## Overview
 
-## 🚀 What's This About?
+FocusLabs is a productivity tool that combines habit tracking with time management analytics. It provides a visual interface for tracking daily habits, analyzing time allocation across categories (Study, Productive Work, Self-Growth), and maintaining streaks through a gamified completion system.
 
-FocusLabs is a full-stack habit tracker that doesn't just track your habits – it becomes your accountability partner, your productivity coach, and that friend who actually remembers what you said you'd do. Built with React, Firebase, and an unhealthy obsession with beautiful UI, this app makes self-improvement feel less like homework and more like a game you actually want to play.
+The application differentiates itself through:
+- **Three-state completion tracking** (completed, skipped, unmarked) rather than binary checkboxes
+- **Stopwatch integration** with category-tagged sessions for granular time analytics
+- **GitHub-style heatmaps** for visualizing activity patterns
+- **Custom date-range habits** for temporary projects or sprints
+- **Real-time sync** across devices via Firebase
 
-Think of it as a Duolingo for your entire life, minus the passive-aggressive owl.
+## Architecture
 
-## ✨ Features That'll Make You Go "Why Didn't I Build This?"
+### Tech Stack
 
-### 🎨 Core Habit Tracking
-- **Monthly Grid View**: Track up to 30 habits across the entire month at a glance. Each day is a tiny battlefield, and green checkmarks are your victories.
-- **Daily Planner Mode**: Focus on today without the overwhelm. Toggle between monthly and daily views faster than you can say "productivity hack."
-- **Three-State Completion**: Not just done/not done. We've got ✅ Completed, ❌ Skipped, and 😶 Ignored (because honesty matters).
-- **Drag-and-Drop Reordering**: Organize your habits like your life – with complete control and zero judgment.
-- **Smart Categories**: Study, Productive, or Self-Growth. Because "watching YouTube tutorials" isn't the same as "actually coding."
+| Layer | Technology |
+|-------|------------|
+| Frontend Framework | React 19.2 (Vite 7.2) |
+| State Management | React Hooks + Context API |
+| Backend Services | Firebase (Auth, Firestore, Cloud Functions) |
+| Styling | Vanilla CSS with CSS Custom Properties |
+| Visualization | Recharts, Canvas Confetti |
+| Drag & Drop | @dnd-kit |
+| 3D Graphics | Three.js + React Three Fiber |
 
-### 🔥 Streak Tracking & Gamification
-- **Current Streaks**: Watch your consistency grow like a Tamagotchi you actually care about.
-- **Longest Streaks**: Hall of fame for your past achievements. Flex on your past self.
-- **Confetti Celebrations**: Complete all habits for the day? Get showered in confetti. Hit a 10-day streak? More confetti. We're basically a party in your browser.
-- **Visual Progress Indicators**: Color-coded rings, bars, and charts that make data look sexy.
+### Data Model
 
-### 🔍 Advanced Search & Calendar
-- **Calendar View with Search**: "When did I last go to the gym?" Find out in seconds. Search by habit name or subtask across two years of history.
-- **Day History Modal**: Double-click any date to see what you accomplished. It's like a time machine, but for your productivity.
-- **Multi-Level Search**: Search habits, subtasks, and daily tasks. No stone left unturned.
+The Firestore schema uses a user-scoped subcollection pattern:
 
-### ⏱️ Stopwatch with Superpowers
-- **Category-Tagged Laps**: Track study sessions, productive work, or self-growth time. Each lap knows what it's about.
-- **Custom Labels**: "Deep work on that bug" or "Pretending to understand async/await" – name your sessions whatever you want.
-- **Alarm System**: Set timers with presets (30/60/90/120 min) or custom durations. Your brain's new Pomodoro buddy.
-- **Real-Time Analytics**: See exactly where your time goes. Spoiler: probably more on "productive procrastination" than you'd like.
+```
+users/{uid}/
+├── habits/                    # Habit definitions (name, category, time)
+├── completions/{monthKey}/     # Sharded monthly completion data
+├── subtasks/                  # Habit subtask definitions
+├── subtask_completions/       # Subtask completion records
+├── custom_habits/             # Date-range specific habits
+├── daily_tasks/               # Date-specific task lists
+├── data/stopwatch_history     # Stopwatch lap records
+└── devices/                   # FCM tokens for notifications
+```
 
-### 📊 Heatmaps & Visualizations
-- **Study Activity Heatmap**: GitHub-style contribution graph for your study hours. Make that calendar green.
-- **Productivity & Growth Heatmap**: Separate tracking for productive work and self-growth. Because meditation and that startup idea deserve different colors.
-- **Concentric Pie Charts**: 10-day averages for study, productive, and self-growth hours. It spins, it's pretty, and it tells you uncomfortable truths.
-- **Weekly Progress Bars**: How's your week looking? The bars know.
+Completion data is sharded by month (format: `YYYY-MM`) to prevent document size limits for active users with long histories.
 
-### 📝 Subtasks & Daily Tasks
-- **Habit Subtasks**: Big habit? Break it down. "Exercise" becomes "Warmup," "Cardio," "Strength." Check them off one by one.
-- **Daily Task Lists**: Each habit gets a personal to-do list for the day. Add tasks on the fly, mark them done, feel awesome.
-- **Completion Percentages**: Math that actually makes you feel good. "3/5 tasks done = 60% complete." Easy dopamine.
+### Key Hooks
 
+- `useHabits()` – CRUD operations for habits, subtasks, and completions with streak calculation
+- `useCustomHabits()` – Date-range habits with full subtask support
+- `useDailyTasks()` – Per-habit, per-date task management
+- `useStopwatch()` – Timer state with category-tagged lap recording
+- `useFirestore()` – Generic Firestore listener with optimistic updates and circuit breaker logic
+- `useMonthlyCompletions()` – Month-sharded completion data management
 
-### 🎯 Active Habit Focus
-- **Live Countdown Timer**: See exactly how much time until your next habit. Creates healthy urgency without the panic.
-- **Quick Complete Button**: One-tap completion from the active habit card. Friction is the enemy of good habits.
-- **Dynamic Progress Rings**: Animated SVG circles that fill up as you get closer. It's hypnotic.
+## Features
 
-### 🌓 Dark/Light Theme
-- **Smooth Theme Toggle**: Dark mode for night owls, light mode for morning people, and instant switching for the indecisive.
-- **System Responsive**: Respects your OS preference because we're civilized.
-- **Neon Accents**: Gradients, glows, and color schemes that make productivity feel like cyberpunk.
+### Habit Management
 
-### ⚙️ Settings & Data Management
-- **Start-of-Week Preference**: Sunday or Monday? You decide. We don't judge.
-- **Export All Data**: Download everything as JSON. Your data, your control.
-- **Import Data**: Moving devices? Import your backup. Seamless.
-- **Clear Data Options**: Nuclear option when you need a fresh start. With confirmations, because accidents happen.
-- **Firestore Sync**: Real-time cloud sync across devices. Start on your laptop, finish on your phone.
+**Regular Habits**
+- Create habits with category (Study/Productive/Self-Growth), time allocation, and color coding
+- Drag-and-drop reordering via `@dnd-kit`
+- Subtasks for breaking habits into actionable components
+- Three-state completion: `completed`, `failed`, or `null` (unmarked)
 
-### 🎨 UI/UX That Doesn't Suck
-- **Glassmorphism Effects**: Frosted glass cards because we're fancy.
-- **Smooth Animations**: Micro-interactions that feel like butter.
-- **Responsive Design**: Looks gorgeous on desktop, tablet, and phone. We didn't forget mobile exists.
-- **Loading States**: No awkward blank screens. Spinners with personality.
-- **Error Boundaries**: When things break (they won't, but if they do), you'll know gracefully.
+**Custom Date Habits**
+- Habits active only within specific date ranges (e.g., "Conference prep Jan 1-15")
+- Full subtask and completion support identical to regular habits
+- Override regular habits during their active period
 
-### 🔐 Authentication & Security
-- **Google Sign-In**: One click, you're in. No passwords to remember or forget.
-- **User-Scoped Data**: Your habits are yours. Firestore rules ensure privacy.
-- **Session Persistence**: Stay logged in until you want to log out.
+**Completion States**
+| State | Visual | Meaning |
+|-------|--------|---------|
+| `completed` | Green checkmark | Done as planned |
+| `failed` | Red X | Skipped/missed |
+| `null` | Empty | Not yet marked |
 
-### 🧠 Under-the-Hood Magic
-- **Circuit Breakers**: Prevents infinite Firebase write loops. We learned this the hard way.
-- **Memory-Only Cache**: No localStorage quota errors. Your browser thanks us.
-- **Optimistic Updates**: UI updates instantly, syncs in the background. Feels fast because it is.
-- **Error Recovery**: Failed writes? We retry. Connection drops? We queue.
+### Time Tracking
 
-## 🛠️ Tech Stack
+**Stopwatch**
+- Runs continuously across sessions; persists state to `localStorage`
+- Lap recording with duration calculation (time since last lap)
+- Categories: Study, Productive, Self-Growth, Other
+- Editable labels for session descriptions
+- Alarm system with preset durations (30/60/90/120 min)
 
-**Frontend:**
-- **React 19.2** – The new hotness with concurrent features
-- **Vite 7.2** – Build tool that's faster than your coffee break
-- **Lucide React** – Icons that don't look like clipart from 2005
-- **Recharts** – Charts that actually respect your time
-- **Canvas Confetti** – Because celebrations matter
-- **@dnd-kit** – Drag-and-drop that doesn't fight you
+**Analytics**
+- Concentric pie charts showing 10-day rolling averages by category
+- Weekly progress bars for completion rates
+- Streak tracking (current and longest) per habit
 
-**Backend & Cloud:**
-- **Firebase Authentication** – Google sign-in without the OAuth headache
-- **Firestore** – NoSQL database that scales (and syncs in real-time)
-- **Firebase Cloud Messaging** – Push notifications that arrive
-- **Firebase Functions** – Serverless scheduled reminders
+### Visualization
 
-**Styling:**
-- **Vanilla CSS** – Full control, zero compromises
-- **CSS Custom Properties** – Theme switching without the complexity
-- **Flexbox & Grid** – Layout systems from this decade
+**Heatmaps**
+- GitHub-style contribution graphs for Study, Productive, and Self-Growth hours
+- Two-year scrollable history
+- Color intensity based on daily duration
 
-## 📦 Installation
+**Calendar View**
+- Month grid with completion status indicators
+- Search across habit names and subtasks (spanning 24 months)
+- Double-click any date to open Day History modal
+
+**Day History Modal**
+- Shows all habits, subtasks, and daily tasks for a specific date
+- Task status with inline toggle capability
+- Historical search results integration
+
+### Views
+
+| View | Purpose | Key Features |
+|------|---------|--------------|
+| **Month Grid** | Overview of monthly progress | 30 habits x 30 days grid, drag-to-reorder |
+| **Daily Planner** | Focus on single day | Per-habit task lists, inline task creation |
+| **Custom Date** | Temporary/sprint habits | Date-range specific habit rows |
+| **Calendar** | Historical search | Cross-month search, day detail modals |
+
+### Gamification
+
+- Confetti celebration when all habits completed for the day
+- Additional confetti at 10-day streak milestones (per habit)
+- Current and longest streak display in sidebar
+- Animated progress rings for upcoming habits
+
+### Settings & Data
+
+- **Theme**: Dark/light/system preference
+- **Week Start**: Sunday or Monday
+- **Data Export**: Full JSON backup (habits, completions, subtasks, tasks, stopwatch history)
+- **Data Import**: Restore from backup file
+- **Clear Data**: Selective or complete data removal with confirmation
+
+## Getting Started
 
 ### Prerequisites
-- **Node.js** (v18+) – Check with `node -v`
-- **npm** or **yarn** – Your package manager of choice
-- **Firebase Account** – Free tier works perfectly
 
-### Step 1: Clone the Repo
-```bash
-git clone https://github.com/yourusername/FocusLabs.git
-cd FocusLabs
-```
+- Node.js 18+
+- Firebase project (free tier sufficient)
 
-### Step 2: Install Dependencies
-```bash
-cd frontend
-npm install
-```
+### Installation
 
-### Step 3: Firebase Setup
-1. Go to [Firebase Console](https://console.firebase.google.com/)
-2. Create a new project (or use existing)
-3. Enable **Authentication** → Google Sign-In
-4. Enable **Firestore Database** → Start in production mode
-5. (Optional) Enable **Cloud Messaging** for notifications
-6. Copy your Firebase config
+1. **Clone and install dependencies**
+   ```bash
+   git clone https://github.com/yourusername/FocusLabs.git
+   cd FocusLabs/frontend
+   npm install
+   ```
 
-### Step 4: Environment Variables
-Create `frontend/.env.local`:
-```env
-VITE_FIREBASE_API_KEY=your_api_key_here
-VITE_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
-VITE_FIREBASE_PROJECT_ID=your_project_id
-VITE_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
-VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
-VITE_FIREBASE_APP_ID=your_app_id
-VITE_FIREBASE_MEASUREMENT_ID=G-XXXXXXXXXX
-```
+2. **Configure Firebase**
+   
+   Create `frontend/.env.local`:
+   ```env
+   VITE_FIREBASE_API_KEY=your_api_key
+   VITE_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
+   VITE_FIREBASE_PROJECT_ID=your_project_id
+   VITE_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
+   VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+   VITE_FIREBASE_APP_ID=your_app_id
+   VITE_FIREBASE_MEASUREMENT_ID=G-XXXXXXXXXX
+   ```
 
-### Step 5: Deploy Firestore Rules
-```bash
-# From project root
-firebase deploy --only firestore:rules
-```
+3. **Deploy Firestore security rules**
+   ```bash
+   firebase deploy --only firestore:rules
+   ```
+   Rules enforce user-scoped access: users can only read/write their own `users/{uid}/` subcollections.
 
-### Step 6: Run Development Server
-```bash
-npm run dev
-```
+4. **Run development server**
+   ```bash
+   npm run dev
+   ```
 
-Open [http://localhost:5173](http://localhost:5173) and watch the magic happen.
+### Firebase Configuration
 
-## 🎮 How to Use
+Required services:
+- **Authentication**: Enable Google sign-in provider
+- **Firestore**: Create database in production mode
+- **Security Rules**: Deploy the included `firestore.rules` to enforce user isolation
 
-### Getting Started
-1. **Sign in with Google** – Click the button, pick your account, done.
-2. **Add your first habit** – Click the `+` button in the top nav.
-3. **Fill in the details:**
-   - Name (e.g., "Morning workout")
-   - Category (Study / Productive / Self-Growth)
-   - Time allocation (e.g., 30 minutes)
-   - Optional: Add subtasks ("Warmup", "Run", "Cooldown")
-   - Optional: Set notification reminders
+## Usage Guide
+
+### Creating Your First Habit
+
+1. Sign in with Google (top-right)
+2. Click the plus icon in the navigation bar
+3. Enter habit name, select category, set time allocation
+4. Optional: Add subtasks for granular tracking
+5. Save; habit appears in Month Grid view
 
 ### Daily Workflow
-1. **Check Active Habit** – See what's next and when it's scheduled
-2. **Complete Habits** – Click once for ✅, twice for ❌, third time to clear
-3. **Add Daily Tasks** – Click the `+` in the active habit card
-4. **Track Focus Time** – Open stopwatch (⏱️ icon), start tracking
-5. **Label Your Sessions** – Add categories and custom labels to stopwatch laps
-6. **Review Progress** – Scroll down to see heatmaps and stats
 
-### Views & Navigation
-- **Month View** – See all habits across the entire month (default)
-- **Daily Planner** – Focus on today's habits and tasks
-- **Calendar** – Search history, double-click dates for details
-- **Analytics** – Dive deep into trends and patterns
+1. **Review Active Habit**: Top card shows next scheduled habit with countdown timer
+2. **Complete Habits**: Click grid cells to cycle: empty → completed (green) → failed (red) → empty
+3. **Add Daily Tasks**: In Daily Planner view, click `+` on any habit card to add date-specific tasks
+4. **Track Time**: Open stopwatch, start timer, record categorized laps
+5. **Check Progress**: Scroll to heatmaps and analytics section
 
-### Stopwatch Power User Tips
-- **Set alarms** before starting long sessions (click 🔔 icon)
-- **Use categories** to auto-tag laps (Study/Productive/Self-Growth)
-- **Edit lap labels** by clicking on them
-- **Lap doesn't reset timer** – it records duration and starts next lap
+### Keyboard Shortcuts
 
-### Data Management
-1. **Export backup:** Settings → Export Data → Save JSON file
-2. **Import backup:** Settings → Import Data → Choose file
-3. **Clear data:** Settings → Clear All Data (requires confirmation)
+None implemented; all interactions are pointer-based for mobile compatibility.
 
-### Customization
-- **Theme:** Toggle dark/light in settings (⚙️ icon)
-- **Week Start:** Choose Sunday or Monday in settings
-- **Habit Order:** Drag habits to reorder in month view
+### Data Portability
 
-## 🔥 Pro Tips
+All user data can be exported as JSON via Settings → Export. The schema is stable and backward-compatible for imports.
 
-- **Double-click dates** in calendar to see full history
-- **Search works on deleted habits too** – perfect for remembering "when did I stop doing yoga?"
-- **Set habit time to 0** if you just want to track completion (no time commitment)
-- **Use subtasks** for complex habits – feels better to check off multiple items
-- **Export data monthly** – backups are free insurance
-- **Streak reset?** Life happens. The confetti will return.
+## Development Notes
 
-## 🤝 Contributing
+### Performance Optimizations
 
-This is a personal project, but if you found a bug or have a killer feature idea:
-1. Open an issue
-2. Fork the repo
-3. Submit a PR
-4. Explain why your idea is genius
+- **Memory-only Firestore cache**: Avoids `localStorage` quota errors; data persists to Firestore server-side
+- **Monthly sharding**: Completion documents split by month to prevent unbounded document growth
+- **Circuit breakers**: Prevents runaway Firestore write loops from hook re-renders
+- **Optimistic UI**: State updates immediately, Firestore syncs in background
 
-## 📄 License
+### State Persistence Strategy
 
-None. Zero. Zilch. This project has **no license**, which means standard copyright laws apply. You can look, learn, and get inspired, but technically you can't redistribute or modify without permission. 
+| Data Type | Storage | Sync |
+|-----------|---------|------|
+| Habits, subtasks, completions | Firestore | Real-time |
+| Stopwatch active state | localStorage | Device-local only |
+| Stopwatch history | Firestore | Real-time |
+| Settings | Firestore | Real-time |
+| Theme preference | CSS class + Firestore | Real-time |
 
-(Translation: It's here for you to study and enjoy, but if you want to use chunks of it, shoot me a message!)
+### Known Limitations
 
-## 💬 FAQ
+- Maximum recommended: 30 habits (UI constraints, not technical)
+- Stopwatch active state does not sync across devices (intentional to avoid conflicts)
+- Search history limited to 24 months (performance)
+- No offline support (requires active Firestore connection)
 
-**Q: Will this make me productive?**  
-A: Only if you actually use it. We're good, but we're not magic.
+## Project Structure
 
-**Q: Can I use this without Firebase?**  
-A: Technically, yes (localStorage only), but you'll lose cloud sync and notifications.
+```
+frontend/src/
+├── components/          # React components (modals, views, UI)
+├── hooks/              # Custom React hooks for data and state
+├── contexts/           # Auth and stopwatch history providers
+├── config/             # Firebase initialization
+├── utils/              # Date helpers, storage, validation
+└── styles/             # CSS with theme variables
 
-**Q: Why no email/password login?**  
-A: Because we value our sanity and your security. Google OAuth is battle-tested.
+functions/
+└── index.js            # Cloud Functions placeholder
 
-**Q: The heatmap isn't updating!**  
-A: Refresh the page or wait a few seconds. Real-time sync has a tiny delay sometimes.
+firestore.rules          # Security rules (user-scoped access)
+```
 
-**Q: Can I add more than 30 habits?**  
-A: You *can*, but should you? Focus beats quantity every time.
+## Browser Support
 
-## 🙏 Acknowledgments
+- Chrome/Edge 90+
+- Firefox 88+
+- Safari 14+
+- Mobile Safari (iOS 14+)
+- Chrome Mobile (Android 10+)
 
-- **You**, for reading this far
-- **Coffee**, for existing
-- **The React team**, for making UI fun again
-- **Firebase**, for serverless simplicity
-- **Every productivity YouTuber**, for the inspiration (and procrastination)
+## Roadmap
 
----
+- [ ] PWA support with offline completion queueing
+- [ ] Recurring custom habits (weekdays only, etc.)
+- [ ] Weekly habit templates
+- [ ] Notification reminders via FCM
+- [ ] Data visualization: trend lines, correlation analysis
 
-Built with ☕, 🎵, and an unhealthy amount of ⏰ by someone who really, really wanted to build good habits.
+## Troubleshooting
 
-**Now stop reading and go complete a habit.** ✨
+**Heatmap not updating**
+- Refresh page; real-time listeners may have temporary lag
+- Check browser console for Firestore permission errors
+
+**Data not syncing**
+- Verify `firestore.rules` deployed correctly
+- Check network connection
+- Look for circuit breaker logs in console
+
+**Stopwatch reset on refresh**
+- Expected behavior: only `localStorage` persists; Firestore syncs completed laps only
+
+## Credits
+
+Built with React, Firebase, and Three.js. Charting via Recharts. Icons via Lucide.
