@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Search, X, Trash2, Edit2, Check, ChevronDown, ChevronRight } from 'lucide-react';
-import { getMonthDates, getMonthName, isSameDay, getTwoYearsAgo, isWithinTwoYears, formatDateKey, isFutureDate } from '../utils/dateHelpers';
+import { getMonthDates, getMonthName, isSameDay, getTwoYearsAgo, isWithinTwoYears, formatDateKey, isFutureDate, getYearMonth } from '../utils/dateHelpers';
 import { ConfirmationModal } from './ConfirmationModal';
 import './styles/CalendarView.css';
 
@@ -154,7 +154,7 @@ const HabitItem = ({ habit, isCompleted, subtasks, subtaskCompletions, dailyTask
   );
 };
 
-export function CalendarView({ habits, completions, subtasks = [], subtaskCompletions = {}, dailyTasks = [], onDateDoubleClick, onToggleTask, onUpdateTask, onDeleteTask }) {
+export function CalendarView({ habits, completions, subtasks = [], subtaskCompletions = {}, dailyTasks = [], loadMonth, onDateDoubleClick, onToggleTask, onUpdateTask, onDeleteTask }) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [calendarDays, setCalendarDays] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -386,19 +386,30 @@ export function CalendarView({ habits, completions, subtasks = [], subtaskComple
     }
   }, [searchTerm, completions, habits, subtasks, subtaskCompletions, dailyTasks]);
 
+  /**
+   * Request completion data for the displayed month.
+   * loadMonth is a no-op if the month is already loaded.
+   */
+  const ensureMonthLoaded = useCallback((date) => {
+    if (!loadMonth) return;
+    const monthKey = getYearMonth(date);
+    loadMonth(monthKey);
+  }, [loadMonth]);
+
   const handlePrevMonth = () => {
     const newDate = new Date(currentDate);
     newDate.setMonth(newDate.getMonth() - 1);
     if (isWithinTwoYears(newDate)) {
       setCurrentDate(newDate);
+      ensureMonthLoaded(newDate);
     }
   };
 
   const handleNextMonth = () => {
     const newDate = new Date(currentDate);
     newDate.setMonth(newDate.getMonth() + 1);
-    // Prevent going beyond current month + 1 year (optional limit)
     setCurrentDate(newDate);
+    ensureMonthLoaded(newDate);
   };
 
   const handleToday = () => {
@@ -406,6 +417,7 @@ export function CalendarView({ habits, completions, subtasks = [], subtaskComple
     today.setHours(0, 0, 0, 0);
     setCurrentDate(today);
     setSelectedDate(today);
+    ensureMonthLoaded(today);
   };
 
   const getDayCompletionStats = (date) => {
@@ -644,6 +656,7 @@ export function CalendarView({ habits, completions, subtasks = [], subtaskComple
                         resultDate.getFullYear() !== currentDate.getFullYear()
                       ) {
                         setCurrentDate(new Date(resultDate.getFullYear(), resultDate.getMonth(), 1));
+                        ensureMonthLoaded(resultDate);
                       }
                     }}
                   >

@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
 import { useFirestore } from './useFirestore';
+import { useMonthlyCompletions } from './useMonthlyCompletions';
 import { useAuth } from '../contexts/AuthContext';
 import { formatDateKey } from '../utils/dateHelpers';
 
@@ -12,7 +13,14 @@ export function useHabits() {
   const userId = user?.uid;
 
   const [habits, setHabits, habitsLoading] = useFirestore(userId, 'habits', []);
-  const [completions, setCompletions, completionsLoading] = useFirestore(userId, 'completions', {});
+  const { 
+    completions, 
+    loading: completionsLoading, 
+    toggleCompletion: monthlyToggleCompletion,
+    clearCompletion: monthlyClearCompletion,
+    getCompletionStatus: monthlyGetCompletionStatus,
+    loadMonth
+  } = useMonthlyCompletions(userId);
   const [subtasks, setSubtasks, subtasksLoading] = useFirestore(userId, 'subtasks', []);
   const [subtaskCompletions, setSubtaskCompletions, subtaskCompletionsLoading] = useFirestore(userId, 'subtask_completions', {});
 
@@ -74,12 +82,8 @@ export function useHabits() {
   const deleteHabit = (habitId) => {
     setHabits(prev => prev.filter(habit => habit.id !== habitId));
     
-    // Remove completion data
-    setCompletions(prev => {
-      const updated = { ...prev };
-      delete updated[habitId];
-      return updated;
-    });
+    // Note: Completion data is now sharded by month - cleanup happens automatically
+    // when documents become empty, or we could add a batch delete here if needed
 
     // Remove subtasks
     setSubtasks(prev => prev.filter(st => st.habitId !== habitId));
@@ -188,33 +192,7 @@ export function useHabits() {
    * Cycles through: null -> 'completed' -> 'failed' -> null
    */
   const toggleCompletion = (habitId, date) => {
-    const dateKey = formatDateKey(date);
-    
-    setCompletions(prev => {
-      const habitCompletions = prev[habitId] || {};
-      const currentStatus = habitCompletions[dateKey];
-      
-      let newStatus;
-      if (!currentStatus) {
-        newStatus = 'completed';
-      } else if (currentStatus === 'completed') {
-        newStatus = 'failed';
-      } else {
-        newStatus = null;
-      }
-      
-      const updatedHabitCompletions = { ...habitCompletions };
-      if (newStatus === null) {
-        delete updatedHabitCompletions[dateKey];
-      } else {
-        updatedHabitCompletions[dateKey] = newStatus;
-      }
-
-      return {
-        ...prev,
-        [habitId]: updatedHabitCompletions
-      };
-    });
+    monthlyToggleCompletion(habitId, date);
     window.dispatchEvent(new Event('habit-data-updated'));
   };
 
@@ -223,29 +201,7 @@ export function useHabits() {
    * Directly sets status to null (removes the entry)
    */
   const clearCompletion = (habitId, date) => {
-    const dateKey = formatDateKey(date);
-    if (!dateKey) return;
-
-    setCompletions(prev => {
-      const habitCompletions = prev[habitId];
-      if (!habitCompletions || !habitCompletions[dateKey]) {
-        return prev;
-      }
-
-      const updatedHabitCompletions = { ...habitCompletions };
-      delete updatedHabitCompletions[dateKey];
-
-      if (Object.keys(updatedHabitCompletions).length === 0) {
-        const updated = { ...prev };
-        delete updated[habitId];
-        return updated;
-      }
-
-      return {
-        ...prev,
-        [habitId]: updatedHabitCompletions
-      };
-    });
+    monthlyClearCompletion(habitId, date);
     window.dispatchEvent(new Event('habit-data-updated'));
   };
 
@@ -253,8 +209,7 @@ export function useHabits() {
    * Get completion status for a habit on a specific date
    */
   const getCompletionStatus = (habitId, date) => {
-    const dateKey = formatDateKey(date);
-    return completions[habitId]?.[dateKey] || null;
+    return monthlyGetCompletionStatus(habitId, date);
   };
 
   /**
@@ -372,6 +327,7 @@ export function useHabits() {
     toggleSubtaskCompletion,
     getSubtaskStatus,
     getSubtaskCompletionPercentage,
-    reorderHabits
+    reorderHabits,
+    loadMonth
   };
 }

@@ -6,6 +6,7 @@ import './styles/premium-animations.css'
 import App from './App.jsx'
 import ErrorBoundary from './components/ErrorBoundary.jsx'
 import { AuthProvider, useAuth } from './contexts/AuthContext.jsx'
+import { StopwatchHistoryProvider } from './contexts/StopwatchHistoryContext.jsx'
 import { Login } from './components/Login.jsx'
 
 // Wrapper to handle auth state
@@ -42,7 +43,11 @@ function AppWrapper() {
     return <Login />;
   }
 
-  return <App />;
+  return (
+    <StopwatchHistoryProvider>
+      <App />
+    </StopwatchHistoryProvider>
+  );
 }
 
 

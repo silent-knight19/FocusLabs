@@ -1,19 +1,15 @@
 import React, { useMemo } from 'react';
-import { useFirestore } from '../hooks/useFirestore';
-import { useAuth } from '../contexts/AuthContext';
-import './styles/ProductivityHeatmap.css';
+import { useStopwatchHistory } from '../contexts/StopwatchHistoryContext';
 import './styles/ProductivityHeatmap.css';
 
 /**
  * GitHub-style contribution heatmap showing Productive & Self Growth hours
  * Combines 'prod' and 'self' categories
+ * Uses shared StopwatchHistoryContext for data access.
  */
 export function ProductivityHeatmap({ habits = [], completions = {}, dataVersion = 0 }) {
-  // Get lap history from localStorage (where categories are stored)
-  // Get lap history from Firestore
-  const { user } = useAuth();
-  const userId = user?.uid;
-  const [history, , loading] = useFirestore(userId, 'stopwatch_history', []);
+  // Get shared history from context (single Firestore listener)
+  const { history, loading } = useStopwatchHistory();
 
   const getLapHistory = () => {
     if (loading || !history) return [];
@@ -162,7 +158,7 @@ export function ProductivityHeatmap({ habits = [], completions = {}, dataVersion
       max: maxHours.toFixed(1),
       average: daysWithActivity > 0 ? (totalHours / daysWithActivity).toFixed(1) : 0
     };
-  }, [dataVersion, habits, completions]);
+  }, [dataVersion, history, loading, habits, completions]);
 
   const monthLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   const dayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];

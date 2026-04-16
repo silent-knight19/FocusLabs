@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
-import { useFirestore } from '../hooks/useFirestore';
-import { doc, deleteDoc, getDoc, setDoc } from 'firebase/firestore';
+import { useStopwatchHistory } from '../contexts/StopwatchHistoryContext';
+import { doc, deleteDoc, getDoc, setDoc, collection, getDocs } from 'firebase/firestore';
+import { getYearMonth, getDayFromDateKey } from '../utils/dateHelpers';
 import { db } from '../config/firebase';
 import { useAuth } from '../contexts/AuthContext';
 import { downloadDataAsJson, clearAllData } from '../utils/storageHelpers';
@@ -16,7 +17,7 @@ export function SettingsPanel({ isOpen, onClose, settings, onUpdateSettings }) {
   useLockBodyScroll(isOpen);
   const { user, signOut } = useAuth();
   const userId = user?.uid;
-  const [history, setHistory] = useFirestore(userId, 'stopwatch_history', []);
+  const { history, setHistory } = useStopwatchHistory();
 
   const [importError, setImportError] = useState('');
 
@@ -41,14 +42,44 @@ export function SettingsPanel({ isOpen, onClose, settings, onUpdateSettings }) {
     onUpdateSettings({ startOfWeek: value });
   };
 
+  /**
+   * Read all monthly completion documents and reassemble into the
+   * flat { habitId: { dateKey: status } } format for export compatibility.
+   */
+  const fetchMonthlyCompletions = async () => {
+    if (!userId) return {};
+    try {
+      const completionsRef = collection(db, 'users', userId, 'completions');
+      const snapshot = await getDocs(completionsRef);
+      const aggregated = {};
+
+      snapshot.forEach(docSnap => {
+        const monthKey = docSnap.id; // e.g. "2024-01"
+        const monthData = docSnap.data();
+
+        Object.entries(monthData).forEach(([habitId, days]) => {
+          if (!aggregated[habitId]) aggregated[habitId] = {};
+          Object.entries(days).forEach(([day, status]) => {
+            const dateKey = `${monthKey}-${day.padStart(2, '0')}`;
+            aggregated[habitId][dateKey] = status;
+          });
+        });
+      });
+
+      return aggregated;
+    } catch (err) {
+      console.error('Error fetching monthly completions:', err);
+      return {};
+    }
+  };
+
   const handleExport = async () => {
     try {
       setSuccessMessage('Exporting data...');
       
-      // Fetch all data from Firestore
-      const collections = [
+      // Fetch useFirestore-managed collections (stored under data/{name})
+      const dataCollections = [
         'habits', 
-        'completions', 
         'subtasks', 
         'subtask_completions', 
         'stopwatch_history', 
@@ -64,8 +95,7 @@ export function SettingsPanel({ isOpen, onClose, settings, onUpdateSettings }) {
       const firestoreData = {};
       
       if (userId) {
-        // Fetch from Firestore for logged-in users
-        await Promise.all(collections.map(async (colName) => {
+        await Promise.all(dataCollections.map(async (colName) => {
           try {
             const docRef = doc(db, 'users', userId, 'data', colName);
             const docSnap = await getDoc(docRef);
@@ -80,6 +110,9 @@ export function SettingsPanel({ isOpen, onClose, settings, onUpdateSettings }) {
           }
         }));
       }
+
+      // Fetch monthly-sharded completions from the new path
+      const monthlyCompletions = await fetchMonthlyCompletions();
       
       // Also get localStorage data (for anonymous users or fallback)
       const localData = {
@@ -95,17 +128,21 @@ export function SettingsPanel({ isOpen, onClose, settings, onUpdateSettings }) {
         stopwatchCategories: localStorage.getItem('stopwatch_categories') || '[]',
         settings: localStorage.getItem('habitgrid_settings') || '{}'
       };
+
+      // Use monthly completions if available, otherwise fall back to old format / localStorage
+      const completionsForExport = Object.keys(monthlyCompletions).length > 0
+        ? monthlyCompletions
+        : JSON.parse(localData.completions);
       
       // Combine all data
       const exportData = {
-        version: '2.0.0',
+        version: '3.0.0',
         exportDate: new Date().toISOString(),
         appName: 'FocusLabs',
         userId: userId || 'anonymous',
         data: {
-          // Firestore data (prioritized) — stored under 'value' key by useFirestore hook
           habits: firestoreData.habits?.value || JSON.parse(localData.habits),
-          completions: firestoreData.completions?.value || JSON.parse(localData.completions),
+          completions: completionsForExport,
           subtasks: firestoreData.subtasks?.value || {},
           subtaskCompletions: firestoreData.subtask_completions?.value || {},
           stopwatchHistory: firestoreData.stopwatch_history?.value || [],
@@ -152,6 +189,35 @@ export function SettingsPanel({ isOpen, onClose, settings, onUpdateSettings }) {
     }
   };
 
+  /**
+   * Convert flat completions { habitId: { "2024-01-15": "completed" } }
+   * into monthly-sharded documents for the new Firestore structure.
+   */
+  const writeCompletionsAsMonthly = async (flatCompletions) => {
+    if (!userId || !flatCompletions || typeof flatCompletions !== 'object') return;
+
+    const monthlyBuckets = {};
+
+    Object.entries(flatCompletions).forEach(([habitId, dates]) => {
+      if (!dates || typeof dates !== 'object') return;
+      Object.entries(dates).forEach(([dateKey, status]) => {
+        const monthKey = dateKey.substring(0, 7); // "2024-01"
+        const day = getDayFromDateKey(dateKey);    // "15"
+        if (!monthKey || !day) return;
+
+        if (!monthlyBuckets[monthKey]) monthlyBuckets[monthKey] = {};
+        if (!monthlyBuckets[monthKey][habitId]) monthlyBuckets[monthKey][habitId] = {};
+        monthlyBuckets[monthKey][habitId][day] = status;
+      });
+    });
+
+    // Write each month document
+    for (const [monthKey, data] of Object.entries(monthlyBuckets)) {
+      const docRef = doc(db, 'users', userId, 'completions', monthKey);
+      await setDoc(docRef, data);
+    }
+  };
+
   const handleImport = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -171,10 +237,10 @@ export function SettingsPanel({ isOpen, onClose, settings, onUpdateSettings }) {
         setSuccessMessage('Importing data...');
 
         if (userId) {
-          // Map exported JSON keys → Firestore collection names
+          // Map exported JSON keys → Firestore data/ collection names
+          // (Excludes 'completions' — handled separately below)
           const firestoreMapping = {
             habits: 'habits',
-            completions: 'completions',
             subtasks: 'subtasks',
             subtaskCompletions: 'subtask_completions',
             stopwatchHistory: 'stopwatch_history',
@@ -187,7 +253,7 @@ export function SettingsPanel({ isOpen, onClose, settings, onUpdateSettings }) {
             settings: 'settings'
           };
 
-          // Write each collection to Firestore with { value: data } structure
+          // Write each data/ collection to Firestore
           const writePromises = Object.entries(firestoreMapping).map(
             async ([jsonKey, firestoreCollection]) => {
               const dataToWrite = importedData[jsonKey];
@@ -203,6 +269,11 @@ export function SettingsPanel({ isOpen, onClose, settings, onUpdateSettings }) {
           );
 
           await Promise.all(writePromises);
+
+          // Write completions to the new monthly-sharded path
+          if (importedData.completions) {
+            await writeCompletionsAsMonthly(importedData.completions);
+          }
         }
 
         // Also write localStorage-only data as fallback
@@ -308,26 +379,49 @@ export function SettingsPanel({ isOpen, onClose, settings, onUpdateSettings }) {
 
   const handleClearData = async () => {
     try {
-      // 1. Clear Firestore Data
       if (userId) {
-        const collections = [
+        // 1. Clear data/ subcollection documents
+        const dataCollections = [
           'habits', 
-          'completions', 
           'subtasks', 
           'subtask_completions', 
           'stopwatch_history', 
           'settings', 
           'daily_tasks',
-          'notes'
+          'notes',
+          'custom_habits',
+          'custom_completions',
+          'study_sessions',
+          'productivity_sessions'
         ];
         
-        await Promise.all(collections.map(colName => {
+        await Promise.all(dataCollections.map(colName => {
           const docRef = doc(db, 'users', userId, 'data', colName);
           return deleteDoc(docRef);
         }));
+
+        // 2. Clear monthly completion documents
+        try {
+          const completionsRef = collection(db, 'users', userId, 'completions');
+          const snapshot = await getDocs(completionsRef);
+          const deletePromises = [];
+          snapshot.forEach(docSnap => {
+            deletePromises.push(deleteDoc(doc(db, 'users', userId, 'completions', docSnap.id)));
+          });
+          await Promise.all(deletePromises);
+        } catch (err) {
+          console.error('Error clearing monthly completions:', err);
+        }
+
+        // 3. Clean up old single-document completions (if any remain from pre-migration)
+        try {
+          await deleteDoc(doc(db, 'users', userId, 'data', 'completions'));
+        } catch (err) {
+          // Ignore — may not exist
+        }
       }
 
-      // 2. Clear Local Storage
+      // 4. Clear Local Storage
       clearAllData();
       
       setShowClearConfirm(false);

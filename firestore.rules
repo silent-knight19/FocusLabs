@@ -16,13 +16,20 @@ service cloud.firestore {
       // Users can only read/write their own data
       allow read, write: if isOwner(userId);
       
+      // General data subcollection (used by useFirestore hook)
+      // Path: users/{uid}/data/{collectionName}
+      match /data/{document=**} {
+        allow read, write: if isOwner(userId);
+      }
+      
       // Habits subcollection
       match /habits/{habitId} {
         allow read, write: if isOwner(userId);
       }
       
-      // Completions subcollection (if stored separately)
-      match /completions/{completionId} {
+      // Monthly completions subcollection (sharded by month)
+      // Path: users/{uid}/completions/{monthKey}
+      match /completions/{monthKey} {
         allow read, write: if isOwner(userId);
       }
       

@@ -207,3 +207,26 @@ export function formatTime12(timeStr) {
   const hours12 = hours % 12 || 12;
   return `${hours12}:${String(minutes).padStart(2, '0')} ${period}`;
 }
+
+/**
+ * Get year-month string from date for monthly sharding
+ * @param {Date} date
+ * @returns {string} - "2024-01"
+ */
+export function getYearMonth(date) {
+  const d = date instanceof Date ? date : new Date(date);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  return `${year}-${month}`;
+}
+
+/**
+ * Get day from date key (YYYY-MM-DD) -> "01"
+ * @param {string} dateKey
+ * @returns {string} - "01"
+ */
+export function getDayFromDateKey(dateKey) {
+  if (!dateKey) return null;
+  const parts = dateKey.split('-');
+  return parts[2] || null;
+}

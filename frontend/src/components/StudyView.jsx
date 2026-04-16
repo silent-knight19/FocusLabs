@@ -1,13 +1,13 @@
 import React, { useMemo } from 'react';
-import { useFirestore } from '../hooks/useFirestore';
-import { useAuth } from '../contexts/AuthContext';
-import { formatTime12 } from '../utils/dateHelpers';
+import { useStopwatchHistory } from '../contexts/StopwatchHistoryContext';
 import './styles/AnalyticsView.css'; // Reuse analytics styles
 
+/**
+ * Study analytics view showing study hours and sessions
+ * Uses shared StopwatchHistoryContext for data access.
+ */
 export function StudyView() {
-  const { user } = useAuth();
-  const userId = user?.uid;
-  const [history] = useFirestore(userId, 'stopwatch_history', []);
+  const { history } = useStopwatchHistory();
 
   const studyStats = useMemo(() => {
     if (!history) return { totalHours: '0.0', count: 0, chartData: [] };
@@ -34,7 +34,7 @@ export function StudyView() {
       }));
 
     return { totalHours, count: studyLaps.length, chartData };
-  }, []);
+  }, [history]);
 
   return (
     <div className="analytics-view">

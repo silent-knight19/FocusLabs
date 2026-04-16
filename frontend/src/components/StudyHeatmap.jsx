@@ -1,19 +1,15 @@
 import React, { useMemo } from 'react';
-import { useFirestore } from '../hooks/useFirestore';
-import { useAuth } from '../contexts/AuthContext';
-import './styles/StudyHeatmap.css';
+import { useStopwatchHistory } from '../contexts/StopwatchHistoryContext';
 import './styles/StudyHeatmap.css';
 
 /**
  * GitHub-style contribution heatmap showing daily study hours
  * Minimum 2 hours to show color intensity effect
+ * Uses shared StopwatchHistoryContext for data access.
  */
 export function StudyHeatmap({ dataVersion = 0 }) {
-  // Get lap history from localStorage
-  // Get lap history from Firestore
-  const { user } = useAuth();
-  const userId = user?.uid;
-  const [history, , loading] = useFirestore(userId, 'stopwatch_history', []);
+  // Get shared history from context (single Firestore listener)
+  const { history, loading } = useStopwatchHistory();
 
   const getLapHistory = () => {
     if (loading || !history) return [];

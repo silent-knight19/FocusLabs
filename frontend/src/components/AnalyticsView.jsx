@@ -1,6 +1,5 @@
 import React, { useMemo } from 'react';
-import { useFirestore } from '../hooks/useFirestore';
-import { useAuth } from '../contexts/AuthContext';
+import { useStopwatchHistory } from '../contexts/StopwatchHistoryContext';
 import { getToday, formatDateKey, getWeekStart, getMonthDates } from '../utils/dateHelpers';
 import './styles/AnalyticsView.css';
 
@@ -65,9 +64,8 @@ export function AnalyticsView({
   // ... (Weekly, Monthly, Yearly stats remain same) ...
 
   // 5. Productivity Hours (Filtered by > 60s) & Daily Average
-  const { user } = useAuth();
-  const userId = user?.uid;
-  const [history] = useFirestore(userId, 'stopwatch_history', []);
+  // Get shared history from context (single Firestore listener)
+  const { history } = useStopwatchHistory();
 
   const productivityStats = useMemo(() => {
     if (!history) return { stats: [], max: 1, dailyAverage: '0.0' };
@@ -120,7 +118,7 @@ export function AnalyticsView({
       max: maxDuration > 0 ? maxDuration : 1,
       dailyAverage: dailyAverageHours.toFixed(1)
     };
-  }, [today]);
+  }, [history, today]);
 
   return (
     <div className="analytics-view">

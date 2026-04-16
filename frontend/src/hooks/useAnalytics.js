@@ -1,17 +1,14 @@
 import { useMemo } from 'react';
-import { useFirestore } from './useFirestore';
-import { useAuth } from '../contexts/AuthContext';
+import { useStopwatchHistory } from '../contexts/StopwatchHistoryContext';
 
 /**
  * Hook for analyzing stopwatch lap data
  * Aggregates laps by category and time period
+ * Uses shared StopwatchHistoryContext for data access.
  */
 export function useAnalytics() {
-  // Get lap history from localStorage
-  // Get lap history from Firestore
-  const { user } = useAuth();
-  const userId = user?.uid;
-  const [history] = useFirestore(userId, 'stopwatch_history', []);
+  // Get shared history from context (single Firestore listener)
+  const { history } = useStopwatchHistory();
 
   const getLapHistory = () => {
     if (!history) return [];

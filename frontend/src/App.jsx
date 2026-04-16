@@ -25,10 +25,13 @@ import { CustomHabitModal } from './components/CustomHabitModal';
 import { CustomDateView } from './components/CustomDateView';
 
 import { useHabits } from './hooks/useHabits.jsx';
+import { setMigrationRunning } from './hooks/useMonthlyCompletions';
 import { useCustomHabits } from './hooks/useCustomHabits.js';
 import { useDailyTasks } from './hooks/useDailyTasks.jsx';
 import { useSettings } from './hooks/useSettings';
 import { useActiveHabit } from './hooks/useActiveHabit';
+import { useAuth } from './contexts/AuthContext';
+import { runMigrationIfNeeded } from './utils/migrateCompletions';
 import { 
   getWeekStart, 
   getWeekDates, 
@@ -57,6 +60,33 @@ function App() {
   const [isCustomHabitModalOpen, setIsCustomHabitModalOpen] = useState(false);
   const [currentDate] = useState(getToday());
   const [searchTerm, setSearchTerm] = useState('');
+  const [migrationStatus, setMigrationStatus] = useState({ running: false, done: false });
+  
+  const { user } = useAuth();
+  
+  // Run migration on startup if needed
+  useEffect(() => {
+    if (!user?.uid || migrationStatus.done) return;
+    
+    let cancelled = false;
+    
+    const doMigration = async () => {
+      setMigrationRunning(true);
+      setMigrationStatus({ running: true, done: false });
+      const result = await runMigrationIfNeeded(user.uid);
+      setMigrationRunning(false);
+      if (!cancelled) {
+        setMigrationStatus({ running: false, done: true });
+      }
+    };
+    
+    doMigration();
+    
+    return () => { 
+      cancelled = true;
+      setMigrationRunning(false);
+    };
+  }, [user?.uid]);
   
   // Confirmation Modal State
   const [confirmationModal, setConfirmationModal] = useState({
@@ -96,7 +126,8 @@ function App() {
     toggleSubtaskCompletion,
     getSubtaskStatus,
     getSubtaskCompletionPercentage,
-    reorderHabits
+    reorderHabits,
+    loadMonth
   } = useHabits();
 
   // Daily tasks hook
@@ -590,6 +621,7 @@ function App() {
               subtasks={subtasks}
               subtaskCompletions={subtaskCompletions}
               dailyTasks={dailyTasks}
+              loadMonth={loadMonth}
               onDateDoubleClick={(date) => {
                 setSelectedDate(date);
               }}
