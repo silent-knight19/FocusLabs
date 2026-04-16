@@ -250,7 +250,7 @@ export function CalendarView({ habits, completions, subtasks = [], subtaskComple
     });
 
     // 2. Collect matching Subtasks (Static)
-    if (subtasks && subtasks.length > 0) {
+    if (Array.isArray(subtasks) && subtasks.length > 0) {
       subtasks.forEach(subtask => {
         if (subtask.title.toLowerCase().includes(searchLower)) {
           const parentHabit = habits.find(h => h.id === subtask.habitId);
@@ -324,10 +324,10 @@ export function CalendarView({ habits, completions, subtasks = [], subtaskComple
     });
 
     // 2. Search Subtask History (Completed Subtasks)
-    const matchingSubtasks = subtasks.filter(st => {
+    const matchingSubtasks = Array.isArray(subtasks) ? subtasks.filter(st => {
       const parentHabitExists = habits.some(h => h.id === st.habitId);
       return parentHabitExists && st.title.toLowerCase().includes(searchLower);
-    });
+    }) : [];
 
     matchingSubtasks.forEach(subtask => {
       const habitId = subtask.habitId;
@@ -682,7 +682,7 @@ export function CalendarView({ habits, completions, subtasks = [], subtaskComple
                     {activeHabits.map(habit => {
                       const habitDateKey = formatDateKey(selectedDate);
                       const isCompleted = completions[habit.id]?.[habitDateKey] === 'completed';
-                      const habitSubtasks = subtasks.filter(st => st.habitId === habit.id);
+                      const habitSubtasks = Array.isArray(subtasks) ? subtasks.filter(st => st.habitId === habit.id) : [];
                       const habitDailyTasks = tasksByHabit[habit.id] || [];
                       
                       return (
