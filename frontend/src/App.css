@@ -281,6 +281,26 @@
 }
 
 /* ========================================
+   Main Content Split - 70/30 Layout
+   ======================================== */
+
+.main-content-split {
+  display: flex;
+  gap: 1.5rem;
+  align-items: flex-start;
+}
+
+.main-column {
+  flex: 0 0 70%;
+  max-width: 70%;
+}
+
+.sidebar-column {
+  flex: 0 0 30%;
+  max-width: 30%;
+}
+
+/* ========================================
    Mobile Responsive
    ======================================== */
 
@@ -290,22 +310,63 @@
   }
 }
 
+@media (max-width: 1024px) {
+  .main-content-split {
+    flex-direction: column;
+  }
+
+  .main-column,
+  .sidebar-column {
+    flex: 1 1 100%;
+    max-width: 100%;
+  }
+
+  .sidebar-column {
+    position: static;
+  }
+}
+
 @media (max-width: 768px) {
   .app-main {
-    padding: var(--spacing-md) 0;
+    padding: calc(60px + var(--spacing-md)) 0 var(--spacing-md);
   }
 
   .app-container {
-    padding: 0 var(--spacing-md);
+    padding: 0 var(--spacing-sm);
   }
 
   .view-toggle-container {
     flex-wrap: wrap;
+    gap: var(--spacing-sm);
+    margin-top: var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
   }
 
   .view-toggle-btn {
-    font-size: 0.95rem !important;
-    padding: 0.75rem 1.5rem !important;
+    font-size: 0.85rem !important;
+    padding: 0.625rem 1.25rem !important;
+    flex: 1;
+    min-width: 100px;
+  }
+
+  .main-content-split {
+    gap: var(--spacing-lg);
+  }
+}
+
+@media (max-width: 480px) {
+  .app-container {
+    padding: 0 0.75rem;
+  }
+
+  .view-toggle-container {
+    padding: 0 var(--spacing-xs);
+  }
+
+  .view-toggle-btn {
+    font-size: 0.8rem !important;
+    padding: 0.5rem 1rem !important;
+    min-width: 80px;
   }
 }
 

@@ -126,9 +126,82 @@
 @media (max-width: 768px) {
     .custom-habit-row {
         grid-template-columns: 1fr;
+        gap: var(--spacing-sm);
+        padding: var(--spacing-sm);
+    }
+
+    .custom-habit-row .habit-name-button {
+        font-size: var(--font-size-sm);
+    }
+
+    .custom-habit-row .habit-color-indicator {
+        height: 28px;
+    }
+
+    .date-range-badge {
+        font-size: 10px;
+        padding: 2px 6px;
+    }
+
+    .custom-habit-row .habit-meta {
+        padding-left: 0;
+    }
+
+    .custom-habit-row .habit-time {
+        font-size: 11px;
     }
 
     .custom-habit-row .habit-days {
         justify-content: flex-start;
+    }
+
+    /* Always show actions on mobile */
+    .custom-habit-row .habit-inline-actions {
+        opacity: 1;
+        justify-content: flex-end;
+    }
+
+    .custom-habit-row .action-button {
+        padding: 8px;
+        font-size: 16px;
+        min-width: 36px;
+        min-height: 36px;
+    }
+}
+
+@media (max-width: 480px) {
+    .custom-habit-row {
+        padding: var(--spacing-xs);
+    }
+
+    .custom-habit-row .habit-name-button {
+        font-size: var(--font-size-xs);
+    }
+
+    .custom-habit-row .action-button {
+        padding: 6px;
+        font-size: 14px;
+        min-width: 32px;
+        min-height: 32px;
+    }
+}
+
+/* Touch device optimizations */
+@media (hover: none) and (pointer: coarse) {
+    .custom-habit-row:hover {
+        background: rgba(255, 107, 53, 0.05);
+        border-color: rgba(255, 107, 53, 0.3);
+    }
+
+    .custom-habit-row .habit-inline-actions {
+        opacity: 1;
+    }
+
+    .custom-habit-row .action-button {
+        opacity: 1;
+    }
+
+    .custom-habit-row .habit-name-button:hover {
+        color: var(--text-primary);
     }
 }

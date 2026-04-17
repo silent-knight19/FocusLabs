@@ -454,9 +454,9 @@ function App() {
           </div>
 
           {/* Main content area with 70/30 split */}
-          <div className="main-content-split" style={{ display: 'flex', gap: '1.5rem', alignItems: 'flex-start' }}>
+          <div className="main-content-split">
             {/* Left column - 70% */}
-            <div className="main-column" style={{ flex: '0 0 70%', maxWidth: '70%' }}>
+            <div className="main-column">
               {currentView === 'week' && (
                 <HabitGrid
                   habits={filteredHabits}
@@ -528,7 +528,7 @@ function App() {
             </div>
 
             {/* Right column - 30% with ProgressSection */}
-            <div className="sidebar-column parallax-layer-2" style={{ flex: '0 0 30%', maxWidth: '30%' }}>
+            <div className="sidebar-column parallax-layer-2">
               <ProgressSection
                 habits={habits}
                 getCurrentStreak={getCurrentStreak}

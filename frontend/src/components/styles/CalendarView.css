@@ -589,12 +589,173 @@
     .calendar-main {
         border-right: none;
         border-bottom: 1px solid #262626;
-        min-height: 500px;
+        min-height: 400px;
+        padding: 24px;
     }
 
     .calendar-sidebar {
         width: 100%;
         padding: 24px;
+    }
+}
+
+@media (max-width: 768px) {
+    .calendar-main {
+        padding: 16px;
+        min-height: 350px;
+    }
+
+    .calendar-header {
+        flex-direction: column;
+        gap: 16px;
+        margin-bottom: 16px;
+    }
+
+    .calendar-header-left {
+        gap: 12px;
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .current-month {
+        font-size: 1.25rem;
+    }
+
+    .calendar-nav {
+        gap: 4px;
+    }
+
+    .nav-btn {
+        padding: 4px 10px;
+        font-size: 0.8rem;
+    }
+
+    .calendar-search {
+        width: 100%;
+    }
+
+    .calendar-search-input {
+        padding: 6px 10px 6px 32px;
+        font-size: 0.875rem;
+    }
+
+    .calendar-grid-header {
+        margin-bottom: 8px;
+    }
+
+    .day-header {
+        font-size: 0.65rem;
+    }
+
+    .calendar-day {
+        min-height: 60px;
+        padding: 6px;
+    }
+
+    .day-number {
+        font-size: 0.8rem;
+    }
+
+    .event-dots {
+        gap: 2px;
+    }
+
+    .event-dot,
+    .more-events-dot {
+        width: 4px;
+        height: 4px;
+    }
+
+    .calendar-sidebar {
+        padding: 16px;
+        gap: 20px;
+    }
+
+    .sidebar-header {
+        padding-bottom: 16px;
+    }
+
+    .sidebar-day {
+        font-size: 2.5rem;
+    }
+
+    .sidebar-weekday {
+        font-size: 0.95rem;
+    }
+
+    .sidebar-month {
+        font-size: 0.8rem;
+    }
+
+    .sidebar-section-title {
+        font-size: 0.7rem;
+        margin-bottom: 12px;
+    }
+
+    .sidebar-item {
+        padding: 6px 0;
+    }
+
+    .sidebar-item-text {
+        font-size: 0.875rem;
+    }
+
+    .task-checkbox {
+        width: 16px;
+        height: 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    .calendar-main {
+        padding: 12px;
+        min-height: 300px;
+    }
+
+    .calendar-header {
+        margin-bottom: 12px;
+    }
+
+    .current-month {
+        font-size: 1.1rem;
+    }
+
+    .calendar-nav {
+        padding: 3px;
+    }
+
+    .nav-btn {
+        padding: 3px 8px;
+        font-size: 0.75rem;
+    }
+
+    .calendar-day {
+        min-height: 44px;
+        padding: 4px;
+    }
+
+    .day-number {
+        font-size: 0.75rem;
+    }
+
+    .calendar-sidebar {
+        padding: 12px;
+    }
+
+    .sidebar-day {
+        font-size: 2rem;
+    }
+
+    .sidebar-content {
+        gap: 16px;
+    }
+
+    .suggestion-item {
+        padding: 8px 10px;
+    }
+
+    .suggestion-text {
+        font-size: 0.8rem;
     }
 }
 

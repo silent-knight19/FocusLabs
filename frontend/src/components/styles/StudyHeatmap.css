@@ -213,11 +213,107 @@
 /* ===== Responsive Design ===== */
 @media (max-width: 768px) {
     .study-heatmap-container {
-        padding: 16px;
+        padding: var(--spacing-md);
+        border-radius: var(--radius-md);
+    }
+
+    .study-heatmap-container .heatmap-header {
+        margin-bottom: 12px;
+        padding-bottom: 12px;
+    }
+
+    .study-heatmap-container .heatmap-title {
+        font-size: 0.95rem;
+    }
+
+    .study-heatmap-container .stat-item {
+        padding: 4px 8px;
+    }
+
+    .study-heatmap-container .stat-value {
+        font-size: 0.8rem;
+    }
+
+    .study-heatmap-container .stat-label {
+        font-size: 0.6rem;
     }
 
     .heatmap-wrapper {
         overflow-x: scroll;
         -webkit-overflow-scrolling: touch;
+    }
+
+    .heatmap-months {
+        grid-template-columns: repeat(53, 10px);
+        gap: 2px;
+        margin-left: 30px;
+        height: 16px;
+    }
+
+    .month-label {
+        font-size: 0.65rem;
+    }
+
+    .heatmap-grid {
+        grid-template-columns: 30px repeat(53, 10px);
+        gap: 2px;
+    }
+
+    .day-label {
+        font-size: 0.6rem;
+    }
+
+    .heatmap-cell {
+        width: 10px;
+        height: 10px;
+        border-radius: 2px;
+    }
+
+    .heatmap-legend {
+        gap: 6px;
+        margin-top: 12px;
+    }
+
+    .legend-label {
+        font-size: 0.65rem;
+    }
+
+    .legend-cells {
+        gap: 2px;
+    }
+
+    .legend-cell {
+        width: 10px;
+        height: 10px;
+        border-radius: 2px;
+    }
+}
+
+@media (max-width: 480px) {
+    .study-heatmap-container {
+        padding: var(--spacing-sm);
+    }
+
+    .study-heatmap-container .heatmap-stats {
+        gap: 6px;
+    }
+
+    .heatmap-months {
+        grid-template-columns: repeat(53, 8px);
+        margin-left: 24px;
+    }
+
+    .heatmap-grid {
+        grid-template-columns: 24px repeat(53, 8px);
+    }
+
+    .heatmap-cell {
+        width: 8px;
+        height: 8px;
+    }
+
+    .legend-cell {
+        width: 8px;
+        height: 8px;
     }
 }

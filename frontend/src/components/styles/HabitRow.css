@@ -196,22 +196,18 @@
 /* Mobile responsive */
 @media (max-width: 768px) {
     .habit-row {
-        /* Name, Days, Actions - All scrollable together */
-        grid-template-columns: 160px repeat(7, 64px) 100px;
-        gap: 0;
-        padding: var(--spacing-sm) 0;
-        width: max-content;
-        /* Force width to accommodate all columns */
+        grid-template-columns: 150px repeat(7, minmax(44px, 48px)) auto;
+        gap: var(--spacing-xs);
+        padding: var(--spacing-sm) var(--spacing-sm);
+        min-width: max-content;
     }
 
-    /* Remove Sticky Name Column */
     .habit-info {
         position: static;
         background-color: transparent;
         z-index: 10;
-        padding-left: var(--spacing-md);
-        border-right: none;
-        box-shadow: none;
+        padding-right: var(--spacing-sm);
+        border-right: 1px solid var(--border-color);
     }
 
     .habit-name-section {
@@ -223,38 +219,62 @@
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
-        max-width: 120px;
+        max-width: 130px;
     }
 
     .habit-category {
         display: none;
-        /* Hide category to save space */
     }
 
-    /* Hide Time Column */
     .habit-time {
         display: none;
     }
 
-    /* Adjust Days */
     .habit-days {
-        gap: 4px;
-        padding: 0 var(--spacing-sm);
+        gap: 6px;
+        padding: 0 var(--spacing-xs);
     }
 
-    /* Remove Sticky Actions */
     .habit-actions {
         opacity: 1;
-        padding-right: var(--spacing-sm);
+        padding-left: var(--spacing-xs);
         position: static;
         background-color: transparent;
         z-index: 10;
-        border-left: none;
+        border-left: 1px solid var(--border-color);
+        gap: var(--spacing-xs);
+    }
+
+    .action-button {
+        width: 36px;
+        height: 36px;
+        font-size: var(--font-size-base);
+        border-radius: var(--radius-md);
+    }
+}
+
+@media (max-width: 480px) {
+    .habit-row {
+        grid-template-columns: 130px repeat(7, minmax(40px, 44px)) auto;
+        gap: 4px;
+        padding: var(--spacing-xs) var(--spacing-xs);
+    }
+
+    .habit-name-button {
+        max-width: 110px;
+        font-size: 0.8rem;
+    }
+
+    .habit-info {
+        padding-right: var(--spacing-xs);
+    }
+
+    .habit-days {
+        gap: 4px;
     }
 
     .action-button {
         width: 32px;
         height: 32px;
-        font-size: var(--font-size-base);
     }
 }

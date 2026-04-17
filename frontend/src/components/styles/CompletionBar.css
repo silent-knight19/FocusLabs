@@ -63,3 +63,46 @@
 .progress-bar-fill {
     animation: progressGrow 0.8s ease-out;
 }
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .completion-bar-container {
+        padding: var(--spacing-md);
+    }
+
+    .completion-bar-header {
+        margin-bottom: var(--spacing-sm);
+    }
+
+    .completion-bar-header h3 {
+        font-size: var(--font-size-base);
+    }
+
+    .completion-stats {
+        font-size: var(--font-size-xs);
+    }
+
+    .progress-bar-background {
+        height: 32px;
+    }
+
+    .progress-percentage {
+        font-size: var(--font-size-xs);
+    }
+}
+
+@media (max-width: 480px) {
+    .completion-bar-container {
+        padding: var(--spacing-sm);
+        border-radius: var(--radius-md);
+    }
+
+    .progress-bar-background {
+        height: 28px;
+        border-radius: var(--radius-sm);
+    }
+
+    .progress-bar-fill {
+        border-radius: var(--radius-sm);
+    }
+}

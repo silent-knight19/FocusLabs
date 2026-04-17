@@ -81,11 +81,48 @@
     .daily-overview-container {
         flex-direction: column;
         align-items: stretch;
-        gap: var(--spacing-md);
+        gap: var(--spacing-sm);
         text-align: center;
+        padding: var(--spacing-sm) var(--spacing-md);
+        border-radius: var(--radius-md);
+    }
+
+    .greeting-text {
+        font-size: 1.1rem;
+    }
+
+    .date-text {
+        font-size: 0.8rem;
     }
 
     .overview-right {
         max-width: 100%;
+        gap: 6px;
+    }
+
+    .progress-info {
+        font-size: 0.8rem;
+    }
+
+    .progress-bar-bg {
+        height: 6px;
+    }
+}
+
+@media (max-width: 480px) {
+    .daily-overview-container {
+        padding: var(--spacing-sm);
+    }
+
+    .greeting-text {
+        font-size: 1rem;
+    }
+
+    .date-text {
+        font-size: 0.75rem;
+    }
+
+    .progress-info {
+        font-size: 0.75rem;
     }
 }

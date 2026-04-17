@@ -149,3 +149,81 @@
         opacity: 0.9;
     }
 }
+
+/* ===== Mobile Responsive ===== */
+@media (max-width: 768px) {
+    .streak-display-container {
+        padding: var(--spacing-md);
+    }
+
+    .streak-display-container h3 {
+        font-size: var(--font-size-base);
+        margin-bottom: var(--spacing-md);
+    }
+
+    .streak-list {
+        gap: var(--spacing-sm);
+    }
+
+    .streak-item {
+        flex-direction: column;
+        gap: var(--spacing-sm);
+        padding: var(--spacing-sm);
+    }
+
+    .streak-color-bar {
+        width: 100%;
+        height: 3px;
+    }
+
+    .streak-header-row {
+        width: 100%;
+    }
+
+    .streak-habit-name {
+        font-size: 0.9rem;
+    }
+
+    .streak-flame-container {
+        padding: 2px 6px;
+    }
+
+    .streak-flame {
+        font-size: 1rem;
+    }
+
+    .streak-count {
+        font-size: 0.85rem;
+    }
+
+    .streak-stats {
+        width: 100%;
+        gap: var(--spacing-sm);
+    }
+
+    .streak-stat-pill {
+        padding: 3px 6px;
+    }
+
+    .streak-label {
+        font-size: 0.65rem;
+    }
+
+    .streak-value {
+        font-size: 0.85rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .streak-display-container {
+        padding: var(--spacing-sm);
+    }
+
+    .streak-item {
+        padding: var(--spacing-xs);
+    }
+
+    .streak-habit-name {
+        font-size: 0.85rem;
+    }
+}

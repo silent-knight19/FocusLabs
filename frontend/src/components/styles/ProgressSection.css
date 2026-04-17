@@ -20,7 +20,8 @@
 /* Mobile responsive */
 @media (max-width: 968px) {
     .progress-section {
-        padding: 0 var(--spacing-md);
+        padding: var(--spacing-md);
+        margin-top: var(--spacing-md);
     }
 
     .progress-grid {
@@ -30,5 +31,23 @@
 
     .progress-item {
         grid-column: 1;
+    }
+}
+
+@media (max-width: 480px) {
+    .progress-section {
+        padding: var(--spacing-sm);
+        border-radius: var(--radius-md);
+    }
+
+    .progress-grid {
+        gap: var(--spacing-sm);
+    }
+}
+
+/* Touch device optimizations */
+@media (hover: none) and (pointer: coarse) {
+    .progress-section:hover {
+        border-color: var(--border-color);
     }
 }

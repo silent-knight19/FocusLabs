@@ -494,35 +494,125 @@
 
 /* Mobile Responsive */
 @media (max-width: 768px) {
+    .day-history-overlay {
+        padding: var(--spacing-sm);
+    }
+
     .day-history-modal {
         width: 95%;
         max-height: 90vh;
-        border-radius: 20px;
+        border-radius: var(--radius-lg);
     }
 
     .day-history-header {
-        padding: var(--spacing-lg);
+        padding: var(--spacing-md);
     }
 
     .day-history-title {
-        font-size: 1.4rem;
+        font-size: 1.25rem;
+    }
+
+    .day-history-subtitle {
+        font-size: 0.85rem;
+    }
+
+    .close-btn-icon {
+        width: 36px;
+        height: 36px;
     }
 
     .day-summary-cards {
-        grid-template-columns: 1fr;
-        padding: var(--spacing-md);
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--spacing-sm);
+        padding: var(--spacing-sm);
+    }
+
+    .summary-card {
+        padding: var(--spacing-sm);
+    }
+
+    .summary-icon {
+        width: 36px;
+        height: 36px;
+    }
+
+    .summary-value {
+        font-size: 1.1rem;
+    }
+
+    .summary-label {
+        font-size: 0.75rem;
     }
 
     .day-history-content {
-        padding: var(--spacing-md);
+        padding: var(--spacing-sm);
+    }
+
+    .section-title {
+        font-size: 1rem;
     }
 
     .distribution-container {
         flex-direction: column;
+        gap: var(--spacing-md);
     }
 
     .pie-chart-container {
-        width: 180px;
-        height: 180px;
+        width: 140px;
+        height: 140px;
+    }
+
+    .category-row {
+        padding: var(--spacing-xs) 0;
+    }
+
+    .category-dot {
+        width: 10px;
+        height: 10px;
+    }
+
+    .category-name {
+        font-size: 0.85rem;
+    }
+
+    .category-time {
+        font-size: 0.75rem;
+    }
+
+    .session-item {
+        padding: var(--spacing-xs) var(--spacing-sm);
+    }
+
+    .session-category,
+    .session-time {
+        font-size: 0.8rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .day-history-overlay {
+        padding: var(--spacing-xs);
+    }
+
+    .day-history-modal {
+        width: 100%;
+        border-radius: var(--radius-md);
+    }
+
+    .day-history-title {
+        font-size: 1.1rem;
+    }
+
+    .day-summary-cards {
+        grid-template-columns: 1fr;
+    }
+
+    .pie-chart-container {
+        width: 120px;
+        height: 120px;
+    }
+
+    .history-section {
+        margin-bottom: var(--spacing-lg);
     }
 }

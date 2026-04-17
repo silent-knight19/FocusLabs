@@ -132,8 +132,80 @@
 
 /* Mobile responsive */
 @media (max-width: 768px) {
+    .habit-stats-container {
+        padding: var(--spacing-md);
+    }
+
+    .habit-stats-container h3 {
+        font-size: var(--font-size-base);
+    }
+
+    .stats-list {
+        gap: var(--spacing-sm);
+    }
+
+    .stat-item {
+        padding: var(--spacing-sm);
+    }
+
+    .stat-header {
+        margin-bottom: var(--spacing-xs);
+    }
+
+    .stat-color-indicator {
+        height: 20px;
+    }
+
+    .stat-habit-name {
+        font-size: var(--font-size-sm);
+    }
+
+    .stat-badge {
+        font-size: var(--font-size-xs);
+    }
+
     .stat-details {
         flex-direction: column;
         gap: var(--spacing-xs);
+    }
+
+    .metric-label {
+        font-size: 10px;
+    }
+
+    .metric-value {
+        font-size: var(--font-size-sm);
+    }
+
+    .stat-progress-bar {
+        height: 5px;
+    }
+}
+
+@media (max-width: 480px) {
+    .habit-stats-container {
+        padding: var(--spacing-sm);
+        border-radius: var(--radius-md);
+    }
+
+    .stat-item {
+        padding: var(--spacing-xs);
+    }
+
+    .stat-habit-name {
+        font-size: var(--font-size-xs);
+    }
+}
+
+/* Touch device optimizations */
+@media (hover: none) and (pointer: coarse) {
+    .stat-item:hover {
+        border-color: var(--border-color);
+        transform: none;
+        box-shadow: none;
+    }
+
+    .stat-item:active {
+        border-color: var(--neon-orange);
     }
 }

@@ -12,6 +12,14 @@
 /* Responsive adjustments */
 @media (max-width: 768px) {
     .concentric-pie-chart {
-        max-width: 286px; /* ~10% larger */
+        max-width: 260px;
+        padding: var(--spacing-md) 0;
+    }
+}
+
+@media (max-width: 480px) {
+    .concentric-pie-chart {
+        max-width: 200px;
+        padding: var(--spacing-sm) 0;
     }
 }

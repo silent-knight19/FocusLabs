@@ -146,18 +146,83 @@
 @media (max-width: 768px) {
     .daily-task-item {
         padding: var(--spacing-xs) var(--spacing-sm);
+        gap: var(--spacing-sm);
     }
 
+    /* Larger touch targets for mobile */
     .task-checkbox {
-        width: 20px;
-        height: 20px;
-        min-width: 20px;
-        min-height: 20px;
+        width: 36px;
+        height: 36px;
+        min-width: 36px;
+        min-height: 36px;
+        border-radius: var(--radius-md);
+    }
+
+    .check-mark {
+        font-size: var(--font-size-base);
+    }
+
+    .task-title {
+        font-size: var(--font-size-sm);
+    }
+
+    .task-edit-input {
+        padding: var(--spacing-xs);
+        font-size: var(--font-size-sm);
     }
 
     .task-delete {
         opacity: 1;
-        /* Always visible on mobile */
+        width: 32px;
+        height: 32px;
+        min-width: 32px;
+        min-height: 32px;
+        border-radius: var(--radius-md);
+    }
+}
+
+@media (max-width: 480px) {
+    .daily-task-item {
+        padding: var(--spacing-xs);
+    }
+
+    .task-checkbox {
+        width: 32px;
+        height: 32px;
+        min-width: 32px;
+        min-height: 32px;
+    }
+
+    .task-title {
+        font-size: var(--font-size-xs);
+    }
+
+    .task-delete {
+        width: 28px;
+        height: 28px;
+        min-width: 28px;
+        min-height: 28px;
+    }
+}
+
+/* Touch device optimizations */
+@media (hover: none) and (pointer: coarse) {
+    .task-delete {
+        opacity: 1;
+    }
+
+    .daily-task-item:hover {
+        background: var(--bg-secondary);
+    }
+
+    .task-checkbox:hover {
+        border-color: var(--border-color);
+        transform: none;
+    }
+
+    .task-checkbox:active {
+        border-color: var(--neon-orange);
+        transform: scale(0.95);
     }
 }
 

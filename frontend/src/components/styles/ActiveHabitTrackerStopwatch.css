@@ -101,6 +101,7 @@
         width: 100%;
         margin-right: 0;
         margin-bottom: 12px;
+        padding: 10px;
     }
 
     .stopwatch-time-display {
@@ -112,21 +113,70 @@
         justify-content: center;
     }
 
+    .stopwatch-time {
+        font-size: 1.1rem;
+    }
+
     .stopwatch-actions {
         width: 100%;
         justify-content: space-between;
+        gap: 8px;
     }
 
     .stopwatch-btn {
         flex: 1;
+        padding: 10px;
+        font-size: 0.85rem;
+        min-height: 40px;
     }
 
     .active-habit-actions {
         flex-direction: column;
         width: 100%;
+        gap: 8px;
     }
 
     .completion-btn {
         width: 100%;
+        min-height: 44px;
+    }
+}
+
+@media (max-width: 480px) {
+    .stopwatch-controls {
+        padding: 8px;
+    }
+
+    .stopwatch-time {
+        font-size: 1rem;
+    }
+
+    .stopwatch-btn {
+        padding: 8px;
+        font-size: 0.75rem;
+        min-height: 36px;
+    }
+}
+
+/* Touch device optimizations */
+@media (hover: none) and (pointer: coarse) {
+    .stopwatch-btn:hover:not(:disabled) {
+        background: #171717;
+        border-color: #333;
+        color: var(--text-primary);
+    }
+
+    .stopwatch-btn.start:hover {
+        background: var(--neon-orange);
+        border-color: var(--neon-orange);
+    }
+
+    .stopwatch-btn.stop:hover {
+        background: #dc2626;
+        border-color: #dc2626;
+    }
+
+    .stopwatch-btn:active:not(:disabled) {
+        transform: scale(0.95);
     }
 }

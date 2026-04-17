@@ -18,7 +18,27 @@
 
 /* Responsive */
 @media (max-width: 768px) {
+    .weekly-chart-container {
+        padding: var(--spacing-md);
+    }
+
+    .weekly-chart-container h3 {
+        font-size: var(--font-size-base);
+    }
+
     .weekly-chart-svg {
         max-width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .weekly-chart-container {
+        padding: var(--spacing-sm);
+        border-radius: var(--radius-md);
+    }
+
+    .weekly-chart-container h3 {
+        font-size: var(--font-size-sm);
+        margin-bottom: var(--spacing-sm);
     }
 }

@@ -504,11 +504,80 @@
     }
 
     .modern-checkbox {
-        width: 26px;
-        height: 26px;
+        width: 32px;
+        height: 32px;
+        min-width: 32px;
+        min-height: 32px;
+    }
+
+    .modern-checkbox.checked svg {
+        width: 20px;
+        height: 20px;
     }
 
     .task-text {
         font-size: 0.9rem;
+    }
+
+    .task-delete {
+        width: 32px;
+        height: 32px;
+        display: flex;
+    }
+
+    .task-add-btn {
+        width: 38px;
+        height: 38px;
+    }
+}
+
+/* Touch device optimizations */
+@media (hover: none) and (pointer: coarse) {
+    .task-card:hover {
+        transform: none;
+        background: #0f0f0f;
+    }
+
+    .task-card:hover::before {
+        left: -100%;
+    }
+
+    .task-delete {
+        display: flex;
+        opacity: 0.7;
+    }
+
+    .task-card:active .task-delete {
+        opacity: 1;
+    }
+
+    .task-delete:hover {
+        transform: none;
+    }
+
+    .task-delete:active {
+        transform: scale(0.95);
+    }
+
+    .task-card:hover .modern-checkbox:not(.checked) {
+        transform: none;
+    }
+
+    .modern-checkbox:active:not(.checked) {
+        transform: scale(0.95);
+        border-color: var(--neon-orange);
+    }
+
+    .task-add-btn:hover:not(:disabled) {
+        transform: none;
+    }
+
+    .task-add-btn:active:not(:disabled) {
+        transform: scale(0.95);
+    }
+
+    .task-add-btn:hover:not(:disabled)::before {
+        width: 0;
+        height: 0;
     }
 }

@@ -87,19 +87,42 @@
 @media (max-width: 768px) {
     .habit-grid-container {
         border-radius: var(--radius-md);
-        margin: 0 -1rem;
-        /* Negative margin to allow full-width scroll */
+        margin: 0 -0.75rem;
         border-left: none;
         border-right: none;
         overflow-x: auto;
-        /* Scroll the whole container */
         -webkit-overflow-scrolling: touch;
+        position: relative;
+    }
+
+    /* Scroll indicator fade on right edge */
+    .habit-grid-container::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 8px;
+        width: 40px;
+        background: linear-gradient(to right, transparent, rgba(13, 10, 15, 0.8));
+        pointer-events: none;
+        z-index: 5;
     }
 
     .habit-grid-body {
         overflow-x: visible;
-        /* Let body expand */
         padding-bottom: var(--spacing-sm);
+        min-width: max-content;
+    }
+}
+
+@media (max-width: 480px) {
+    .habit-grid-container {
+        margin: 0 -0.5rem;
+        border-radius: var(--radius-sm);
+    }
+
+    .habit-grid-container::after {
+        width: 30px;
     }
 }
 

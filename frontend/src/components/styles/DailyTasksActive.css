@@ -173,8 +173,131 @@
 
 /* Mobile Responsive */
 @media (max-width: 768px) {
+    .daily-tasks-list {
+        gap: var(--spacing-xs);
+    }
+
+    .no-tasks-message {
+        padding: var(--spacing-md);
+        font-size: var(--font-size-xs);
+    }
+
+    .daily-task-item-active {
+        padding: 10px 14px;
+        gap: 10px;
+    }
+
+    .daily-task-item-active .task-checkbox {
+        width: 32px;
+        height: 32px;
+        min-width: 32px;
+        min-height: 32px;
+    }
+
+    .daily-task-item-active .task-title {
+        font-size: 0.9rem;
+    }
+
     .daily-task-item-active .task-delete-btn {
         opacity: 1;
-        /* Always visible on mobile */
+        width: 32px;
+        height: 32px;
+        transform: scale(1);
+    }
+
+    .add-task-form {
+        gap: var(--spacing-xs);
+    }
+
+    .add-task-input {
+        padding: 10px 14px;
+        font-size: var(--font-size-xs);
+    }
+
+    .add-task-btn {
+        width: 38px;
+        height: 38px;
+        padding: 8px;
+    }
+}
+
+@media (max-width: 480px) {
+    .daily-task-item-active {
+        padding: 8px 12px;
+        border-radius: 25px;
+    }
+
+    .daily-task-item-active .task-checkbox {
+        width: 28px;
+        height: 28px;
+        min-width: 28px;
+        min-height: 28px;
+    }
+
+    .daily-task-item-active .task-title {
+        font-size: 0.85rem;
+    }
+
+    .daily-task-item-active .task-delete-btn {
+        width: 28px;
+        height: 28px;
+    }
+
+    .add-task-input {
+        padding: 8px 12px;
+    }
+
+    .add-task-btn {
+        width: 34px;
+        height: 34px;
+        padding: 6px;
+    }
+}
+
+/* Touch device optimizations */
+@media (hover: none) and (pointer: coarse) {
+    .daily-task-item-active:hover {
+        transform: none;
+        background: var(--glass-bg);
+        border-color: var(--glass-border);
+        box-shadow: none;
+    }
+
+    .daily-task-item-active .task-delete-btn {
+        opacity: 0.7;
+        transform: scale(1);
+    }
+
+    .daily-task-item-active:active .task-delete-btn {
+        opacity: 1;
+    }
+
+    .daily-task-item-active .task-delete-btn:hover {
+        background: rgba(255, 0, 0, 0.1);
+        color: var(--neon-red);
+        box-shadow: none;
+    }
+
+    .daily-task-item-active .task-delete-btn:active {
+        background: var(--neon-red);
+        color: white;
+    }
+
+    .daily-task-item-active .task-checkbox:hover {
+        border-color: var(--border-color);
+        box-shadow: none;
+    }
+
+    .daily-task-item-active .task-checkbox:active {
+        border-color: var(--neon-green);
+        box-shadow: 0 0 10px var(--neon-green);
+    }
+
+    .add-task-btn:hover:not(:disabled) {
+        transform: none;
+    }
+
+    .add-task-btn:active {
+        transform: scale(0.95);
     }
 }

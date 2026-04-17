@@ -552,3 +552,134 @@
     border-radius: 6px;
     margin-top: 2px;
 }
+
+/* ===== Mobile Responsive ===== */
+@media (max-width: 768px) {
+    .stopwatch-container {
+        padding: 40px 20px;
+    }
+
+    .stopwatch-header-actions {
+        top: 16px;
+        right: 20px;
+    }
+
+    .close-btn {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+    }
+
+    .stopwatch-display {
+        font-size: clamp(3rem, 12vw, 5rem);
+    }
+
+    .time-part.small {
+        font-size: clamp(1.5rem, 5vw, 2rem);
+    }
+
+    .time-separator.small {
+        font-size: clamp(1.5rem, 5vw, 2rem);
+    }
+
+    .stopwatch-center-layout {
+        gap: 24px;
+    }
+
+    .category-pills {
+        gap: 6px;
+        padding: 4px;
+    }
+
+    .category-pill {
+        padding: 5px 12px;
+        font-size: 0.8rem;
+    }
+
+    .stopwatch-controls {
+        gap: 40px;
+        margin-bottom: 40px;
+    }
+
+    .control-btn {
+        width: 90px !important;
+        height: 90px !important;
+        border-radius: 24px;
+    }
+
+    .alarm-btn {
+        min-width: 44px;
+        padding: 6px 10px;
+        font-size: 0.7rem;
+    }
+
+    .alarm-panel {
+        width: 90%;
+        max-width: 320px;
+        padding: 16px;
+    }
+
+    .alarm-presets {
+        gap: 8px;
+    }
+
+    .preset-option {
+        padding: 8px;
+        font-size: 0.85rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .stopwatch-container {
+        padding: 30px 16px;
+    }
+
+    .stopwatch-display {
+        font-size: clamp(2.5rem, 14vw, 3.5rem);
+    }
+
+    .time-part.small {
+        font-size: clamp(1.25rem, 6vw, 1.5rem);
+    }
+
+    .time-separator.small {
+        font-size: clamp(1.25rem, 6vw, 1.5rem);
+    }
+
+    .stopwatch-controls {
+        gap: 24px;
+        margin-bottom: 30px;
+    }
+
+    .control-btn {
+        width: 70px !important;
+        height: 70px !important;
+        border-radius: 20px;
+        font-size: 0.8rem;
+    }
+
+    .category-pill {
+        padding: 4px 10px;
+        font-size: 0.75rem;
+    }
+
+    .alarm-btn {
+        min-width: 40px;
+        padding: 5px 8px;
+        font-size: 0.65rem;
+        border-radius: 8px;
+    }
+
+    .alarm-panel {
+        padding: 12px;
+    }
+
+    .alarm-panel-header h4 {
+        font-size: 0.9rem;
+    }
+
+    .preset-option {
+        padding: 6px;
+        font-size: 0.8rem;
+    }
+}

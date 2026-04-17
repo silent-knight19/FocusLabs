@@ -118,3 +118,85 @@
     gap: 8px;
     margin-top: var(--spacing-sm);
 }
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .custom-date-view {
+        padding: var(--spacing-sm);
+    }
+
+    .custom-date-header {
+        flex-direction: column;
+        gap: var(--spacing-sm);
+        align-items: flex-start;
+        margin-bottom: var(--spacing-md);
+        padding-bottom: var(--spacing-sm);
+    }
+
+    .custom-date-header h2 {
+        font-size: 1.1rem;
+    }
+
+    .add-custom-habit-btn {
+        padding: 8px 14px;
+        font-size: 12px;
+        width: 100%;
+        justify-content: center;
+    }
+
+    .custom-date-empty {
+        padding: var(--spacing-lg) var(--spacing-md);
+        min-height: 200px;
+    }
+
+    .custom-date-empty .empty-icon {
+        font-size: 3rem;
+    }
+
+    .custom-date-empty h3 {
+        font-size: var(--font-size-base);
+    }
+
+    .custom-date-empty p {
+        font-size: var(--font-size-sm);
+        margin-bottom: var(--spacing-md);
+    }
+
+    .empty-add-btn {
+        padding: 10px 18px;
+        font-size: 12px;
+    }
+
+    .custom-date-grid {
+        padding: var(--spacing-sm);
+        border-radius: var(--radius-md);
+    }
+
+    .custom-grid-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+}
+
+@media (max-width: 480px) {
+    .custom-date-header h2 {
+        font-size: 1rem;
+    }
+
+    .add-custom-habit-btn {
+        padding: 6px 12px;
+        font-size: 11px;
+    }
+
+    .custom-date-empty .empty-icon {
+        font-size: 2.5rem;
+    }
+
+    .custom-date-empty h3 {
+        font-size: var(--font-size-sm);
+    }
+
+    .custom-date-empty p {
+        font-size: var(--font-size-xs);
+    }
+}

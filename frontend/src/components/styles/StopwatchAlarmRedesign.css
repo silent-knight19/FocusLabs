@@ -337,14 +337,151 @@
 @media (max-width: 768px) {
     .alarm-settings-panel {
         width: 280px;
+        right: -20px;
     }
 
     .alarm-presets {
         grid-template-columns: 1fr;
+        padding: var(--spacing-md);
+        gap: 10px;
     }
-    
+
+    .preset-option {
+        padding: 12px;
+        flex-direction: row;
+        justify-content: center;
+    }
+
+    .alarm-panel-header {
+        padding: var(--spacing-sm) var(--spacing-md);
+    }
+
+    .alarm-panel-header h4 {
+        font-size: 1rem;
+    }
+
+    .alarm-custom {
+        padding: var(--spacing-md);
+    }
+
+    .custom-input-group input {
+        padding: 10px 12px;
+        font-size: 0.9rem;
+    }
+
+    .custom-input-group .set-btn {
+        padding: 10px 16px;
+    }
+
+    .disable-alarm-btn {
+        padding: 10px;
+        margin: 0 var(--spacing-md) var(--spacing-md) var(--spacing-md);
+    }
+
     .alarm-notification {
         min-width: 280px;
         padding: var(--spacing-lg);
+        width: 90%;
+    }
+
+    .alarm-notification .alarm-title {
+        font-size: 1.25rem;
+    }
+
+    .alarm-notification .alarm-subtitle {
+        font-size: 0.9rem;
+    }
+
+    .alarm-notification .alarm-dismiss-btn {
+        padding: 10px 24px;
+        font-size: 0.9rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .alarm-btn {
+        padding: 6px 8px;
+        font-size: 0.7rem;
+        min-width: 44px;
+        min-height: 44px;
+    }
+
+    .alarm-settings-panel {
+        width: 260px;
+        right: -40px;
+        border-radius: var(--radius-lg);
+    }
+
+    .preset-option {
+        padding: 10px;
+    }
+
+    .preset-option span {
+        font-size: 0.85rem;
+    }
+
+    .alarm-notification {
+        min-width: auto;
+        width: 95%;
+        padding: var(--spacing-md);
+    }
+
+    .alarm-notification .alarm-title {
+        font-size: 1.1rem;
+    }
+
+    .alarm-notification .alarm-dismiss-btn {
+        width: 100%;
+    }
+}
+
+/* Touch device optimizations */
+@media (hover: none) and (pointer: coarse) {
+    .alarm-btn:hover {
+        background: rgba(255, 255, 255, 0.05);
+        border-color: rgba(255, 255, 255, 0.15);
+        color: rgba(255, 255, 255, 0.5);
+    }
+
+    .alarm-btn.active:hover {
+        background: linear-gradient(135deg, rgba(255, 122, 89, 0.18), rgba(255, 107, 157, 0.12));
+        box-shadow: 0 0 22px rgba(255, 122, 89, 0.35);
+    }
+
+    .alarm-btn:active {
+        transform: scale(0.95);
+    }
+
+    .preset-option:hover {
+        background: var(--bg-tertiary);
+        border-color: var(--border-color);
+        color: var(--text-secondary);
+        transform: none;
+    }
+
+    .preset-option:active {
+        transform: scale(0.98);
+    }
+
+    .custom-input-group .set-btn:hover:not(:disabled) {
+        transform: none;
+    }
+
+    .custom-input-group .set-btn:active {
+        transform: scale(0.95);
+    }
+
+    .disable-alarm-btn:hover {
+        background: rgba(255, 59, 48, 0.1);
+        border-color: rgba(255, 59, 48, 0.3);
+        transform: none;
+    }
+
+    .alarm-notification .alarm-dismiss-btn:hover {
+        transform: none;
+    }
+
+    .alarm-notification .alarm-dismiss-btn:active {
+        transform: scale(0.95);
     }
 }

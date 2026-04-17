@@ -48,3 +48,18 @@
         transform: translateX(-50%) translateY(0);
     }
 }
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .tooltip {
+        font-size: var(--font-size-xs);
+        padding: 6px 10px;
+    }
+}
+
+/* Touch devices - hide tooltips on touch as they're not useful */
+@media (hover: none) and (pointer: coarse) {
+    .tooltip {
+        display: none !important;
+    }
+}

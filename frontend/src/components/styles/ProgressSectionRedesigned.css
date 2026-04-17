@@ -557,29 +557,127 @@
 }
 
 @media (max-width: 768px) {
+    .progress-section-redesigned {
+        padding: var(--spacing-lg) 0;
+    }
+
     .progress-header {
-        flex-direction: column;
-        align-items: flex-start;
+        flex-direction: row;
+        align-items: center;
         gap: var(--spacing-sm);
+        margin-bottom: var(--spacing-md);
+    }
+
+    .progress-header h2 {
+        font-size: 1.25rem;
+    }
+
+    .progress-count {
+        font-size: 0.85rem;
+    }
+
+    .progress-main-grid {
+        gap: var(--spacing-md);
+    }
+
+    .progress-card {
+        padding: var(--spacing-lg);
     }
 
     .circular-progress-container {
-        width: 180px;
-        height: 180px;
+        width: 140px;
+        height: 140px;
     }
 
     .progress-percentage {
-        font-size: 2.5rem;
+        font-size: 2rem;
+    }
+
+    .progress-label {
+        font-size: 0.75rem;
+    }
+
+    .week-mini-bars {
+        height: 50px;
+    }
+
+    .streaks-list {
+        max-height: 240px;
     }
 
     .streak-item {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: var(--spacing-sm);
+        padding: var(--spacing-xs) var(--spacing-sm);
+    }
+
+    .streak-name {
+        font-size: 0.7rem;
+        max-width: 100px;
+    }
+
+    .streak-value {
+        font-size: 1.2rem;
+    }
+
+    .streak-stat {
+        min-width: 40px;
+    }
+
+    .streak-label {
+        font-size: 0.6rem;
+    }
+
+    .quick-complete-btn {
+        padding: 6px 10px;
+        font-size: 0.75rem;
+    }
+
+    .show-all-btn {
+        padding: 4px 8px;
+        font-size: 0.75rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .progress-header h2 {
+        font-size: 1.1rem;
+    }
+
+    .progress-card {
+        padding: var(--spacing-md);
+        border-radius: var(--radius-md);
+    }
+
+    .circular-progress-container {
+        width: 120px;
+        height: 120px;
+    }
+
+    .progress-percentage {
+        font-size: 1.75rem;
+    }
+
+    .card-header h3 {
+        font-size: 1rem;
+    }
+
+    .week-mini-bars {
+        height: 40px;
+        gap: 4px;
+    }
+
+    .mini-bar-label {
+        font-size: 0.65rem;
+    }
+
+    .streaks-summary {
+        display: none;
     }
 
     .streak-stats {
-        width: 100%;
-        justify-content: space-around;
+        gap: var(--spacing-xs);
+    }
+
+    .streak-divider {
+        height: 30px;
     }
 }

@@ -428,6 +428,43 @@ h3 {
   z-index: 1;
 }
 
+/* ========================================
+   Mobile CSS Variables & Safe Areas
+   ======================================== */
+
+@media (max-width: 768px) {
+  :root {
+    --spacing-section: 1rem;
+    --font-size-hero: 1.5rem;
+    --touch-target-min: 44px;
+  }
+}
+
+@media (max-width: 480px) {
+  :root {
+    --spacing-section: 0.75rem;
+    --font-size-hero: 1.25rem;
+  }
+}
+
+/* iOS Safe Area Support */
+@supports (padding: max(0px)) {
+  .app-main {
+    padding-bottom: max(var(--spacing-xl), env(safe-area-inset-bottom));
+  }
+
+  @media (max-width: 768px) {
+    .app-main {
+      padding-bottom: max(var(--spacing-md), env(safe-area-inset-bottom));
+    }
+
+    .app-container {
+      padding-left: max(var(--spacing-sm), env(safe-area-inset-left));
+      padding-right: max(var(--spacing-sm), env(safe-area-inset-right));
+    }
+  }
+}
+
 
 
 /* Animations */

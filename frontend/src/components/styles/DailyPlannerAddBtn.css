@@ -34,3 +34,46 @@
     align-items: center;
     margin-bottom: var(--spacing-xl);
 }
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .add-habit-btn-small {
+        padding: var(--spacing-xs) var(--spacing-sm);
+        font-size: var(--font-size-xs);
+        gap: var(--spacing-xs);
+    }
+
+    .planner-header-left {
+        position: static;
+        transform: none;
+        margin-bottom: var(--spacing-sm);
+    }
+
+    .planner-header {
+        flex-direction: column;
+        gap: var(--spacing-sm);
+    }
+}
+
+@media (max-width: 480px) {
+    .add-habit-btn-small {
+        padding: 6px 10px;
+        font-size: 11px;
+    }
+
+    .add-habit-btn-small svg {
+        width: 14px;
+        height: 14px;
+    }
+}
+
+/* Touch device optimizations */
+@media (hover: none) and (pointer: coarse) {
+    .add-habit-btn-small:hover {
+        transform: none;
+    }
+
+    .add-habit-btn-small:active {
+        transform: scale(0.95);
+    }
+}
