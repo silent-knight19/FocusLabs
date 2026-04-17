@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import confetti from 'canvas-confetti';
-import { VideoBackground } from './components/VideoBackground';
 import { TopNav } from './components/TopNav';
 import { HabitGrid } from './components/HabitGrid';
 import { AddHabitButton } from './components/AddHabitButton';
@@ -366,9 +365,6 @@ function App() {
 
   return (
     <>
-      {/* Video Background with 40% blur - 8 sec loop */}
-      <VideoBackground />
-
       {/* TopNav - outside perspective-root for fixed positioning */}
       <TopNav
         onSettingsClick={() => setIsSettingsPanelOpen(true)}

@@ -7,7 +7,6 @@
     backdrop-filter: blur(20px) saturate(120%);
     -webkit-backdrop-filter: blur(20px) saturate(120%);
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    padding: 4px var(--spacing-lg);
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -53,6 +52,7 @@
     /* Clip the massive empty space in the logo image */
     height: 56px;
     overflow: hidden;
+    margin-left: px;
 }
 
 .app-logo-container:hover {
@@ -69,9 +69,8 @@
     object-position: top left;
     /* Pull the image up so the text (which starts ~15% down
        in the 800x800 image) aligns with the container top */
-    margin-top: -20px;
+    margin-top: -27px;
     margin-bottom: -95px; /* Added 5px bottom margin boost */
-    margin-left: 10px;
     filter: drop-shadow(0 0 10px rgba(255, 122, 89, 0.4));
     transition: all var(--transition-fast);
     padding-bottom: 20px;

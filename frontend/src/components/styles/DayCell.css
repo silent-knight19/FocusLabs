@@ -1,6 +1,6 @@
 .day-cell {
-    width: 48px;
-    height: 48px;
+    width: 46px;
+    height: 46px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -86,64 +86,73 @@
 }
 
 .cell-icon {
-    font-size: 14px;
+    font-size: 13px;
 }
 
 /* Numbered Cell Styles */
 .day-cell.numbered {
-    width: 32px;
-    height: 32px;
-    min-width: 32px;
-    min-height: 32px;
-    font-size: 12px;
+    width: 30px;
+    height: 30px;
+    min-width: 30px;
+    min-height: 30px;
+    font-size: 11px;
     font-weight: 500;
     color: #FFFFFF;
     background-color: rgba(255, 255, 255, 0.15);
     padding: 0;
 }
 
-/* Mobile: Ensure minimum 44px touch targets */
+/* Mobile: Smaller cells to fit all days */
 @media (max-width: 768px) {
     .day-cell {
-        width: 44px;
-        height: 44px;
-        min-width: 44px;
-        min-height: 44px;
+        width: 30px;
+        height: 30px;
+        min-width: 30px;
+        min-height: 30px;
+        border-radius: 6px;
     }
 
     .day-cell.numbered {
-        width: 44px;
-        height: 44px;
-        min-width: 44px;
-        min-height: 44px;
-        font-size: 14px;
+        width: 30px;
+        height: 30px;
+        min-width: 30px;
+        min-height: 30px;
+        font-size: 11px;
         font-weight: 600;
     }
 
     .day-number {
-        font-size: 14px;
+        font-size: 11px;
     }
 
     .cell-icon {
-        font-size: 16px;
+        font-size: 13px;
     }
 }
 
 @media (max-width: 480px) {
     .day-cell {
-        width: 40px;
-        height: 40px;
-        min-width: 40px;
-        min-height: 40px;
-        border-radius: 6px;
+        width: 27px;
+        height: 27px;
+        min-width: 27px;
+        min-height: 27px;
+        border-radius: 4px;
     }
 
     .day-cell.numbered {
-        width: 40px;
-        height: 40px;
-        min-width: 40px;
-        min-height: 40px;
-        font-size: 13px;
+        width: 27px;
+        height: 27px;
+        min-width: 27px;
+        min-height: 27px;
+        font-size: 10px;
+    }
+
+    .day-number {
+        font-size: 10px;
+    }
+
+    .cell-icon {
+        font-size: 11px;
     }
 }
 

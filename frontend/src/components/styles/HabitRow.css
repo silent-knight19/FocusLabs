@@ -148,6 +148,32 @@
     /* Align to the right */
 }
 
+/* Mobile: Make days scrollable */
+@media (max-width: 768px) {
+    .habit-days {
+        display: flex;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        /* Firefox */
+        -ms-overflow-style: none;
+        /* IE/Edge */
+        gap: 6px;
+        padding: 4px var(--spacing-xs);
+        max-width: none;
+        width: auto;
+        flex: 1;
+        min-width: 0;
+        /* Allow shrinking */
+    }
+
+    .habit-days::-webkit-scrollbar {
+        display: none;
+        /* Chrome/Safari/Opera */
+    }
+}
+
 /* Actions Section */
 .habit-actions {
     display: flex;
@@ -193,13 +219,17 @@
     border-color: var(--accent-red);
 }
 
-/* Mobile responsive */
+/* Mobile responsive - Root cause fix for day cell overflow */
 @media (max-width: 768px) {
     .habit-row {
-        grid-template-columns: 150px repeat(7, minmax(44px, 48px)) auto;
-        gap: var(--spacing-xs);
-        padding: var(--spacing-sm) var(--spacing-sm);
-        min-width: max-content;
+        display: grid;
+        /* Fixed layout: info column + scrollable days area */
+        grid-template-columns: 140px 1fr;
+        gap: 8px;
+        padding: var(--spacing-sm);
+        width: 100%;
+        min-width: 0;
+        overflow: hidden;
     }
 
     .habit-info {
@@ -208,10 +238,15 @@
         z-index: 10;
         padding-right: var(--spacing-sm);
         border-right: 1px solid var(--border-color);
+        min-width: 0;
+        overflow: hidden;
     }
 
     .habit-name-section {
         width: 100%;
+        display: flex;
+        align-items: center;
+        gap: 6px;
     }
 
     .habit-name-button {
@@ -219,7 +254,7 @@
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
-        max-width: 130px;
+        max-width: 100px;
     }
 
     .habit-category {
@@ -230,39 +265,51 @@
         display: none;
     }
 
+    /* CRITICAL FIX: habit-days is a scrollable container with constrained width */
     .habit-days {
-        gap: 6px;
-        padding: 0 var(--spacing-xs);
+        display: flex;
+        flex-wrap: nowrap;
+        gap: 4px;
+        padding: 4px 0;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+        /* Prevent expansion beyond container */
+        min-width: 0;
+        width: 100%;
+        /* Visual fade indicator on right */
+        mask-image: linear-gradient(to right, black 90%, transparent 100%);
+        -webkit-mask-image: linear-gradient(to right, black 90%, transparent 100%);
     }
 
-    .habit-actions {
-        opacity: 1;
-        padding-left: var(--spacing-xs);
-        position: static;
-        background-color: transparent;
-        z-index: 10;
-        border-left: 1px solid var(--border-color);
-        gap: var(--spacing-xs);
+    .habit-days::-webkit-scrollbar {
+        display: none;
+    }
+
+    /* Hide inline actions on mobile - use action buttons instead */
+    .habit-inline-actions {
+        display: none;
     }
 
     .action-button {
-        width: 36px;
-        height: 36px;
-        font-size: var(--font-size-base);
+        width: 28px;
+        height: 28px;
+        font-size: var(--font-size-xs);
         border-radius: var(--radius-md);
     }
 }
 
 @media (max-width: 480px) {
     .habit-row {
-        grid-template-columns: 130px repeat(7, minmax(40px, 44px)) auto;
-        gap: 4px;
-        padding: var(--spacing-xs) var(--spacing-xs);
+        grid-template-columns: 120px 1fr;
+        gap: 6px;
+        padding: var(--spacing-xs);
     }
 
     .habit-name-button {
-        max-width: 110px;
-        font-size: 0.8rem;
+        max-width: 85px;
+        font-size: 0.75rem;
     }
 
     .habit-info {
@@ -270,11 +317,12 @@
     }
 
     .habit-days {
-        gap: 4px;
+        gap: 3px;
+        padding: 2px 0;
     }
 
     .action-button {
-        width: 32px;
-        height: 32px;
+        width: 26px;
+        height: 26px;
     }
 }

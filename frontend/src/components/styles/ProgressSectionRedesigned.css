@@ -345,7 +345,7 @@
                 border-color 0.2s var(--ease-standard),
                 background-color 0.2s var(--ease-standard);
     position: relative;
-    overflow: hidden;
+    overflow: visible;
     cursor: pointer;
 }
 
