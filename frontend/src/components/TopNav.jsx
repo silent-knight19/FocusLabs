@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Timer, Settings, Plus } from 'lucide-react';
+import { Calendar, Timer, Settings, Plus, Target } from 'lucide-react';
 import './styles/TopNav.css';
 import { ButtonWithTooltip } from './ButtonWithTooltip';
 
 /**
  * Top navigation bar with app name and settings
  */
-export function TopNav({ onSettingsClick, onStopwatchClick, onCalendarClick, onAddHabitClick }) {
+export function TopNav({ onSettingsClick, onStopwatchClick, onCalendarClick, onAddHabitClick, onGoalsClick }) {
   const [currentTime, setCurrentTime] = useState(new Date());
 
   useEffect(() => {
@@ -54,6 +54,15 @@ export function TopNav({ onSettingsClick, onStopwatchClick, onCalendarClick, onA
           >
             <Plus size={18} />
             <span>Add Habit</span>
+          </button>
+        </ButtonWithTooltip>
+        <ButtonWithTooltip tooltipText="View your goals">
+          <button
+            type="button"
+            className="nav-icon-btn"
+            onClick={onGoalsClick}
+          >
+            <Target size={20} />
           </button>
         </ButtonWithTooltip>
         <ButtonWithTooltip tooltipText="View calendar">

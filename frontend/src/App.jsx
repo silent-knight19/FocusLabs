@@ -22,12 +22,16 @@ import { DailyPlanner } from './components/DailyPlanner';
 import { ConfirmationModal } from './components/ConfirmationModal';
 import { CustomHabitModal } from './components/CustomHabitModal';
 import { CustomDateView } from './components/CustomDateView';
+import { GoalsView } from './components/GoalsView';
+import { GoalModal } from './components/GoalModal';
+import { GoalDetailModal } from './components/GoalDetailModal';
 
 import { useHabits } from './hooks/useHabits.jsx';
 import { useCustomHabits } from './hooks/useCustomHabits.js';
 import { useDailyTasks } from './hooks/useDailyTasks.jsx';
 import { useSettings } from './hooks/useSettings';
 import { useActiveHabit } from './hooks/useActiveHabit';
+import { useGoals } from './hooks/useGoals';
 import { 
   getWeekStart, 
   getWeekDates, 
@@ -55,6 +59,12 @@ function App() {
   const [editingCustomHabit, setEditingCustomHabit] = useState(null);
   const [isCustomHabitModalOpen, setIsCustomHabitModalOpen] = useState(false);
   const [currentDate] = useState(getToday());
+
+  // Goals state
+  const [isGoalsDashboardOpen, setIsGoalsDashboardOpen] = useState(false);
+  const [isGoalModalOpen, setIsGoalModalOpen] = useState(false);
+  const [editingGoal, setEditingGoal] = useState(null);
+  const [selectedGoal, setSelectedGoal] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   
   // Confirmation Modal State
@@ -130,6 +140,21 @@ function App() {
     getCustomSubtaskStatus,
     getCustomSubtaskCompletionPercentage
   } = useCustomHabits();
+
+  // Goals hook
+  const {
+    goals,
+    addGoal,
+    updateGoal,
+    deleteGoal: removeGoal,
+    completeGoal,
+    archiveGoal,
+    toggleSubGoal,
+    addSubGoal,
+    deleteSubGoal,
+    getGoalProgress,
+    getGoalStats
+  } = useGoals();
 
   // Helper to check if a date has custom habits (blocking regular habits)
   const isDateBlockedByCustom = (date) => {
@@ -316,6 +341,56 @@ function App() {
     });
   };
 
+  // Goal handlers
+  const handleAddGoal = () => {
+    setEditingGoal(null);
+    setIsGoalModalOpen(true);
+  };
+
+  const handleEditGoal = (goal) => {
+    setEditingGoal(goal);
+    setIsGoalModalOpen(true);
+    setSelectedGoal(null);
+  };
+
+  const handleSaveGoal = (goalData) => {
+    if (editingGoal) {
+      updateGoal(editingGoal.id, goalData);
+    } else {
+      addGoal(goalData);
+    }
+  };
+
+  const handleDeleteGoal = (goalId) => {
+    setConfirmationModal({
+      isOpen: true,
+      title: 'Delete Goal',
+      message: 'Are you sure you want to delete this goal? This action cannot be undone.',
+      confirmText: 'Delete',
+      type: 'danger',
+      onConfirm: () => {
+        removeGoal(goalId);
+        setSelectedGoal(null);
+      }
+    });
+  };
+
+  const handleCompleteGoal = (goalId) => {
+    completeGoal(goalId);
+    setSelectedGoal(null);
+    confetti({
+      particleCount: 120,
+      spread: 80,
+      origin: { y: 0.5 },
+      colors: ['#FF6B35', '#00FF9F', '#0080FF', '#FFD700', '#BD00FF']
+    });
+  };
+
+  const handleArchiveGoal = (goalId) => {
+    archiveGoal(goalId);
+    setSelectedGoal(null);
+  };
+
   const handleCompleteAllToday = () => {
     const today = getToday();
     const todayKey = formatDateKey(today);
@@ -371,6 +446,7 @@ function App() {
         onStopwatchClick={() => setIsStopwatchOpen(true)}
         onCalendarClick={() => setIsCalendarOpen(!isCalendarOpen)}
         onAddHabitClick={handleAddHabit}
+        onGoalsClick={() => setIsGoalsDashboardOpen(true)}
         currentDate={currentDate}
       />
 
@@ -550,6 +626,39 @@ function App() {
         onSave={handleSaveHabit}
         habit={editingHabit}
       />
+
+      <GoalsView
+        isOpen={isGoalsDashboardOpen}
+        onClose={() => setIsGoalsDashboardOpen(false)}
+        goals={goals}
+        getGoalProgress={getGoalProgress}
+        getGoalStats={getGoalStats}
+        onAddGoal={handleAddGoal}
+        onOpenGoal={(goal) => setSelectedGoal(goal)}
+        onToggleSubGoal={toggleSubGoal}
+      />
+
+      <GoalModal
+        isOpen={isGoalModalOpen}
+        onClose={() => setIsGoalModalOpen(false)}
+        onSave={handleSaveGoal}
+        goal={editingGoal}
+      />
+
+      {selectedGoal && (
+        <GoalDetailModal
+          goal={goals.find(g => g.id === selectedGoal.id) || selectedGoal}
+          progress={getGoalProgress(selectedGoal.id)}
+          onClose={() => setSelectedGoal(null)}
+          onEdit={handleEditGoal}
+          onComplete={handleCompleteGoal}
+          onArchive={handleArchiveGoal}
+          onDelete={handleDeleteGoal}
+          onToggleSubGoal={toggleSubGoal}
+          onAddSubGoal={addSubGoal}
+          onDeleteSubGoal={deleteSubGoal}
+        />
+      )}
 
       <CustomHabitModal
         isOpen={isCustomHabitModalOpen}
