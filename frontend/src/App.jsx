@@ -463,6 +463,10 @@ function App() {
             onDeleteDailyTask={deleteDailyTask}
             onToggleCompletion={toggleCompletion}
             getCompletionStatus={getCompletionStatus}
+            goals={goals}
+            getGoalProgress={getGoalProgress}
+            onOpenGoal={(goal) => setSelectedGoal(goal)}
+            onViewAllGoals={() => setIsGoalsDashboardOpen(true)}
           />
 
           <DailyOverview 

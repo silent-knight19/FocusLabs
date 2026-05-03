@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { formatTime12, formatDateKey } from '../utils/dateHelpers';
 import { CheckCircle, Plus, Play, Pause, Square, Clock } from 'lucide-react';
 import { useStopwatch } from '../hooks/useStopwatch';
+import { GoalsCarousel } from './GoalsCarousel';
 import './styles/ActiveHabitTracker.css';
 
 // Sound utility
@@ -58,7 +59,11 @@ export function ActiveHabitTracker({
   onAddDailyTask,
   onDeleteDailyTask,
   onToggleCompletion,
-  getCompletionStatus
+  getCompletionStatus,
+  goals = [],
+  getGoalProgress,
+  onOpenGoal,
+  onViewAllGoals
 }) {
   const { activeHabit, formattedTimeRemaining, progress } = activeData || {};
   
@@ -146,6 +151,22 @@ export function ActiveHabitTracker({
   };
 
   if (!activeHabit && !finishedHabit) {
+    const activeGoals = goals.filter(g => g.status === 'active');
+    const hasGoals = activeGoals.length > 0;
+
+    if (hasGoals) {
+      return (
+        <div className="active-tracker-container empty">
+          <GoalsCarousel
+            goals={goals}
+            getGoalProgress={getGoalProgress}
+            onOpenGoal={onOpenGoal}
+            onViewAll={onViewAllGoals}
+          />
+        </div>
+      );
+    }
+
     return (
       <div className="active-tracker-container empty">
         <div className="empty-content">

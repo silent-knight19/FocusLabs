@@ -28,6 +28,20 @@ function formatDeadline(dateStr) {
 }
 
 /**
+ * Convert a hex color to rgba
+ * @param {string} hex - Hex color
+ * @param {number} alpha - Alpha value
+ * @returns {string} RGBA string
+ */
+function hexToRgba(hex, alpha = 0.12) {
+  if (!hex) return `rgba(255, 90, 31, ${alpha})`;
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+/**
  * Individual goal card for the goals grid
  * @param {object} props
  * @param {object} props.goal - Goal data object
@@ -47,6 +61,8 @@ export function GoalCard({ goal, progress, onClick, onToggleSubGoal, index = 0 }
   const remainingCount = subGoals.length - 3;
 
   const dashOffset = PROGRESS_CIRCUMFERENCE * (1 - progress / 100);
+  const goalColor = goal.color || '#FF5A1F';
+  const colorAlpha = hexToRgba(goalColor, 0.12);
 
   const cardClass = [
     'goal-card',
@@ -84,21 +100,27 @@ export function GoalCard({ goal, progress, onClick, onToggleSubGoal, index = 0 }
   return (
     <div
       className={cardClass}
-      style={{ '--goal-color': goal.color, animationDelay: `${index * 0.08}s` }}
+      style={{ 
+        '--goal-color': goalColor, 
+        '--goal-color-alpha': colorAlpha,
+        animationDelay: `${index * 0.08}s` 
+      }}
       onClick={onClick}
       role="button"
       tabIndex={0}
       onKeyDown={(e) => { if (e.key === 'Enter') onClick(); }}
     >
-      {/* Header */}
-      <div className="goal-card-header">
-        <h3 className="goal-card-title">{goal.title}</h3>
-        <div className="goal-card-badges">
-          <span className={`priority-badge ${goal.priority}`}>{goal.priority}</span>
-          {isOverdue && <span className="overdue-badge">Overdue</span>}
-          {isCompleted && <span className="completed-badge">Done</span>}
+      {/* Inner wrapper for new design */}
+      <div className="goal-card-inner">
+        {/* Header */}
+        <div className="goal-card-header">
+          <h3 className="goal-card-title">{goal.title}</h3>
+          <div className="goal-card-badges">
+            <span className={`priority-badge ${goal.priority}`}>{goal.priority}</span>
+            {isOverdue && <span className="overdue-badge">Overdue</span>}
+            {isCompleted && <span className="completed-badge">Done</span>}
+          </div>
         </div>
-      </div>
 
       {/* Description */}
       {goal.description && (
@@ -108,31 +130,19 @@ export function GoalCard({ goal, progress, onClick, onToggleSubGoal, index = 0 }
       {/* Progress */}
       <div className="goal-card-progress">
         <div className="goal-progress-ring-wrapper">
-          <svg viewBox="0 0 44 44">
-            <circle className="goal-progress-ring-bg" cx="22" cy="22" r={PROGRESS_RADIUS} />
+          <svg viewBox="0 0 80 80">
+            <circle className="goal-progress-ring-bg" cx="40" cy="40" r={36} />
             <circle
               className="goal-progress-ring-fill"
-              cx="22" cy="22" r={PROGRESS_RADIUS}
-              stroke={goal.color || 'var(--accent-primary)'}
-              strokeDasharray={PROGRESS_CIRCUMFERENCE}
-              strokeDashoffset={dashOffset}
+              cx="40" cy="40" r={36}
+              stroke={goalColor}
+              strokeDasharray={2 * Math.PI * 36}
+              strokeDashoffset={2 * Math.PI * 36 * (1 - progress / 100)}
             />
           </svg>
-          <span className="goal-progress-text">{progress}%</span>
-        </div>
-        <div className="goal-progress-info">
-          <div className="goal-progress-bar">
-            <div
-              className="goal-progress-fill"
-              style={{ width: `${progress}%`, color: goal.color, backgroundColor: goal.color }}
-            />
+          <div className="goal-progress-text">
+            <span className="goal-progress-pct">{progress}%</span>
           </div>
-          <span className="goal-progress-label">
-            {subGoals.length > 0
-              ? `${subGoals.filter(sg => sg.isCompleted).length}/${subGoals.length} sub-goals`
-              : 'No sub-goals'
-            }
-          </span>
         </div>
       </div>
 
@@ -167,6 +177,8 @@ export function GoalCard({ goal, progress, onClick, onToggleSubGoal, index = 0 }
           {getDeadlineText()}
         </span>
       </div>
+      
+      </div> {/* End goal-card-inner */}
     </div>
   );
 }
