@@ -16,7 +16,7 @@
     right: 0;
     z-index: 1000;
     height: 64px;
-    transition: all var(--transition-base);
+    transition: background-color var(--transition-base), border-color var(--transition-base), color var(--transition-base), opacity var(--transition-base), transform var(--transition-base), box-shadow var(--transition-base);
 }
 
 .nav-left,
@@ -72,7 +72,7 @@
     margin-top: -27px;
     margin-bottom: -95px; /* Added 5px bottom margin boost */
     filter: drop-shadow(0 0 10px rgba(255, 122, 89, 0.4));
-    transition: all var(--transition-fast);
+    transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), opacity var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
     padding-bottom: 20px;
 }
 
@@ -95,7 +95,7 @@
     border-radius: var(--radius-md);
     border: 1px solid var(--glass-border);
     min-width: 160px;
-    transition: all var(--transition-fast);
+    transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), opacity var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .date-time-display:hover {
@@ -136,7 +136,7 @@
     border-radius: var(--radius-lg);
     color: var(--text-secondary);
     cursor: pointer;
-    transition: all var(--transition-fast);
+    transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), opacity var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
     position: relative;
     overflow: hidden;
 }
@@ -164,7 +164,7 @@
     width: 22px;
     height: 22px;
     stroke-width: 2;
-    transition: all var(--transition-fast);
+    transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), opacity var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
     position: relative;
     z-index: 1;
 }
@@ -240,7 +240,7 @@
     border-radius: 50%;
     background: transparent;
     cursor: pointer;
-    transition: all var(--transition-fast);
+    transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), opacity var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
     overflow: hidden;
     position: relative;
 }
@@ -255,7 +255,7 @@
     bottom: -4px;
     border-radius: 50%;
     border: 2px solid transparent;
-    transition: all var(--transition-fast);
+    transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), opacity var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .user-profile-btn:hover {
@@ -359,7 +359,7 @@
     color: var(--accent-red);
     font-weight: 600;
     cursor: pointer;
-    transition: all var(--transition-fast);
+    transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), opacity var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
     text-align: left;
     font-size: 0.95rem;
     display: flex;

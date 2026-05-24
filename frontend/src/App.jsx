@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useMemo, useCallback, lazy, Suspense } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import { TopNav } from './components/TopNav';
-import { HabitGrid } from './components/HabitGrid';
 import { HabitModal } from './components/HabitModal';
 import { SettingsPanel } from './components/SettingsPanel';
 import { ProgressSection } from './components/ProgressSection';
@@ -11,47 +11,42 @@ import { ActiveHabitTracker } from './components/ActiveHabitTracker';
 import { Stopwatch } from './components/Stopwatch';
 import { StudyHeatmap } from './components/StudyHeatmap';
 import { ProductivityHeatmap } from './components/ProductivityHeatmap';
-import { DailyPlanner } from './components/DailyPlanner';
 import { ConfirmationModal } from './components/ConfirmationModal';
 import { CustomHabitModal } from './components/CustomHabitModal';
-import { CustomDateView } from './components/CustomDateView';
 import { GoalsView } from './components/GoalsView';
 import { GoalModal } from './components/GoalModal';
 import { GoalDetailModal } from './components/GoalDetailModal';
 import { HabitGridSkeleton } from './components/HabitGridSkeleton';
+import { MonthViewPage } from './components/views/MonthViewPage';
+import { PlannerPage } from './components/views/PlannerPage';
+import { CustomDatePage } from './components/views/CustomDatePage';
+
+import { useHabitsContext } from './contexts/HabitsContext';
+import { useGoalsContext } from './contexts/GoalsContext';
+import { useDailyPlannerContext } from './contexts/DailyPlannerContext';
+import { useSettings } from './hooks/useSettings';
+import { useLockBodyScroll } from './hooks/useLockBodyScroll';
 import { calculateCurrentStreak } from './utils/streakHelpers';
+import { formatDateKey, getToday, getCurrentMonthDates } from './utils/dateHelpers';
+import { ScrollReveal } from './components/animations/ScrollReveal';
+
+import './App.css';
+import './components/styles/CalendarOverlay.css';
 
 const CalendarView = lazy(() => import('./components/CalendarView').then(m => ({ default: m.CalendarView })));
 const AnalyticsModal = lazy(() => import('./components/AnalyticsModal').then(m => ({ default: m.AnalyticsModal })));
 const DayHistoryModal = lazy(() => import('./components/DayHistoryModal').then(m => ({ default: m.DayHistoryModal })));
 const StudyView = lazy(() => import('./components/StudyView').then(m => ({ default: m.StudyView })));
 
-import { useHabits } from './hooks/useHabits.jsx';
-import { useCustomHabits } from './hooks/useCustomHabits.js';
-import { useDailyTasks } from './hooks/useDailyTasks.jsx';
-import { useSettings } from './hooks/useSettings';
-import { useActiveHabit } from './hooks/useActiveHabit';
-import { useGoals } from './hooks/useGoals';
-import { 
-  getWeekStart, 
-  getWeekDates, 
-  formatDateKey, 
-  isSameDay, 
-  getToday,
-  getCurrentMonthDates 
-} from './utils/dateHelpers';
-import { useLockBodyScroll } from './hooks/useLockBodyScroll';
-
-import './App.css';
-import './components/styles/CalendarOverlay.css';
-
 const VIEW_ROUTES = { week: '/', daily: '/planner', custom: '/custom', study: '/study' };
 const ROUTE_VIEWS = { '/': 'week', '/planner': 'daily', '/custom': 'custom', '/study': 'study' };
 
-function App() {
+export function App() {
   const navigate = useNavigate();
   const location = useLocation();
   const currentView = ROUTE_VIEWS[location.pathname] || 'week';
+
+  // UI Modal / View states
   const [isHabitModalOpen, setIsHabitModalOpen] = useState(false);
   const [isSettingsPanelOpen, setIsSettingsPanelOpen] = useState(false);
   const [isStopwatchOpen, setIsStopwatchOpen] = useState(false);
@@ -63,12 +58,11 @@ function App() {
   const [isCustomHabitModalOpen, setIsCustomHabitModalOpen] = useState(false);
   const [currentDate] = useState(getToday());
 
-  // Goals state
+  // Goals dashboard states
   const [isGoalsDashboardOpen, setIsGoalsDashboardOpen] = useState(false);
   const [isGoalModalOpen, setIsGoalModalOpen] = useState(false);
   const [editingGoal, setEditingGoal] = useState(null);
   const [selectedGoal, setSelectedGoal] = useState(null);
-  const [searchTerm, setSearchTerm] = useState('');
   
   // Confirmation Modal State
   const [confirmationModal, setConfirmationModal] = useState({
@@ -82,116 +76,47 @@ function App() {
 
   useLockBodyScroll(isCalendarOpen);
 
-  const [selectedCategory, setSelectedCategory] = useState('all');
-  const [selectedPlannerDate, setSelectedPlannerDate] = useState(getToday());
-
-  const setView = useCallback((view) => {
+  const setView = (view) => {
     const path = VIEW_ROUTES[view] || '/';
     if (location.pathname !== path) {
       navigate(path);
     }
-  }, [navigate, location.pathname]);
+  };
+
+  // Consume core contexts
+  const {
+    habits, completions, subtasks, subtaskCompletions,
+    addHabit, updateHabit, deleteHabit, toggleCompletion,
+    clearCompletion, clearCompletionsForDateKeys, getCompletionStatus,
+    getCurrentStreak, getLongestStreak, getWeekCompletionData,
+    addSubtask, customHabits, customCompletions, addCustomHabit,
+    updateCustomHabit, deleteCustomHabit, toggleCustomCompletion,
+    getCustomCompletionStatus, getDateKeysInRange, activeData, loading: habitsLoading
+  } = useHabitsContext();
 
   const {
-    habits,
-    completions,
-    subtasks,
-    subtaskCompletions,
-    addHabit,
-    updateHabit,
-    deleteHabit,
-    toggleCompletion,
-    clearCompletion,
-    clearCompletionsForDateKeys,
-    getCompletionStatus,
-    getCurrentStreak,
-    getLongestStreak,
-    getWeekCompletionData,
-    // Subtask methods
-    getSubtasks,
-    addSubtask,
-    updateSubtask,
-    deleteSubtask,
-    toggleSubtaskCompletion,
-    getSubtaskStatus,
-    getSubtaskCompletionPercentage,
-    reorderHabits,
-    loading: habitsLoading
-  } = useHabits();
+    goals, addGoal, updateGoal, deleteGoal: removeGoal,
+    completeGoal, archiveGoal, toggleSubGoal, addSubGoal,
+    deleteSubGoal, getGoalProgress, getGoalStats
+  } = useGoalsContext();
 
-  // Daily tasks hook
   const {
-    dailyTasks,
-    getDailyTasks,
-    getAllDailyTasks,
-    addDailyTask,
-    toggleDailyTask,
-    updateDailyTask,
-    deleteDailyTask,
-    getDailyCompletion,
-    getDateCompletion,
-    deleteTasksForHabit
-  } = useDailyTasks();
-
-  // Custom habits hook
-  const {
-    customHabits,
-    customCompletions,
-    addCustomHabit,
-    updateCustomHabit,
-    deleteCustomHabit,
-    toggleCustomCompletion,
-    getCustomCompletionStatus,
-    formatDateRange,
-    // Subtask methods
-    getCustomSubtasks,
-    addCustomSubtask,
-    deleteCustomSubtask,
-    toggleCustomSubtaskCompletion,
-    getCustomSubtaskStatus,
-    getCustomSubtaskCompletionPercentage,
-    isDateBlockedByCustomHabits,
-    getDateKeysInRange,
-    loading: customHabitsLoading
-  } = useCustomHabits();
-
-  // Goals hook
-  const {
-    goals,
-    addGoal,
-    updateGoal,
-    deleteGoal: removeGoal,
-    completeGoal,
-    archiveGoal,
-    toggleSubGoal,
-    addSubGoal,
-    deleteSubGoal,
-    getGoalProgress,
-    getGoalStats
-  } = useGoals();
-
-  // Helper to check if a date has custom habits (blocking regular habits in month view)
-  const isDateBlockedByCustom = isDateBlockedByCustomHabits;
+    dailyTasks, addDailyTask, toggleDailyTask, updateDailyTask,
+    deleteDailyTask, deleteTasksForHabit
+  } = useDailyPlannerContext();
 
   const { settings, updateSettings } = useSettings();
 
-  // Get active habit with countdown timer
-  const activeData = useActiveHabit(habits, customHabits);
+  // Version counter to trigger heatmaps update
+  const [dataVersion, setDataVersion] = useState(0);
+  const handleDataUpdate = () => setDataVersion(v => v + 1);
 
-  // Get week dates based on start-of-week preference
-  const weekDates = getWeekDates(currentDate, settings.startOfWeek);
-  const weekCompletionData = getWeekCompletionData(weekDates);
+  useEffect(() => {
+    window.addEventListener('habit-data-updated', handleDataUpdate);
+    return () => window.removeEventListener('habit-data-updated', handleDataUpdate);
+  }, []);
 
-  // Filter habits based on search and category
-  const filteredHabits = useMemo(() => {
-    return habits.filter(habit => {
-      const matchesSearch = habit.name.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesCategory = selectedCategory === 'all' || habit.category === selectedCategory;
-      return matchesSearch && matchesCategory;
-    });
-  }, [habits, searchTerm, selectedCategory]);
-
-  // Apply theme to root element
+  // Theme support
   useEffect(() => {
     const root = document.documentElement;
     if (settings.theme === 'dark' || settings.theme === 'light') {
@@ -200,51 +125,34 @@ function App() {
     }
   }, [settings.theme]);
 
-  // Celebrate when all habits are completed for today and when a habit reaches a 10+ day streak
+  // Completions celebrations
   useEffect(() => {
     const today = getToday();
     const todayKey = formatDateKey(today);
 
-    // Full day celebration
     const allCompleted = habits.length > 0 && habits.every(habit =>
       completions[habit.id]?.[todayKey] === 'completed'
     );
 
     if (allCompleted) {
       confetti({
-        particleCount: 100,
-        spread: 70,
-        origin: { y: 0.6 },
+        particleCount: 100, spread: 70, origin: { y: 0.6 },
         colors: ['#FF6B35', '#00FF9F', '#0080FF']
       });
     }
 
-    // Streak celebration for each habit with 10+ day streak
-    // Only celebrate once per day per habit to avoid spam
     const celebratedToday = JSON.parse(sessionStorage.getItem('streak_celebrated') || '{}');
-    const todayStr = todayKey;
-
-    // Clean up entries for deleted habits to prevent unbounded growth
-    const validHabitIds = new Set(habits.map(h => h.id));
     let needsCleanup = false;
-    for (const habitId of Object.keys(celebratedToday)) {
-      if (!validHabitIds.has(habitId)) {
-        delete celebratedToday[habitId];
-        needsCleanup = true;
-      }
-    }
 
     habits.forEach(habit => {
       const habitCompletions = completions[habit.id] || {};
       const streak = calculateCurrentStreak(habitCompletions, today);
 
-      // Only celebrate if streak >= 10 and not celebrated today
-      if (streak >= 10 && celebratedToday[habit.id] !== todayStr) {
-        celebratedToday[habit.id] = todayStr;
+      if (streak >= 10 && celebratedToday[habit.id] !== todayKey) {
+        celebratedToday[habit.id] = todayKey;
         needsCleanup = true;
         confetti({
-          particleCount: 30,
-          spread: 30,
+          particleCount: 30, spread: 30,
           origin: { x: Math.random(), y: Math.random() },
           colors: ['#FF6B35', '#00FF9F', '#0080FF']
         });
@@ -256,36 +164,15 @@ function App() {
     }
   }, [completions, habits]);
 
-  const handleAddHabit = () => {
-    setEditingHabit(null);
-    setIsHabitModalOpen(true);
-  };
-
-  const handleToggle = (habitId, date) => {
-    toggleCompletion(habitId, date);
-  };
-
-  const handleEditHabit = (habit) => {
-    setEditingHabit(habit);
-    setIsHabitModalOpen(true);
-  };
-
+  // Habit operations
   const handleSaveHabit = (habitData) => {
-    let habitId;
-    if (editingHabit) {
-      updateHabit(editingHabit.id, habitData);
-      habitId = editingHabit.id;
-    } else {
-      const newHabit = addHabit(habitData);
-      habitId = newHabit.id;
-    }
+    let habitId = editingHabit ? editingHabit.id : addHabit(habitData).id;
+    if (editingHabit) updateHabit(editingHabit.id, habitData);
 
-    // Add any new subtasks
     if (habitData.subtasks && habitData.subtasks.length > 0) {
-      habitData.subtasks.forEach(title => {
-        addSubtask(habitId, title);
-      });
+      habitData.subtasks.forEach(title => addSubtask(habitId, title));
     }
+    handleDataUpdate();
   };
 
   const handleDeleteHabit = (habitId) => {
@@ -298,21 +185,12 @@ function App() {
       onConfirm: () => {
         deleteHabit(habitId);
         deleteTasksForHabit(habitId);
+        handleDataUpdate();
       }
     });
   };
 
-  // Custom habit handlers
-  const handleAddCustomHabit = () => {
-    setEditingCustomHabit(null);
-    setIsCustomHabitModalOpen(true);
-  };
-
-  const handleEditCustomHabit = (habit) => {
-    setEditingCustomHabit(habit);
-    setIsCustomHabitModalOpen(true);
-  };
-
+  // Custom habit operations
   const handleSaveCustomHabit = (habitData) => {
     const blockedDateKeys = getDateKeysInRange(habitData.dateFrom, habitData.dateTo);
     clearCompletionsForDateKeys(blockedDateKeys);
@@ -322,6 +200,7 @@ function App() {
     } else {
       addCustomHabit(habitData);
     }
+    handleDataUpdate();
   };
 
   const handleDeleteCustomHabit = (habitId) => {
@@ -333,22 +212,12 @@ function App() {
       type: 'danger',
       onConfirm: () => {
         deleteCustomHabit(habitId);
+        handleDataUpdate();
       }
     });
   };
 
-  // Goal handlers
-  const handleAddGoal = () => {
-    setEditingGoal(null);
-    setIsGoalModalOpen(true);
-  };
-
-  const handleEditGoal = (goal) => {
-    setEditingGoal(goal);
-    setIsGoalModalOpen(true);
-    setSelectedGoal(null);
-  };
-
+  // Goals operations
   const handleSaveGoal = (goalData) => {
     if (editingGoal) {
       updateGoal(editingGoal.id, goalData);
@@ -375,257 +244,172 @@ function App() {
     completeGoal(goalId);
     setSelectedGoal(null);
     confetti({
-      particleCount: 120,
-      spread: 80,
-      origin: { y: 0.5 },
+      particleCount: 120, spread: 80, origin: { y: 0.5 },
       colors: ['#FF6B35', '#00FF9F', '#0080FF', '#FFD700', '#BD00FF']
     });
   };
 
-  const handleArchiveGoal = (goalId) => {
-    archiveGoal(goalId);
-    setSelectedGoal(null);
-  };
-
-  const handleCompleteAllToday = () => {
-    const today = getToday();
-    const todayKey = formatDateKey(today);
-
-    habits.forEach(habit => {
-      const currentStatus = completions[habit.id]?.[todayKey];
-      if (currentStatus !== 'completed') {
-        // Clear existing status first (e.g. 'failed' -> null), then toggle to 'completed'
-        if (currentStatus) {
-          clearCompletion(habit.id, today);
-        }
-        toggleCompletion(habit.id, today);
-      }
-    });
-  };
-
-  const handleClearAllToday = () => {
-    setConfirmationModal({
-      isOpen: true,
-      title: 'Clear Today',
-      message: 'Are you sure you want to clear all entries for today?',
-      confirmText: 'Clear All',
-      type: 'warning',
-      onConfirm: () => {
-        const today = getToday();
-        const todayKey = formatDateKey(today);
-
-        habits.forEach(habit => {
-          const currentStatus = completions[habit.id]?.[todayKey];
-          // Clear any existing status by setting to null
-          if (currentStatus === 'completed' || currentStatus === 'failed') {
-            clearCompletion(habit.id, today);
-          }
-        });
-      }
-    });
-  };
-
-  // Force re-render of heatmaps when data changes
-  const [dataVersion, setDataVersion] = useState(0);
-  const handleDataUpdate = () => setDataVersion(v => v + 1);
-  // Keep listener for external events if any other parts dispatch
-  useEffect(() => {
-    window.addEventListener('habit-data-updated', handleDataUpdate);
-    return () => window.removeEventListener('habit-data-updated', handleDataUpdate);
-  }, []);
-
-  if (habitsLoading || customHabitsLoading) {
+  if (habitsLoading) {
     return <HabitGridSkeleton />;
   }
 
   return (
     <>
-      {/* TopNav - outside perspective-root for fixed positioning */}
       <TopNav
         onSettingsClick={() => setIsSettingsPanelOpen(true)}
         onStopwatchClick={() => setIsStopwatchOpen(true)}
         onCalendarClick={() => setIsCalendarOpen(!isCalendarOpen)}
-        onAddHabitClick={handleAddHabit}
+        onAddHabitClick={() => { setEditingHabit(null); setIsHabitModalOpen(true); }}
         onGoalsClick={() => setIsGoalsDashboardOpen(true)}
         currentDate={currentDate}
       />
 
       <div className="app perspective-root">
         <main className="app-main" style={{ transformStyle: 'preserve-3d' }}>
-        <div className="app-container" style={{ transformStyle: 'preserve-3d' }}>
+          <div className="app-container" style={{ transformStyle: 'preserve-3d' }}>
+            <ActiveHabitTracker
+              activeData={activeData}
+              dailyTasks={dailyTasks}
+              onToggleDailyTask={toggleDailyTask}
+              onAddDailyTask={addDailyTask}
+              onDeleteDailyTask={deleteDailyTask}
+              onToggleCompletion={toggleCompletion}
+              getCompletionStatus={getCompletionStatus}
+              goals={goals}
+              getGoalProgress={getGoalProgress}
+              onViewAllGoals={() => setIsGoalsDashboardOpen(true)}
+            />
 
-          {/* Active Habit Tracker */}
-          <ActiveHabitTracker
-            activeData={activeData}
-            dailyTasks={dailyTasks}
-            onToggleDailyTask={toggleDailyTask}
-            onAddDailyTask={addDailyTask}
-            onDeleteDailyTask={deleteDailyTask}
-            onToggleCompletion={toggleCompletion}
-            getCompletionStatus={getCompletionStatus}
-            goals={goals}
-            getGoalProgress={getGoalProgress}
-            onOpenGoal={(goal) => setSelectedGoal(goal)}
-            onViewAllGoals={() => setIsGoalsDashboardOpen(true)}
-          />
+            <ScrollReveal delay={0.1}>
+              <DailyOverview
+                habits={habits}
+                getCompletionStatus={getCompletionStatus}
+                getToday={getToday}
+              />
+            </ScrollReveal>
 
-          <DailyOverview 
-            habits={habits}
-            getCompletionStatus={getCompletionStatus}
-            getToday={getToday}
-          />
+            <div className="view-toggle-container">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className={`view-toggle-btn btn-3d ${currentView === 'week' ? 'active' : ''}`}
+                onClick={() => setView('week')}
+              >
+                Month View
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className={`view-toggle-btn btn-3d ${currentView === 'daily' ? 'active' : ''}`}
+                onClick={() => setView('daily')}
+              >
+                Day Planner
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className={`view-toggle-btn btn-3d ${currentView === 'custom' ? 'active' : ''}`}
+                onClick={() => setView('custom')}
+              >
+                Custom Date
+              </motion.button>
+            </div>
 
-          <div className="view-toggle-container" style={{ display: 'flex', justifyContent: 'center', marginBottom: 'var(--spacing-lg)', marginTop: 'var(--spacing-xl)', gap: 'var(--spacing-sm)' }}>
-            <button
-              className={`view-toggle-btn btn-3d ${currentView === 'week' ? 'active' : ''}`}
-              onClick={() => setView('week')}
-              style={{ 
-                fontSize: '0.9rem', 
-                padding: '0.75rem 1.5rem', 
-                fontWeight: '600',
-                background: currentView === 'week' ? 'var(--gradient-primary)' : 'var(--bg-elevated)',
-                color: currentView === 'week' ? '#fff' : 'var(--text-secondary)',
-                border: currentView === 'week' ? 'none' : '1px solid var(--border-color)',
-                borderRadius: 'var(--radius-md)',
-                boxShadow: currentView === 'week' ? 'var(--glow-primary)' : 'none',
-                cursor: 'pointer'
-              }}
-            >
-              Month View
-            </button>
-            <button
-              className={`view-toggle-btn btn-3d ${currentView === 'daily' ? 'active' : ''}`}
-              onClick={() => setView('daily')}
-              style={{ 
-                fontSize: '0.9rem', 
-                padding: '0.75rem 1.5rem', 
-                fontWeight: '600',
-                background: currentView === 'daily' ? 'var(--gradient-primary)' : 'var(--bg-elevated)',
-                color: currentView === 'daily' ? '#fff' : 'var(--text-secondary)',
-                border: currentView === 'daily' ? 'none' : '1px solid var(--border-color)',
-                borderRadius: 'var(--radius-md)',
-                boxShadow: currentView === 'daily' ? 'var(--glow-primary)' : 'none',
-                cursor: 'pointer'
-              }}
-            >
-              Day Planner
-            </button>
-            <button
-              className={`view-toggle-btn btn-3d ${currentView === 'custom' ? 'active' : ''}`}
-              onClick={() => setView('custom')}
-              style={{ 
-                fontSize: '0.9rem', 
-                padding: '0.75rem 1.5rem', 
-                fontWeight: '600',
-                background: currentView === 'custom' ? 'var(--gradient-primary)' : 'var(--bg-elevated)',
-                color: currentView === 'custom' ? '#fff' : 'var(--text-secondary)',
-                border: currentView === 'custom' ? 'none' : '1px solid var(--border-color)',
-                borderRadius: 'var(--radius-md)',
-                boxShadow: currentView === 'custom' ? 'var(--glow-primary)' : 'none',
-                cursor: 'pointer'
-              }}
-            >
-              Custom Date
-            </button>
-          </div>
+            <div className="main-content-split">
+              <div className="main-column">
+                <AnimatePresence mode="wait">
+                  {currentView === 'week' && (
+                    <motion.div 
+                      key="week"
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: 20 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <MonthViewPage
+                        currentDate={currentDate}
+                        onEditHabit={(h) => { setEditingHabit(h); setIsHabitModalOpen(true); }}
+                        onDeleteHabit={handleDeleteHabit}
+                      />
+                    </motion.div>
+                  )}
 
-          {/* Main content area with 70/30 split */}
-          <div className="main-content-split">
-            {/* Left column - 70% */}
-            <div className="main-column">
-              {currentView === 'week' && (
-                <HabitGrid
-                  habits={filteredHabits}
-                  weekDates={getCurrentMonthDates(currentDate)}
-                  onToggle={handleToggle}
-                  onEditHabit={handleEditHabit}
-                  onDeleteHabit={handleDeleteHabit}
-                  getCompletionStatus={getCompletionStatus}
-                  reorderHabits={reorderHabits}
-                  isDateBlockedByCustom={isDateBlockedByCustom}
-                />
-              )}
+                  {currentView === 'daily' && (
+                    <motion.div
+                      key="daily"
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: 20 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <PlannerPage
+                        onAddHabit={() => { setEditingHabit(null); setIsHabitModalOpen(true); }}
+                        onAddCustomHabit={() => { setEditingCustomHabit(null); setIsCustomHabitModalOpen(true); }}
+                      />
+                    </motion.div>
+                  )}
 
-              {currentView === 'daily' && (
-                <DailyPlanner
-                  habits={filteredHabits}
-                  selectedDate={selectedPlannerDate}
-                  onDateChange={setSelectedPlannerDate}
-                  getDailyTasks={getDailyTasks}
-                  onAddTask={addDailyTask}
-                  onToggleTask={toggleDailyTask}
-                  onUpdateTask={updateDailyTask}
-                  onDeleteTask={deleteDailyTask}
-                  getDailyCompletion={getDailyCompletion}
-                  getDateCompletion={getDateCompletion}
-                  onAddHabit={handleAddHabit}
-                  // Custom habits props
-                  customHabits={customHabits}
-                  customCompletions={customCompletions}
-                  toggleCustomCompletion={toggleCustomCompletion}
-                  getCustomCompletionStatus={getCustomCompletionStatus}
-                  onAddCustomHabit={handleAddCustomHabit}
-                  // Custom subtask props
-                  getCustomSubtasks={getCustomSubtasks}
-                  addCustomSubtask={addCustomSubtask}
-                  deleteCustomSubtask={deleteCustomSubtask}
-                  toggleCustomSubtaskCompletion={toggleCustomSubtaskCompletion}
-                  getCustomSubtaskStatus={getCustomSubtaskStatus}
-                  getCustomSubtaskCompletionPercentage={getCustomSubtaskCompletionPercentage}
-                />
-              )}
+                  {currentView === 'study' && (
+                    <motion.div
+                      key="study"
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -20 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <Suspense fallback={<HabitGridSkeleton />}>
+                        <StudyView />
+                      </Suspense>
+                    </motion.div>
+                  )}
 
-              {currentView === 'study' && (
-                <Suspense fallback={<HabitGridSkeleton />}>
-                  <StudyView />
-                </Suspense>
-              )}
+                  {currentView === 'custom' && (
+                    <motion.div
+                      key="custom"
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -20 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <CustomDatePage
+                        currentDate={currentDate}
+                        onEditCustomHabit={(ch) => { setEditingCustomHabit(ch); setIsCustomHabitModalOpen(true); }}
+                        onDeleteCustomHabit={handleDeleteCustomHabit}
+                        onAddCustomHabit={() => { setEditingCustomHabit(null); setIsCustomHabitModalOpen(true); }}
+                      />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
 
-              {currentView === 'custom' && (
-                <CustomDateView
-                  customHabits={customHabits}
-                  weekDates={getCurrentMonthDates(currentDate)}
-                  onToggleCustom={toggleCustomCompletion}
-                  onEditCustomHabit={handleEditCustomHabit}
-                  onDeleteCustomHabit={handleDeleteCustomHabit}
-                  getCustomCompletionStatus={getCustomCompletionStatus}
-                  onAddCustomHabit={handleAddCustomHabit}
-                  formatDateRange={formatDateRange}
-                />
-              )}
+                <ScrollReveal delay={0.2} className="heatmaps-container-compact">
+                  <StudyHeatmap dataVersion={dataVersion} />
+                  <ProductivityHeatmap
+                    habits={habits}
+                    completions={completions}
+                    dataVersion={dataVersion}
+                  />
+                </ScrollReveal>
+              </div>
 
-              {/* Heatmaps - positioned right below habits */}
-              <div className="heatmaps-container-compact">
-                <StudyHeatmap dataVersion={dataVersion} />
-                <ProductivityHeatmap
-                  habits={habits}
-                  completions={completions}
-                  dataVersion={dataVersion}
-                />
+              <div className="sidebar-column parallax-layer-2">
+                <ScrollReveal delay={0.3} direction="left">
+                  <ProgressSection
+                    habits={habits}
+                    getCurrentStreak={getCurrentStreak}
+                    getLongestStreak={getLongestStreak}
+                    completions={completions}
+                    customHabits={customHabits}
+                    customCompletions={customCompletions}
+                    onOpenAnalytics={() => setIsAnalyticsOpen(true)}
+                    onToggleCompletion={toggleCompletion}
+                  />
+                </ScrollReveal>
               </div>
             </div>
-
-            {/* Right column - 30% with ProgressSection */}
-            <div className="sidebar-column parallax-layer-2">
-              <ProgressSection
-                habits={habits}
-                getCurrentStreak={getCurrentStreak}
-                getLongestStreak={getLongestStreak}
-                completions={completions}
-                customHabits={customHabits}
-                customCompletions={customCompletions}
-                onOpenAnalytics={() => setIsAnalyticsOpen(true)}
-                onToggleCompletion={toggleCompletion}
-              />
-            </div>
           </div>
+        </main>
+      </div>
 
-        </div>
-      </main>
-
-      </div>{/* End perspective-root */}
-
-      {/* All Modals - outside perspective-root for proper fixed positioning */}
       <HabitModal
         isOpen={isHabitModalOpen}
         onClose={() => setIsHabitModalOpen(false)}
@@ -639,8 +423,8 @@ function App() {
         goals={goals}
         getGoalProgress={getGoalProgress}
         getGoalStats={getGoalStats}
-        onAddGoal={handleAddGoal}
-        onOpenGoal={(goal) => setSelectedGoal(goal)}
+        onAddGoal={() => { setEditingGoal(null); setIsGoalModalOpen(true); }}
+        onOpenGoal={setSelectedGoal}
         onToggleSubGoal={toggleSubGoal}
       />
 
@@ -656,9 +440,9 @@ function App() {
           goal={goals.find(g => g.id === selectedGoal.id) || selectedGoal}
           progress={getGoalProgress(selectedGoal.id)}
           onClose={() => setSelectedGoal(null)}
-          onEdit={handleEditGoal}
+          onEdit={(g) => { setEditingGoal(g); setIsGoalModalOpen(true); setSelectedGoal(null); }}
           onComplete={handleCompleteGoal}
-          onArchive={handleArchiveGoal}
+          onArchive={archiveGoal}
           onDelete={handleDeleteGoal}
           onToggleSubGoal={toggleSubGoal}
           onAddSubGoal={addSubGoal}
@@ -699,14 +483,12 @@ function App() {
             <button className="close-btn" onClick={() => setIsCalendarOpen(false)}>×</button>
             <Suspense fallback={<HabitGridSkeleton />}>
               <CalendarView
-                habits={filteredHabits}
+                habits={habits}
                 completions={completions}
                 subtasks={subtasks}
                 subtaskCompletions={subtaskCompletions}
                 dailyTasks={dailyTasks}
-                onDateDoubleClick={(date) => {
-                  setSelectedDate(date);
-                }}
+                onDateDoubleClick={setSelectedDate}
                 onToggleTask={toggleDailyTask}
                 onUpdateTask={updateDailyTask}
                 onDeleteTask={deleteDailyTask}
@@ -719,13 +501,13 @@ function App() {
       {selectedDate && (
         <Suspense fallback={null}>
           <DayHistoryModal
-          date={selectedDate}
-          habits={habits}
-          completions={completions}
-          subtasks={subtasks}
-          subtaskCompletions={subtaskCompletions}
-          dailyTasks={dailyTasks}
-          onClose={() => setSelectedDate(null)}
+            date={selectedDate}
+            habits={habits}
+            completions={completions}
+            subtasks={subtasks}
+            subtaskCompletions={subtaskCompletions}
+            dailyTasks={dailyTasks}
+            onClose={() => setSelectedDate(null)}
           />
         </Suspense>
       )}
@@ -744,5 +526,3 @@ function App() {
 }
 
 export default App;
-
-

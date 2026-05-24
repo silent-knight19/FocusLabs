@@ -1,4 +1,4 @@
-import React, { createContext, useContext } from 'react';
+import React, { createContext, useContext, useMemo } from 'react';
 import { useMonthlyStopwatch } from '../hooks/useMonthlyStopwatch';
 import { useAuth } from './AuthContext';
 
@@ -9,8 +9,10 @@ export function StopwatchHistoryProvider({ children }) {
   const userId = user?.uid;
   const [history, setHistory, loading, loadMore] = useMonthlyStopwatch(userId);
 
+  const value = useMemo(() => ({ history, setHistory, loading, loadMore }), [history, setHistory, loading, loadMore]);
+
   return (
-    <StopwatchHistoryContext.Provider value={{ history, setHistory, loading, loadMore }}>
+    <StopwatchHistoryContext.Provider value={value}>
       {children}
     </StopwatchHistoryContext.Provider>
   );

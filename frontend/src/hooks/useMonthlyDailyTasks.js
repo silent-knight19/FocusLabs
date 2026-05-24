@@ -7,6 +7,9 @@ import { getRecentMonthKeys, getMonthKey, dateKeyToMonthKey } from '../utils/mon
 const MONTHS_TO_LOAD = 6;
 const DEBOUNCE_MS = 2000;
 
+const DEBUG = import.meta.env.DEV;
+const logError = DEBUG ? console.error : () => {};
+
 const pendingDailyTasksFlushes = new Map();
 
 function flushAllDailyTasks() {
@@ -14,7 +17,7 @@ function flushAllDailyTasks() {
     try {
       flushFn();
     } catch (e) {
-      console.error('[MONTHLY DAILY TASKS] Flush error:', e);
+      logError('[MONTHLY DAILY TASKS] Flush error:', e);
     }
   });
 }
@@ -79,17 +82,21 @@ export function useMonthlyDailyTasks(userId) {
       byMonth[mk].push(task);
     }
 
-    shardsRef.current = byMonth;
-
-    await Promise.all(
-      Object.entries(byMonth).map(([monthKey, monthTasks]) =>
-        setDoc(
-          doc(db, 'users', userId, 'daily_tasks', monthKey),
-          { tasks: monthTasks, _v: Date.now() },
-          { merge: true }
+    try {
+      await Promise.all(
+        Object.entries(byMonth).map(([monthKey, monthTasks]) =>
+          setDoc(
+            doc(db, 'users', userId, 'daily_tasks', monthKey),
+            { tasks: monthTasks, _v: Date.now() },
+            { merge: true }
+          )
         )
-      )
-    );
+      );
+      shardsRef.current = byMonth;
+    } catch (err) {
+      logError('Failed to save daily tasks to Firestore', err);
+      showToast('Failed to save task changes. Please check your network connection.', 'error');
+    }
   }, [userId]);
 
   const flushPendingWrite = useCallback(() => {
@@ -154,7 +161,7 @@ export function useMonthlyDailyTasks(userId) {
             migratedRef.current = true;
             try {
               await flushWrites(legacyRef.current);
-            } catch (e) {
+            } catch {
               showToast('Syncing planner tasks to shards...', 'info');
             }
           }

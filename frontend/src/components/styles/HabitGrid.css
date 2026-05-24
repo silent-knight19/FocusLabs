@@ -6,7 +6,7 @@
     box-shadow: var(--shadow-glass);
     border: 1px solid var(--glass-border);
     overflow: hidden;
-    transition: all var(--transition-fast);
+    transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), opacity var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .habit-grid-container:hover {
@@ -46,7 +46,7 @@
     display: flex;
     flex-direction: column;
     gap: 12px;
-    transition: all var(--transition-base);
+    transition: background-color var(--transition-base), border-color var(--transition-base), color var(--transition-base), opacity var(--transition-base), transform var(--transition-base), box-shadow var(--transition-base);
 }
 
 /* Empty State */
@@ -168,7 +168,7 @@
     font-size: 13px;
     font-weight: 600;
     cursor: pointer;
-    transition: all var(--transition-fast);
+    transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), opacity var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .add-custom-btn:hover {

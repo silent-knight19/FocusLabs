@@ -13,7 +13,7 @@
     box-shadow: var(--shadow-glass);
     flex: 1;
     min-width: 0;
-    transition: all var(--transition-base);
+    transition: background-color var(--transition-base), border-color var(--transition-base), color var(--transition-base), opacity var(--transition-base), transform var(--transition-base), box-shadow var(--transition-base);
 }
 
 .study-heatmap-container:hover {
@@ -134,7 +134,7 @@
     height: 14px;
     border-radius: 3px;
     cursor: pointer;
-    transition: all 0.2s var(--ease-out);
+    transition: background-color 0.2s var(--ease-out), border-color 0.2s var(--ease-out), color 0.2s var(--ease-out), opacity 0.2s var(--ease-out), transform 0.2s var(--ease-out), box-shadow 0.2s var(--ease-out);
     position: relative;
     background-color: rgba(255, 255, 255, 0.03);
 }

@@ -1,4 +1,7 @@
 .habit-row {
+      will-change: transform, opacity;
+  transform: translateZ(0);
+
     display: grid;
     grid-template-columns: 350px 1fr;
     gap: var(--spacing-md);
@@ -9,17 +12,23 @@
     border: 1px solid var(--glass-border);
     border-radius: var(--radius-lg);
     align-items: center;
-    transition: all 0.25s var(--ease-standard);
+    transition: background-color 0.25s var(--ease-standard), border-color 0.25s var(--ease-standard), color 0.25s var(--ease-standard), opacity 0.25s var(--ease-standard), transform 0.25s var(--ease-standard), box-shadow 0.25s var(--ease-standard);
     position: relative;
     box-shadow: var(--shadow-glass);
 }
 
 /* Alternating row backgrounds - subtle variation */
 .habit-row:nth-child(even) {
+      will-change: transform, opacity;
+  transform: translateZ(0);
+
     background: var(--glass-bg);
 }
 
 .habit-row:hover {
+      will-change: transform, opacity;
+  transform: translateZ(0);
+
     background: var(--glass-bg);
     border-color: var(--glass-border-hover);
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3), 0 0 20px rgba(245, 158, 11, 0.08);
@@ -62,7 +71,7 @@
     color: var(--accent-primary);
     cursor: pointer;
     text-align: left;
-    transition: all var(--transition-fast);
+    transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), opacity var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
     text-shadow: 0 0 12px rgba(255, 122, 89, 0.25);
     line-height: 1.2;
 }
@@ -82,6 +91,9 @@
 }
 
 .habit-row:hover .habit-inline-actions {
+      will-change: transform, opacity;
+  transform: translateZ(0);
+
     opacity: 1;
 }
 
@@ -184,6 +196,9 @@
 }
 
 .habit-row:hover .habit-actions {
+      will-change: transform, opacity;
+  transform: translateZ(0);
+
     opacity: 1;
 }
 
@@ -196,7 +211,7 @@
     border-radius: var(--radius-sm);
     font-size: var(--font-size-md);
     cursor: pointer;
-    transition: all var(--transition-fast);
+    transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), opacity var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -222,6 +237,9 @@
 /* Mobile responsive - Root cause fix for day cell overflow */
 @media (max-width: 768px) {
     .habit-row {
+          will-change: transform, opacity;
+  transform: translateZ(0);
+
         display: grid;
         /* Fixed layout: info column + scrollable days area */
         grid-template-columns: 140px 1fr;
@@ -302,6 +320,9 @@
 
 @media (max-width: 480px) {
     .habit-row {
+          will-change: transform, opacity;
+  transform: translateZ(0);
+
         grid-template-columns: 120px 1fr;
         gap: 6px;
         padding: var(--spacing-xs);

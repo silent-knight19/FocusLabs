@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useFirestore } from './useFirestore';
 import { useAuth } from '../contexts/AuthContext';
 import { generateId as createId } from '../utils/idHelpers';
@@ -22,7 +22,7 @@ export function useGoals() {
    * @param {object} goalData - Goal information
    * @returns {object} Created goal
    */
-  const addGoal = (goalData) => {
+  const addGoal = useCallback((goalData) => {
     const newGoal = {
       id: generateId('goal'),
       title: goalData.title,
@@ -41,34 +41,34 @@ export function useGoals() {
 
     setGoals(prev => [...prev, newGoal]);
     return newGoal;
-  };
+  }, [goals.length, setGoals]);
 
   /**
    * Update an existing goal
    * @param {string} goalId - Goal ID
    * @param {object} updates - Fields to update
    */
-  const updateGoal = (goalId, updates) => {
+  const updateGoal = useCallback((goalId, updates) => {
     setGoals(prev =>
       prev.map(goal =>
         goal.id === goalId ? { ...goal, ...updates } : goal
       )
     );
-  };
+  }, [setGoals]);
 
   /**
    * Delete a goal
    * @param {string} goalId - Goal ID
    */
-  const deleteGoal = (goalId) => {
+  const deleteGoal = useCallback((goalId) => {
     setGoals(prev => prev.filter(goal => goal.id !== goalId));
-  };
+  }, [setGoals]);
 
   /**
    * Mark a goal as completed
    * @param {string} goalId - Goal ID
    */
-  const completeGoal = (goalId) => {
+  const completeGoal = useCallback((goalId) => {
     setGoals(prev =>
       prev.map(goal =>
         goal.id === goalId
@@ -76,30 +76,31 @@ export function useGoals() {
           : goal
       )
     );
-  };
+  }, [setGoals]);
 
   /**
    * Archive a goal (hide from active view)
    * @param {string} goalId - Goal ID
    */
-  const archiveGoal = (goalId) => {
+  const archiveGoal = useCallback((goalId) => {
     setGoals(prev =>
       prev.map(goal =>
         goal.id === goalId ? { ...goal, status: 'archived' } : goal
       )
     );
-  };
+  }, [setGoals]);
 
   /**
    * Reorder goals based on a new ordered array of goal IDs
    * @param {string[]} newOrder - Array of goal IDs in desired order
    */
-  const reorderGoals = (newOrder) => {
-    const goalMap = {};
-    goals.forEach(g => { goalMap[g.id] = g; });
-    const reordered = newOrder.map((id, index) => ({ ...goalMap[id], order: index }));
-    setGoals(reordered);
-  };
+  const reorderGoals = useCallback((newOrder) => {
+    setGoals(prev => {
+      const goalMap = {};
+      prev.forEach(g => { goalMap[g.id] = g; });
+      return newOrder.map((id, index) => ({ ...goalMap[id], order: index }));
+    });
+  }, [setGoals]);
 
   // ========== SUB-GOAL METHODS ==========
 
@@ -109,7 +110,7 @@ export function useGoals() {
    * @param {object} subGoalData - Sub-goal information
    * @returns {object} Created sub-goal
    */
-  const addSubGoal = (goalId, subGoalData) => {
+  const addSubGoal = useCallback((goalId, subGoalData) => {
     const newSubGoal = {
       id: generateId('subgoal'),
       title: subGoalData.title,
@@ -130,7 +131,7 @@ export function useGoals() {
     );
 
     return newSubGoal;
-  };
+  }, [setGoals]);
 
   /**
    * Update a sub-goal
@@ -138,7 +139,7 @@ export function useGoals() {
    * @param {string} subGoalId - Sub-goal ID
    * @param {object} updates - Fields to update
    */
-  const updateSubGoal = (goalId, subGoalId, updates) => {
+  const updateSubGoal = useCallback((goalId, subGoalId, updates) => {
     setGoals(prev =>
       prev.map(goal => {
         if (goal.id !== goalId) return goal;
@@ -148,14 +149,14 @@ export function useGoals() {
         return { ...goal, subGoals: updatedSubGoals };
       })
     );
-  };
+  }, [setGoals]);
 
   /**
    * Delete a sub-goal
    * @param {string} goalId - Parent goal ID
    * @param {string} subGoalId - Sub-goal ID
    */
-  const deleteSubGoal = (goalId, subGoalId) => {
+  const deleteSubGoal = useCallback((goalId, subGoalId) => {
     setGoals(prev =>
       prev.map(goal => {
         if (goal.id !== goalId) return goal;
@@ -163,14 +164,14 @@ export function useGoals() {
         return { ...goal, subGoals: filtered };
       })
     );
-  };
+  }, [setGoals]);
 
   /**
    * Toggle a sub-goal's completion status
    * @param {string} goalId - Parent goal ID
    * @param {string} subGoalId - Sub-goal ID
    */
-  const toggleSubGoal = (goalId, subGoalId) => {
+  const toggleSubGoal = useCallback((goalId, subGoalId) => {
     setGoals(prev =>
       prev.map(goal => {
         if (goal.id !== goalId) return goal;
@@ -186,14 +187,14 @@ export function useGoals() {
         return { ...goal, subGoals: updatedSubGoals };
       })
     );
-  };
+  }, [setGoals]);
 
   /**
    * Reorder sub-goals within a goal
    * @param {string} goalId - Parent goal ID
    * @param {string[]} newOrder - Array of sub-goal IDs in desired order
    */
-  const reorderSubGoals = (goalId, newOrder) => {
+  const reorderSubGoals = useCallback((goalId, newOrder) => {
     setGoals(prev =>
       prev.map(goal => {
         if (goal.id !== goalId) return goal;
@@ -203,7 +204,7 @@ export function useGoals() {
         return { ...goal, subGoals: reordered };
       })
     );
-  };
+  }, [setGoals]);
 
   // ========== COMPUTED HELPERS ==========
 
@@ -290,7 +291,7 @@ export function useGoals() {
     };
   }, [goals]);
 
-  return {
+  return useMemo(() => ({
     goals,
     goalsLoading,
     // Goal CRUD
@@ -313,5 +314,25 @@ export function useGoals() {
     getOverdueGoals,
     getUpcomingDeadlines,
     getGoalStats
-  };
+  }), [
+    goals,
+    goalsLoading,
+    addGoal,
+    updateGoal,
+    deleteGoal,
+    completeGoal,
+    archiveGoal,
+    reorderGoals,
+    addSubGoal,
+    updateSubGoal,
+    deleteSubGoal,
+    toggleSubGoal,
+    reorderSubGoals,
+    getGoalProgress,
+    getGoalsByStatus,
+    getGoalsByCategory,
+    getOverdueGoals,
+    getUpcomingDeadlines,
+    getGoalStats
+  ]);
 }

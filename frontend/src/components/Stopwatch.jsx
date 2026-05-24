@@ -6,6 +6,9 @@ import { useLockBodyScroll } from '../hooks/useLockBodyScroll';
 import './styles/Stopwatch.css';
 import './styles/StopwatchAlarmRedesign.css';
 
+const DEBUG = import.meta.env.DEV;
+const logError = DEBUG ? console.error : () => {};
+
 export function Stopwatch({ isOpen, onClose, onDataUpdate }) {
   useLockBodyScroll(isOpen);
   const {
@@ -90,7 +93,7 @@ export function Stopwatch({ isOpen, onClose, onDataUpdate }) {
         }
       };
     } catch (e) {
-      console.error('Failed to play alarm sound:', e);
+      logError('Failed to play alarm sound:', e);
     }
   };
 

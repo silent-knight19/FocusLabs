@@ -3,6 +3,7 @@ import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider } from 'firebase/auth';
 import {
   initializeFirestore,
+  getFirestore,
   persistentLocalCache,
   persistentMultipleTabManager
 } from 'firebase/firestore';
@@ -34,10 +35,18 @@ if (appCheckKey) {
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
 
-export const db = initializeFirestore(app, {
-  localCache: persistentLocalCache({
-    tabManager: persistentMultipleTabManager()
-  })
-});
+let dbInstance;
+try {
+  dbInstance = initializeFirestore(app, {
+    localCache: persistentLocalCache({
+      tabManager: persistentMultipleTabManager()
+    })
+  });
+} catch (error) {
+  console.warn('Failed to initialize Firestore persistent local cache. Falling back to default cache:', error);
+  dbInstance = getFirestore(app);
+}
+
+export const db = dbInstance;
 
 export default app;

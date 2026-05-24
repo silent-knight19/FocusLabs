@@ -1,3 +1,4 @@
+import { useCallback, useMemo } from 'react';
 import { useFirestore } from './useFirestore';
 import { useMonthlyCompletions } from './useMonthlyCompletions';
 import { useAuth } from '../contexts/AuthContext';
@@ -21,34 +22,34 @@ export function useCustomHabits() {
   /**
    * Generate unique ID
    */
-  const generateId = (prefix = 'custom') => createId(prefix);
+  const generateId = useCallback((prefix = 'custom') => createId(prefix), []);
 
   /**
    * Check if a date falls within a habit's date range
    */
-  const isDateInRange = (habit, date) => {
+  const isDateInRange = useCallback((habit, date) => {
     const dateKey = formatDateKey(date);
     return dateKey >= habit.dateFrom && dateKey <= habit.dateTo;
-  };
+  }, []);
 
   /**
    * Get custom habits applicable for a specific date
    */
-  const getHabitsForDate = (date) => {
+  const getHabitsForDate = useCallback((date) => {
     return customHabits.filter(habit => isDateInRange(habit, date));
-  };
+  }, [customHabits, isDateInRange]);
 
   /**
    * Check if a date is covered by any custom habit (blocks regular month-view habits)
    */
-  const isDateBlockedByCustomHabits = (date) => {
+  const isDateBlockedByCustomHabits = useCallback((date) => {
     return getHabitsForDate(date).length > 0;
-  };
+  }, [getHabitsForDate]);
 
   /**
    * Get all YYYY-MM-DD keys between two dates (inclusive)
    */
-  const getDateKeysInRange = (dateFrom, dateTo) => {
+  const getDateKeysInRange = useCallback((dateFrom, dateTo) => {
     const keys = [];
     const start = new Date(dateFrom);
     const end = new Date(dateTo);
@@ -61,12 +62,12 @@ export function useCustomHabits() {
     }
 
     return keys;
-  };
+  }, []);
 
   /**
    * Add a new custom habit
    */
-  const addCustomHabit = (habitData) => {
+  const addCustomHabit = useCallback((habitData) => {
     const newHabit = {
       id: generateId('custom_habit'),
       name: habitData.name,
@@ -84,23 +85,23 @@ export function useCustomHabits() {
 
     setCustomHabits(prev => [...prev, newHabit]);
     return newHabit;
-  };
+  }, [customHabits.length, generateId, setCustomHabits]);
 
   /**
    * Update an existing custom habit
    */
-  const updateCustomHabit = (habitId, updates) => {
+  const updateCustomHabit = useCallback((habitId, updates) => {
     setCustomHabits(prev =>
       prev.map(habit =>
         habit.id === habitId ? { ...habit, ...updates } : habit
       )
     );
-  };
+  }, [setCustomHabits]);
 
   /**
    * Delete a custom habit
    */
-  const deleteCustomHabit = (habitId) => {
+  const deleteCustomHabit = useCallback((habitId) => {
     setCustomHabits(prev => prev.filter(habit => habit.id !== habitId));
     
     // Remove completion data
@@ -119,12 +120,12 @@ export function useCustomHabits() {
       delete updated[habitId];
       return updated;
     });
-  };
+  }, [setCustomCompletions, setCustomHabits, setCustomSubtaskCompletions, setCustomSubtasks]);
 
   /**
    * Toggle completion status for a custom habit on a specific date
    */
-  const toggleCustomCompletion = (habitId, date) => {
+  const toggleCustomCompletion = useCallback((habitId, date) => {
     const dateKey = formatDateKey(date);
     
     setCustomCompletions(prev => {
@@ -153,31 +154,31 @@ export function useCustomHabits() {
       };
     });
     window.dispatchEvent(new Event('habit-data-updated'));
-  };
+  }, [setCustomCompletions]);
 
   /**
    * Get completion status for a custom habit on a specific date
    */
-  const getCustomCompletionStatus = (habitId, date) => {
+  const getCustomCompletionStatus = useCallback((habitId, date) => {
     const dateKey = formatDateKey(date);
     return customCompletions[habitId]?.[dateKey] || null;
-  };
+  }, [customCompletions]);
 
   // ==================== SUBTASK METHODS ====================
 
   /**
    * Get subtasks for a habit
    */
-  const getCustomSubtasks = (habitId) => {
+  const getCustomSubtasks = useCallback((habitId) => {
     return customSubtasks
       .filter(st => st.habitId === habitId)
       .sort((a, b) => a.order - b.order);
-  };
+  }, [customSubtasks]);
 
   /**
    * Add a subtask to a custom habit
    */
-  const addCustomSubtask = (habitId, title) => {
+  const addCustomSubtask = useCallback((habitId, title) => {
     const habitSubtasks = getCustomSubtasks(habitId);
     const newSubtask = {
       id: generateId('custom_subtask'),
@@ -189,28 +190,28 @@ export function useCustomHabits() {
 
     setCustomSubtasks(prev => [...prev, newSubtask]);
     return newSubtask;
-  };
+  }, [generateId, getCustomSubtasks, setCustomSubtasks]);
 
   /**
    * Update a custom subtask
    */
-  const updateCustomSubtask = (subtaskId, updates) => {
+  const updateCustomSubtask = useCallback((subtaskId, updates) => {
     setCustomSubtasks(prev =>
       prev.map(st => st.id === subtaskId ? { ...st, ...updates } : st)
     );
-  };
+  }, [setCustomSubtasks]);
 
   /**
    * Delete a custom subtask
    */
-  const deleteCustomSubtask = (subtaskId) => {
+  const deleteCustomSubtask = useCallback((subtaskId) => {
     setCustomSubtasks(prev => prev.filter(st => st.id !== subtaskId));
-  };
+  }, [setCustomSubtasks]);
 
   /**
    * Toggle subtask completion for a specific date
    */
-  const toggleCustomSubtaskCompletion = (habitId, subtaskId, date) => {
+  const toggleCustomSubtaskCompletion = useCallback((habitId, subtaskId, date) => {
     const dateKey = formatDateKey(date);
     setCustomSubtaskCompletions(prev => {
       const habitData = prev[habitId] || {};
@@ -228,20 +229,20 @@ export function useCustomHabits() {
         }
       };
     });
-  };
+  }, [setCustomSubtaskCompletions]);
 
   /**
    * Get subtask completion status
    */
-  const getCustomSubtaskStatus = (habitId, subtaskId, date) => {
+  const getCustomSubtaskStatus = useCallback((habitId, subtaskId, date) => {
     const dateKey = formatDateKey(date);
     return customSubtaskCompletions[habitId]?.[dateKey]?.[subtaskId] || false;
-  };
+  }, [customSubtaskCompletions]);
 
   /**
    * Calculate subtask completion percentage for a habit on a date
    */
-  const getCustomSubtaskCompletionPercentage = (habitId, date) => {
+  const getCustomSubtaskCompletionPercentage = useCallback((habitId, date) => {
     const habitSubtasks = getCustomSubtasks(habitId);
     if (habitSubtasks.length === 0) return 100;
     
@@ -250,14 +251,14 @@ export function useCustomHabits() {
     ).length;
 
     return Math.round((completed / habitSubtasks.length) * 100);
-  };
+  }, [getCustomSubtasks, getCustomSubtaskStatus]);
 
   // ==================== UTILITY METHODS ====================
 
   /**
    * Get all dates within a habit's range
    */
-  const getHabitDateRange = (habit) => {
+  const getHabitDateRange = useCallback((habit) => {
     const dates = [];
     const startDate = new Date(habit.dateFrom);
     const endDate = new Date(habit.dateTo);
@@ -267,20 +268,20 @@ export function useCustomHabits() {
     }
     
     return dates;
-  };
+  }, []);
 
   /**
    * Format date range for display
    */
-  const formatDateRange = (habit) => {
+  const formatDateRange = useCallback((habit) => {
     const fromDate = new Date(habit.dateFrom);
     const toDate = new Date(habit.dateTo);
     
     const options = { month: 'short', day: 'numeric' };
     return `${fromDate.toLocaleDateString('en-US', options)} - ${toDate.toLocaleDateString('en-US', options)}`;
-  };
+  }, []);
 
-  return {
+  return useMemo(() => ({
     customHabits,
     customCompletions,
     customSubtasks,
@@ -306,6 +307,32 @@ export function useCustomHabits() {
     toggleCustomSubtaskCompletion,
     getCustomSubtaskStatus,
     getCustomSubtaskCompletionPercentage
-  };
+  }), [
+    customHabits,
+    customCompletions,
+    customSubtasks,
+    customSubtaskCompletions,
+    habitsLoading,
+    completionsLoading,
+    subtasksLoading,
+    subtaskCompletionsLoading,
+    addCustomHabit,
+    updateCustomHabit,
+    deleteCustomHabit,
+    toggleCustomCompletion,
+    getCustomCompletionStatus,
+    isDateInRange,
+    getHabitsForDate,
+    isDateBlockedByCustomHabits,
+    getDateKeysInRange,
+    getHabitDateRange,
+    formatDateRange,
+    getCustomSubtasks,
+    addCustomSubtask,
+    updateCustomSubtask,
+    deleteCustomSubtask,
+    toggleCustomSubtaskCompletion,
+    getCustomSubtaskStatus,
+    getCustomSubtaskCompletionPercentage
+  ]);
 }
-

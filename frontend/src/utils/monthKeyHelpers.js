@@ -72,15 +72,12 @@ export function shardCompletionsByMonth(completions) {
 /** Merge monthly shards into legacy completions format */
 export function mergeMonthlyCompletions(monthlyDocs) {
   const merged = {};
-  for (const monthData of Object.values(monthlyDocs)) {
+  for (const [monthKey, monthData] of Object.entries(monthlyDocs)) {
     if (!monthData || typeof monthData !== 'object') continue;
     for (const [habitId, days] of Object.entries(monthData)) {
       if (!merged[habitId]) merged[habitId] = {};
       for (const [day, status] of Object.entries(days || {})) {
-        const monthKey = Object.keys(monthlyDocs).find((mk) => monthlyDocs[mk] === monthData);
-        if (monthKey) {
-          merged[habitId][dayToDateKey(monthKey, day)] = status;
-        }
+        merged[habitId][dayToDateKey(monthKey, day)] = status;
       }
     }
   }

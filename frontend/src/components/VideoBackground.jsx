@@ -4,6 +4,9 @@ import React, { useRef, useEffect, useState } from 'react';
  * Video Background Component
  * Loops an 8-second video with 40% blur effect
  */
+const DEBUG = import.meta.env.DEV;
+const logError = DEBUG ? console.error : () => {};
+
 export function VideoBackground() {
   const videoRef = useRef(null);
   const [loaded, setLoaded] = useState(false);
@@ -69,7 +72,7 @@ export function VideoBackground() {
           transition: 'opacity 0.5s ease',
         }}
         onError={(e) => {
-          console.error('Video failed to load:', e);
+          logError('Video failed to load:', e);
           // Fallback to gradient if video fails
           e.target.style.display = 'none';
         }}

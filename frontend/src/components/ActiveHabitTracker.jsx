@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { formatTime12, formatDateKey } from '../utils/dateHelpers';
-import { CheckCircle, Plus, Play, Pause, Square, Clock } from 'lucide-react';
-import { useStopwatch } from '../hooks/useStopwatch';
+import { CheckCircle, Plus, Clock } from 'lucide-react';
 import { GoalsCarousel } from './GoalsCarousel';
+import { ActiveHabitTimer } from './ActiveHabitTimer';
+import { StopwatchWidget } from './StopwatchWidget';
 import './styles/ActiveHabitTracker.css';
 
 // Sound utility
@@ -65,7 +67,7 @@ export function ActiveHabitTracker({
   onOpenGoal,
   onViewAllGoals
 }) {
-  const { activeHabit, formattedTimeRemaining, progress } = activeData || {};
+  const { activeHabit } = activeData || {};
   
   const today = useMemo(() => new Date(), []);
   const todayKey = useMemo(() => formatDateKey(today), [today]);
@@ -80,25 +82,6 @@ export function ActiveHabitTracker({
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const prevHabitRef = useRef(null);
   const alarmCleanup = useRef(null);
-
-  const {
-    time: stopwatchTime,
-    isRunning: isStopwatchRunning,
-    start: startStopwatch,
-    pause: pauseStopwatch,
-    reset: resetStopwatch,
-    lap: recordLap,
-    formatTime: formatStopwatchTime
-  } = useStopwatch();
-
-  const getStopwatchCategory = useCallback(() => {
-    if (!activeHabit?.category) return 'other';
-    const map = {
-      'study': 'study', 'work': 'prod', 'personal': 'self',
-      'health': 'self', 'fitness': 'self', 'social': 'self'
-    };
-    return map[activeHabit.category.toLowerCase()] || 'other';
-  }, [activeHabit]);
 
   useEffect(() => {
     return () => {
@@ -195,10 +178,6 @@ export function ActiveHabitTracker({
     task.habitId === activeHabit.id && task.date === todayKey
   );
 
-  const radius = 80; // Increased scale
-  const circumference = 2 * Math.PI * radius;
-  const progressOffset = circumference * (progress / 100);
-
   return (
     <div className="active-tracker-container glass-3d">
       {/* Header */}
@@ -211,12 +190,14 @@ export function ActiveHabitTracker({
 
       {/* Completion Button */}
       <div className="action-row">
-        <button 
+        <motion.button 
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
           className={`mark-complete-btn ${completionStatus === 'completed' ? 'completed' : ''}`}
           onClick={handleToggleCompletion}
         >
           {completionStatus === 'completed' ? 'COMPLETED' : 'MARK COMPLETE'}
-        </button>
+        </motion.button>
       </div>
 
       {/* Hero Section */}
@@ -224,32 +205,7 @@ export function ActiveHabitTracker({
         <h1 className="habit-title">{activeHabit.name}</h1>
         <div className="timer-container-centered">
           <span className="timer-label">TIME REMAINING</span>
-          <div className="circular-timer">
-             <svg width="184" height="184" viewBox="0 0 184 184">
-                <circle
-                  cx="92"
-                  cy="92"
-                  r={radius}
-                  fill="none"
-                  className="timer-bg"
-                  strokeWidth="6"
-                />
-                <circle
-                  cx="92"
-                  cy="92"
-                  r={radius}
-                  fill="none"
-                  className="timer-progress"
-                  strokeWidth="6"
-                  strokeDasharray={circumference}
-                  strokeDashoffset={progressOffset}
-                  transform="rotate(-90 92 92)"
-                />
-             </svg>
-             <div className="timer-value">
-               {formattedTimeRemaining}
-             </div>
-          </div>
+          <ActiveHabitTimer activeHabit={activeHabit} />
         </div>
       </div>
 
@@ -268,21 +224,34 @@ export function ActiveHabitTracker({
             </div>
           ) : (
              <div className="aht-task-list">
-               {todayTasks.map(task => (
-                 <div key={task.id} className={`aht-task-item ${task.completed ? 'completed' : ''}`}>
-                    <div 
-                      className="aht-task-checkbox" 
-                      onClick={() => onToggleDailyTask(task.id)}
-                    >
-                      {task.completed && <CheckCircle size={14} />}
-                    </div>
-                    <span className="aht-task-text">{task.title}</span>
-                    <button 
-                      className="aht-delete-task-btn"
-                      onClick={() => onDeleteDailyTask(task.id)}
-                    >✕</button>
-                 </div>
-               ))}
+               <AnimatePresence>
+                 {todayTasks.map(task => (
+                   <motion.div 
+                     key={task.id} 
+                     layout
+                     initial={{ opacity: 0, y: 10 }}
+                     animate={{ opacity: 1, y: 0 }}
+                     exit={{ opacity: 0, scale: 0.9 }}
+                     className={`aht-task-item ${task.completed ? 'completed' : ''}`}
+                   >
+                      <motion.div 
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                        className="aht-task-checkbox" 
+                        onClick={() => onToggleDailyTask(task.id)}
+                      >
+                        {task.completed && <CheckCircle size={14} />}
+                      </motion.div>
+                      <span className="aht-task-text">{task.title}</span>
+                      <motion.button 
+                        whileHover={{ scale: 1.2, color: '#ff4b4b' }}
+                        whileTap={{ scale: 0.9 }}
+                        className="aht-delete-task-btn"
+                        onClick={() => onDeleteDailyTask(task.id)}
+                      >✕</motion.button>
+                   </motion.div>
+                 ))}
+               </AnimatePresence>
              </div>
           )}
         </div>
@@ -294,44 +263,19 @@ export function ActiveHabitTracker({
              value={newTaskTitle}
              onChange={(e) => setNewTaskTitle(e.target.value)}
            />
-           <button type="submit" disabled={!newTaskTitle.trim()}>
+           <motion.button 
+             whileHover={{ scale: 1.1 }}
+             whileTap={{ scale: 0.9 }}
+             type="submit" 
+             disabled={!newTaskTitle.trim()}
+           >
              <Plus size={20} />
-           </button>
+           </motion.button>
         </form>
       </div>
 
-      {/* Stopwatch Controls - Scoped to avoid conflicts */}
-      <div className="aht-stopwatch-container">
-         <div className="aht-stopwatch-pill">
-            <div className="aht-stopwatch-display">
-               <Clock size={14} className="stopwatch-icon" />
-               <span>
-                  {(() => {
-                    const t = formatStopwatchTime(stopwatchTime);
-                    return t.hours ? `${t.hours}:${t.minutes}:${t.seconds}` : `${t.minutes}:${t.seconds}`;
-                  })()}
-               </span>
-            </div>
-            
-            <div className="aht-stopwatch-buttons">
-              <button 
-                className="aht-sw-btn play" 
-                onClick={() => isStopwatchRunning ? pauseStopwatch() : startStopwatch()}
-                title={isStopwatchRunning ? "Pause" : "Start"}
-              >
-                {isStopwatchRunning ? <Pause size={14} fill="white" /> : <Play size={14} fill="white" />}
-              </button>
-              
-              <button className="aht-sw-btn lap" onClick={() => recordLap(getStopwatchCategory())}>
-                Lap
-              </button>
-
-              <button className="aht-sw-btn stop" onClick={resetStopwatch}>
-                <Square size={12} fill="currentColor" />
-              </button>
-            </div>
-         </div>
-      </div>
+      {/* Stopwatch Controls */}
+      <StopwatchWidget activeHabit={activeHabit} />
       
     </div>
   );

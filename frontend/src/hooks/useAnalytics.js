@@ -1,4 +1,3 @@
-import { useMemo } from 'react';
 import { useStopwatchHistory } from '../contexts/StopwatchHistoryContext';
 
 /**
@@ -23,9 +22,12 @@ export function useAnalytics() {
     
     let startDate;
     switch (dateRange) {
-      case 'day':
-        startDate = new Date(now.setHours(0, 0, 0, 0));
+      case 'day': {
+        const d = new Date(now);
+        d.setHours(0, 0, 0, 0);
+        startDate = d;
         break;
+      }
       case 'week':
         startDate = new Date(now);
         startDate.setDate(now.getDate() - 7);

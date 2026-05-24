@@ -11,6 +11,9 @@ import {
 const MONTHS_TO_LOAD = 13;
 const DEBOUNCE_MS = 2000;
 
+const DEBUG = import.meta.env.DEV;
+const logError = DEBUG ? console.error : () => {};
+
 const pendingCompletionsFlushes = new Map();
 
 function flushAllCompletions() {
@@ -18,7 +21,7 @@ function flushAllCompletions() {
     try {
       flushFn();
     } catch (e) {
-      console.error('[MONTHLY COMPLETIONS] Flush error:', e);
+      logError('[MONTHLY COMPLETIONS] Flush error:', e);
     }
   });
 }
@@ -62,17 +65,22 @@ export function useMonthlyCompletions(userId, collectionName = 'completions') {
   const flushWrites = useCallback(async (completions) => {
     if (!userId) return;
     const shards = shardCompletionsByMonth(completions);
-    shardsRef.current = shards;
 
-    await Promise.all(
-      Object.entries(shards).map(([monthKey, data]) =>
-        setDoc(
-          doc(db, 'users', userId, collectionName, monthKey),
-          { habits: data, _v: Date.now() },
-          { merge: true }
+    try {
+      await Promise.all(
+        Object.entries(shards).map(([monthKey, data]) =>
+          setDoc(
+            doc(db, 'users', userId, collectionName, monthKey),
+            { habits: data, _v: Date.now() },
+            { merge: true }
+          )
         )
-      )
-    );
+      );
+      shardsRef.current = shards;
+    } catch (err) {
+      logError('Failed to save completions to Firestore', err);
+      showToast('Failed to save completion changes. Please check your network connection.', 'error');
+    }
   }, [userId, collectionName]);
 
   const flushPendingWrite = useCallback(() => {
@@ -138,7 +146,7 @@ export function useMonthlyCompletions(userId, collectionName = 'completions') {
             migratedRef.current = true;
             try {
               await flushWrites(legacyRef.current);
-            } catch (e) {
+            } catch {
               showToast('Migration in progress — some data may sync shortly.', 'info');
             }
           }

@@ -58,7 +58,7 @@
   font-size: 0.78rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: background-color 0.2s, border-color 0.2s, color 0.2s, opacity 0.2s, transform 0.2s, box-shadow 0.2s;
 }
 
 .view-all-goals-btn:hover {
@@ -395,7 +395,7 @@
   flex-shrink: 0;
   border: 2px solid rgba(255, 255, 255, 0.12);
   background: transparent;
-  transition: all 0.3s;
+  transition: background-color 0.3s, border-color 0.3s, color 0.3s, opacity 0.3s, transform 0.3s, box-shadow 0.3s;
 }
 
 .carousel-subgoal-dot.done {
@@ -564,7 +564,7 @@
   border-radius: 50%;
   color: var(--text-secondary);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: background-color 0.2s, border-color 0.2s, color 0.2s, opacity 0.2s, transform 0.2s, box-shadow 0.2s;
 }
 
 .carousel-arrow:hover:not(:disabled) {
@@ -593,7 +593,7 @@
   border: none;
   padding: 0;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: background-color 0.3s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s cubic-bezier(0.16, 1, 0.3, 1), color 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .carousel-dot:hover {

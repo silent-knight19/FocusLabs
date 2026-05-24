@@ -7,7 +7,7 @@
     border: 1px solid var(--glass-border);
     box-shadow: var(--shadow-glass);
     overflow: hidden;
-    transition: all var(--transition-fast);
+    transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), opacity var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .daily-task-panel:hover {
@@ -94,7 +94,7 @@
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: all var(--transition-fast);
+    transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), opacity var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .note-icon-btn:hover {
@@ -176,7 +176,7 @@
     border-radius: var(--radius-md);
     color: var(--text-primary);
     font-size: var(--font-size-md);
-    transition: all var(--transition-fast);
+    transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), opacity var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .task-input:focus {
@@ -210,7 +210,7 @@
     border-radius: var(--radius-md);
     font-weight: 600;
     cursor: pointer;
-    transition: all var(--transition-fast);
+    transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), opacity var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
     box-shadow: var(--glow-orange);
 }
 

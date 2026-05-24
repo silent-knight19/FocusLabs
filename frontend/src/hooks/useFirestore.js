@@ -27,10 +27,38 @@ const globalCircuitBreaker = {
 const queuedWrites = {};
 const pendingFlushes = new Map();
 
-function valuesEqual(a, b) {
+function isDeepEqual(a, b) {
   if (a === b) return true;
   if (a == null || b == null) return false;
-  return JSON.stringify(a) === JSON.stringify(b);
+  if (typeof a !== typeof b) return false;
+
+  if (typeof a === 'object') {
+    if (Array.isArray(a)) {
+      if (!Array.isArray(b) || a.length !== b.length) return false;
+      for (let i = 0; i < a.length; i++) {
+        if (!isDeepEqual(a[i], b[i])) return false;
+      }
+      return true;
+    }
+
+    if (Array.isArray(b)) return false;
+
+    const keysA = Object.keys(a);
+    const keysB = Object.keys(b);
+    if (keysA.length !== keysB.length) return false;
+
+    for (const key of keysA) {
+      if (!Object.prototype.hasOwnProperty.call(b, key)) return false;
+      if (!isDeepEqual(a[key], b[key])) return false;
+    }
+    return true;
+  }
+
+  return false;
+}
+
+function valuesEqual(a, b) {
+  return isDeepEqual(a, b);
 }
 
 function flushAllPending() {

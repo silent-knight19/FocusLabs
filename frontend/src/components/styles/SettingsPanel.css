@@ -75,7 +75,7 @@
     border: 1px solid var(--border-color);
     border-radius: 50px;
     cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    transition: background-color 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), border-color 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), color 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     min-width: 110px;
     justify-content: center;
 }
@@ -124,7 +124,7 @@
     color: var(--text-secondary);
     padding: 6px 12px;
     border-radius: var(--radius-sm);
-    transition: all 0.2s;
+    transition: background-color 0.2s, border-color 0.2s, color 0.2s, opacity 0.2s, transform 0.2s, box-shadow 0.2s;
 }
 
 .radio-label:hover {
@@ -156,7 +156,7 @@
     cursor: pointer;
     font-size: 0.9rem;
     font-weight: 600;
-    transition: all 0.3s;
+    transition: background-color 0.3s, border-color 0.3s, color 0.3s, opacity 0.3s, transform 0.3s, box-shadow 0.3s;
     text-transform: uppercase;
     letter-spacing: 1px;
 }
@@ -236,7 +236,7 @@
     color: var(--text-secondary);
     font-size: var(--font-size-sm);
     cursor: pointer;
-    transition: all var(--transition-base);
+    transition: background-color var(--transition-base), border-color var(--transition-base), color var(--transition-base), opacity var(--transition-base), transform var(--transition-base), box-shadow var(--transition-base);
 }
 
 .focus-category-toggle button:hover {
@@ -275,7 +275,7 @@
     background: var(--bg-hover);
     color: var(--text-primary);
     cursor: pointer;
-    transition: all var(--transition-base);
+    transition: background-color var(--transition-base), border-color var(--transition-base), color var(--transition-base), opacity var(--transition-base), transform var(--transition-base), box-shadow var(--transition-base);
 }
 
 .focus-range-grid button:hover {

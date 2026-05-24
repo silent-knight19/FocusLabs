@@ -1,89 +1,151 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useStopwatchHistory } from '../contexts/StopwatchHistoryContext';
+
+const DEBUG = import.meta.env.DEV;
+const logError = DEBUG ? console.error : () => {};
+const logWarn = DEBUG ? console.warn : () => {};
 
 export function useStopwatch() {
   const { history: laps, setHistory: setLaps } = useStopwatchHistory();
 
+  // Helper to safely load initial state from localStorage
+  const { initialTime, initialIsRunning, initialLastLapTime, initialLaps } = useMemo(() => {
+    let savedTime = 0;
+    let savedIsRunning = false;
+    let savedLastLapTime = 0;
+    let savedLaps = [];
+
+    try {
+      const savedState = localStorage.getItem('stopwatch_active_state');
+      if (savedState) {
+        const parsed = JSON.parse(savedState);
+        savedIsRunning = parsed.savedIsRunning || false;
+        savedLastLapTime = parsed.savedLastLapTime || 0;
+        
+        if (savedIsRunning && parsed.savedLastActive) {
+          const now = Date.now();
+          const elapsed = now - parsed.savedLastActive;
+          savedTime = (parsed.savedTime || 0) + elapsed;
+        } else {
+          savedTime = parsed.savedTime || 0;
+        }
+      }
+    } catch (e) {
+      logError('Failed to parse stopwatch active state from localStorage', e);
+    }
+
+    try {
+      const savedSessionLaps = localStorage.getItem('stopwatch_current_session_laps');
+      if (savedSessionLaps) {
+        savedLaps = JSON.parse(savedSessionLaps);
+      }
+    } catch (e) {
+      logError('Failed to parse stopwatch session laps from localStorage', e);
+    }
+
+    return {
+      initialTime: savedTime,
+      initialIsRunning: savedIsRunning,
+      initialLastLapTime: savedLastLapTime,
+      initialLaps: savedLaps
+    };
+  }, []);
+
   // Local state for the running timer
-  // We don't sync high-frequency timer updates to Firestore to avoid write limits
-  const [time, setTime] = useState(0);
-  const [isRunning, setIsRunning] = useState(false);
-  const [startTime, setStartTime] = useState(null);
-  const [lastLapTime, setLastLapTime] = useState(0); // Track time of last lap to calculate duration
-  const [currentSessionLaps, setCurrentSessionLaps] = useState([]); // Current session laps for UI display
+  const [time, setTime] = useState(initialTime);
+  const [isRunning, setIsRunning] = useState(initialIsRunning);
+  const [lastLapTime, setLastLapTime] = useState(initialLastLapTime);
+  const [currentSessionLaps, setCurrentSessionLaps] = useState(initialLaps);
   
   const requestRef = useRef();
   const previousTimeRef = useRef();
 
-  // Load initial state from localStorage for the active timer (device-specific for now)
+  // Synchronous refs for unload and visibilitychange tracking
+  const timeRef = useRef(0);
+  const isRunningRef = useRef(false);
+  const lastLapTimeRef = useRef(0);
+
   useEffect(() => {
-    const savedState = localStorage.getItem('stopwatch_active_state');
-    if (savedState) {
-      const { savedTime, savedIsRunning, savedLastActive, savedLastLapTime } = JSON.parse(savedState);
-      
-      if (savedIsRunning) {
-        // Calculate time elapsed while away
-        const now = Date.now();
-        const elapsedWhileAway = now - savedLastActive;
-        setTime(savedTime + elapsedWhileAway);
-        setIsRunning(true);
-        setStartTime(Date.now() - (savedTime + elapsedWhileAway));
-      } else {
-        setTime(savedTime);
-        setIsRunning(false);
-      }
-      
-      // Restore lastLapTime
-      if (savedLastLapTime !== undefined) {
-        setLastLapTime(savedLastLapTime);
-      }
-    }
-    
-    // Restore current session laps
-    const savedSessionLaps = localStorage.getItem('stopwatch_current_session_laps');
-    if (savedSessionLaps) {
-      setCurrentSessionLaps(JSON.parse(savedSessionLaps));
+    timeRef.current = time;
+  }, [time]);
+
+  useEffect(() => {
+    isRunningRef.current = isRunning;
+  }, [isRunning]);
+
+  useEffect(() => {
+    lastLapTimeRef.current = lastLapTime;
+  }, [lastLapTime]);
+
+  const saveActiveState = useCallback(() => {
+    try {
+      localStorage.setItem('stopwatch_active_state', JSON.stringify({
+        savedTime: timeRef.current,
+        savedIsRunning: isRunningRef.current,
+        savedLastActive: Date.now(),
+        savedLastLapTime: lastLapTimeRef.current
+      }));
+    } catch (e) {
+      logError('Failed to save stopwatch active state to localStorage', e);
     }
   }, []);
 
-  // Save active state to localStorage on change
+  // Save active state to localStorage on state changes (but NOT on time updates)
   useEffect(() => {
-    localStorage.setItem('stopwatch_active_state', JSON.stringify({
-      savedTime: time,
-      savedIsRunning: isRunning,
-      savedLastActive: Date.now(),
-      savedLastLapTime: lastLapTime
-    }));
-  }, [time, isRunning, lastLapTime]);
+    saveActiveState();
+  }, [isRunning, lastLapTime, saveActiveState]);
 
   // Persist current session laps to localStorage
   useEffect(() => {
-    localStorage.setItem('stopwatch_current_session_laps', JSON.stringify(currentSessionLaps));
+    try {
+      localStorage.setItem('stopwatch_current_session_laps', JSON.stringify(currentSessionLaps));
+    } catch (e) {
+      logError('Failed to save stopwatch session laps to localStorage', e);
+    }
   }, [currentSessionLaps]);
 
-  const animate = useCallback((timestamp) => {
-    if (previousTimeRef.current != undefined) {
-      const deltaTime = timestamp - previousTimeRef.current;
-      setTime(prevTime => prevTime + deltaTime);
-    }
-    previousTimeRef.current = timestamp;
-    requestRef.current = requestAnimationFrame(animate);
-  }, []);
+  // Handle tab unload or backgrounding for robust updates
+  useEffect(() => {
+    const handleUnloadOrHide = () => {
+      saveActiveState();
+    };
+
+    window.addEventListener('pagehide', handleUnloadOrHide);
+    document.addEventListener('visibilitychange', handleUnloadOrHide);
+
+    return () => {
+      window.removeEventListener('pagehide', handleUnloadOrHide);
+      document.removeEventListener('visibilitychange', handleUnloadOrHide);
+    };
+  }, [saveActiveState]);
+
+  const animateRef = useRef();
+  
+  // Set current animation function after render
+  useEffect(() => {
+    animateRef.current = (timestamp) => {
+      if (previousTimeRef.current != undefined) {
+        const deltaTime = timestamp - previousTimeRef.current;
+        setTime(prevTime => prevTime + deltaTime);
+      }
+      previousTimeRef.current = timestamp;
+      requestRef.current = requestAnimationFrame(animateRef.current);
+    };
+  }); // Runs on every render safely outside render phase
 
   useEffect(() => {
     if (isRunning) {
-      requestRef.current = requestAnimationFrame(animate);
+      requestRef.current = requestAnimationFrame(animateRef.current);
     } else {
       cancelAnimationFrame(requestRef.current);
       previousTimeRef.current = undefined;
     }
     return () => cancelAnimationFrame(requestRef.current);
-  }, [isRunning, animate]);
+  }, [isRunning]);
 
   const start = () => {
     if (!isRunning) {
       setIsRunning(true);
-      setStartTime(Date.now() - time);
     }
   };
 
@@ -94,7 +156,6 @@ export function useStopwatch() {
   const reset = () => {
     setIsRunning(false);
     setTime(0);
-    setStartTime(null);
     setLastLapTime(0); // Reset last lap time
     setCurrentSessionLaps([]); // Clear current session laps from UI
   };
@@ -105,7 +166,7 @@ export function useStopwatch() {
     
     // Only save if there's meaningful time (at least 1 second)
     if (sessionDuration < 1000) {
-      console.warn('Session too short to save (< 1 second)');
+      logWarn('Session too short to save (< 1 second)');
       return;
     }
 

@@ -1,10 +1,14 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { doc, setDoc, onSnapshot, getDocs, collection, query, orderBy, limit } from 'firebase/firestore';
 import { db } from '../config/firebase';
+import { showToast } from '../contexts/ToastContext';
 import { getMonthKey, getRecentMonthKeys } from '../utils/monthKeyHelpers';
 
 const MONTHS_TO_LOAD = 6;
 const PAGE_SIZE = 500;
+
+const DEBUG = import.meta.env.DEV;
+const logError = DEBUG ? console.error : () => {};
 
 const pendingStopwatchFlushes = new Map();
 
@@ -13,7 +17,7 @@ function flushAllStopwatch() {
     try {
       flushFn();
     } catch (e) {
-      console.error('[MONTHLY STOPWATCH] Flush error:', e);
+      logError('[MONTHLY STOPWATCH] Flush error:', e);
     }
   });
 }
@@ -57,15 +61,20 @@ export function useMonthlyStopwatch(userId) {
       byMonth[mk].push(session);
     }
 
-    await Promise.all(
-      Object.entries(byMonth).map(([monthKey, monthSessions]) =>
-        setDoc(
-          doc(db, 'users', userId, 'stopwatch', monthKey),
-          { sessions: monthSessions, _v: Date.now() },
-          { merge: true }
+    try {
+      await Promise.all(
+        Object.entries(byMonth).map(([monthKey, monthSessions]) =>
+          setDoc(
+            doc(db, 'users', userId, 'stopwatch', monthKey),
+            { sessions: monthSessions, _v: Date.now() },
+            { merge: true }
+          )
         )
-      )
-    );
+      );
+    } catch (err) {
+      logError('Failed to save stopwatch sessions to Firestore', err);
+      showToast('Failed to save stopwatch changes. Please check your network connection.', 'error');
+    }
   }, [userId]);
 
   const flushPendingWrite = useCallback(() => {

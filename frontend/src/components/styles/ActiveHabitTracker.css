@@ -12,7 +12,7 @@
     overflow: hidden;
     margin-bottom: var(--spacing-lg);
     box-shadow: var(--shadow-glass);
-    transition: all var(--transition-base);
+    transition: background-color var(--transition-base), border-color var(--transition-base), color var(--transition-base), opacity var(--transition-base), transform var(--transition-base), box-shadow var(--transition-base);
 }
 
 .active-tracker-container:hover {
@@ -95,7 +95,7 @@
     font-weight: 600;
     font-size: 12px;
     cursor: pointer;
-    transition: all var(--transition-base);
+    transition: background-color var(--transition-base), border-color var(--transition-base), color var(--transition-base), opacity var(--transition-base), transform var(--transition-base), box-shadow var(--transition-base);
 }
 
 .mark-complete-btn:hover {
@@ -263,7 +263,7 @@
     background: var(--bg-elevated);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
-    transition: all var(--transition-fast);
+    transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), opacity var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .aht-task-item:hover {
@@ -282,7 +282,7 @@
     align-items: center;
     justify-content: center;
     color: var(--bg-primary);
-    transition: all var(--transition-fast);
+    transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), opacity var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .aht-task-item.completed .aht-task-checkbox {
@@ -308,7 +308,7 @@
     cursor: pointer;
     padding: 4px;
     opacity: 0;
-    transition: all var(--transition-fast);
+    transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), opacity var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
     border-radius: 4px;
 }
 
@@ -360,7 +360,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all var(--transition-fast);
+    transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), opacity var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .aht-add-task-form button:hover:not(:disabled) {
@@ -430,7 +430,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all var(--transition-fast);
+    transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), opacity var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
     background: transparent;
     color: var(--text-secondary);
     border-radius: 6px;

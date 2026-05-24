@@ -18,6 +18,10 @@ initMonitoring();
 
 const App = lazy(() => import('./App.jsx'));
 
+import { HabitsProvider } from './contexts/HabitsContext.jsx';
+import { GoalsProvider } from './contexts/GoalsContext.jsx';
+import { DailyPlannerProvider } from './contexts/DailyPlannerContext.jsx';
+
 function AppWrapper() {
   const { user, loading } = useAuth();
 
@@ -36,10 +40,16 @@ function AppWrapper() {
 
   return (
     <StopwatchHistoryProvider>
-      <NetworkStatus />
-      <Suspense fallback={<HabitGridSkeleton />}>
-        <App />
-      </Suspense>
+      <HabitsProvider>
+        <GoalsProvider>
+          <DailyPlannerProvider>
+            <NetworkStatus />
+            <Suspense fallback={<HabitGridSkeleton />}>
+              <App />
+            </Suspense>
+          </DailyPlannerProvider>
+        </GoalsProvider>
+      </HabitsProvider>
     </StopwatchHistoryProvider>
   );
 }

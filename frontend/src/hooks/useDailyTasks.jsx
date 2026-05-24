@@ -1,3 +1,4 @@
+import { useCallback, useMemo } from 'react';
 import { useMonthlyDailyTasks } from './useMonthlyDailyTasks';
 import { useAuth } from '../contexts/AuthContext';
 import { formatDateKey } from '../utils/dateHelpers';
@@ -17,7 +18,7 @@ export function useDailyTasks() {
   /**
    * Generate unique ID for new daily tasks
    */
-  const generateId = () => createId('task');
+  const generateId = useCallback(() => createId('task'), []);
 
   /**
    * Get tasks for a specific habit on a specific date
@@ -25,24 +26,24 @@ export function useDailyTasks() {
    * @param {Date|string} date - Date object or ISO string
    * @returns {Array} Array of daily tasks
    */
-  const getDailyTasks = (habitId, date) => {
+  const getDailyTasks = useCallback((habitId, date) => {
     const dateKey = formatDateKey(date);
     return dailyTasks
       .filter(task => task.habitId === habitId && task.date === dateKey)
       .sort((a, b) => a.order - b.order);
-  };
+  }, [dailyTasks]);
 
   /**
    * Get all tasks for a specific date across all habits
    * @param {Date|string} date - Date object or ISO string
    * @returns {Array} Array of daily tasks
    */
-  const getAllDailyTasks = (date) => {
+  const getAllDailyTasks = useCallback((date) => {
     const dateKey = formatDateKey(date);
     return dailyTasks
       .filter(task => task.date === dateKey)
       .sort((a, b) => a.order - b.order);
-  };
+  }, [dailyTasks]);
 
   /**
    * Add a new daily task
@@ -51,7 +52,7 @@ export function useDailyTasks() {
    * @param {string} title - Task title
    * @returns {object} Created task
    */
-  const addDailyTask = (habitId, date, title) => {
+  const addDailyTask = useCallback((habitId, date, title) => {
     const dateKey = formatDateKey(date);
     const existingTasks = getDailyTasks(habitId, date);
     
@@ -67,48 +68,48 @@ export function useDailyTasks() {
 
     setDailyTasks(prev => [...prev, newTask]);
     return newTask;
-  };
+  }, [generateId, getDailyTasks, setDailyTasks]);
 
   /**
    * Toggle task completion status
    * @param {string} taskId - Task ID
    */
-  const toggleDailyTask = (taskId) => {
+  const toggleDailyTask = useCallback((taskId) => {
     setDailyTasks(prev =>
       prev.map(task =>
         task.id === taskId ? { ...task, completed: !task.completed } : task
       )
     );
-  };
+  }, [setDailyTasks]);
 
   /**
    * Update a daily task
    * @param {string} taskId - Task ID
    * @param {object} updates - Fields to update
    */
-  const updateDailyTask = (taskId, updates) => {
+  const updateDailyTask = useCallback((taskId, updates) => {
     setDailyTasks(prev =>
       prev.map(task =>
         task.id === taskId ? { ...task, ...updates } : task
       )
     );
-  };
+  }, [setDailyTasks]);
 
   /**
    * Delete a daily task
    * @param {string} taskId - Task ID
    */
-  const deleteDailyTask = (taskId) => {
+  const deleteDailyTask = useCallback((taskId) => {
     setDailyTasks(prev => prev.filter(task => task.id !== taskId));
-  };
+  }, [setDailyTasks]);
 
   /**
    * Delete all daily tasks for a specific habit
    * @param {string} habitId - Habit ID
    */
-  const deleteTasksForHabit = (habitId) => {
+  const deleteTasksForHabit = useCallback((habitId) => {
     setDailyTasks(prev => prev.filter(task => task.habitId !== habitId));
-  };
+  }, [setDailyTasks]);
 
   /**
    * Calculate completion percentage for a habit on a date
@@ -116,20 +117,20 @@ export function useDailyTasks() {
    * @param {Date|string} date - Date object or ISO string
    * @returns {number} Completion percentage (0-100)
    */
-  const getDailyCompletion = (habitId, date) => {
+  const getDailyCompletion = useCallback((habitId, date) => {
     const tasks = getDailyTasks(habitId, date);
     if (tasks.length === 0) return 0;
     
     const completedCount = tasks.filter(task => task.completed).length;
     return Math.round((completedCount / tasks.length) * 100);
-  };
+  }, [getDailyTasks]);
 
   /**
    * Get overall completion for a date across all habits
    * @param {Date|string} date - Date object or ISO string
    * @returns {object} Object with total tasks and completed count
    */
-  const getDateCompletion = (date) => {
+  const getDateCompletion = useCallback((date) => {
     const tasks = getAllDailyTasks(date);
     const completed = tasks.filter(task => task.completed).length;
     
@@ -138,7 +139,7 @@ export function useDailyTasks() {
       completed,
       percentage: tasks.length > 0 ? Math.round((completed / tasks.length) * 100) : 0
     };
-  };
+  }, [getAllDailyTasks]);
 
   /**
    * Reorder tasks for a habit on a date
@@ -146,7 +147,7 @@ export function useDailyTasks() {
    * @param {Date|string} date - Date object or ISO string
    * @param {Array} newOrder - Array of task IDs in new order
    */
-  const reorderDailyTasks = (habitId, date, newOrder) => {
+  const reorderDailyTasks = useCallback((habitId, date, newOrder) => {
     setDailyTasks(prev => {
       const dateKey = formatDateKey(date);
       const updated = prev.map(task => {
@@ -160,9 +161,9 @@ export function useDailyTasks() {
       });
       return updated;
     });
-  };
+  }, [setDailyTasks]);
 
-  return {
+  return useMemo(() => ({
     dailyTasks,
     tasksLoading,
     getDailyTasks,
@@ -175,5 +176,18 @@ export function useDailyTasks() {
     getDateCompletion,
     reorderDailyTasks,
     deleteTasksForHabit
-  };
+  }), [
+    dailyTasks,
+    tasksLoading,
+    getDailyTasks,
+    getAllDailyTasks,
+    addDailyTask,
+    toggleDailyTask,
+    updateDailyTask,
+    deleteDailyTask,
+    getDailyCompletion,
+    getDateCompletion,
+    reorderDailyTasks,
+    deleteTasksForHabit
+  ]);
 }

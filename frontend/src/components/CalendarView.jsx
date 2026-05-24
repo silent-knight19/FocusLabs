@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Search, X, Trash2, Edit2, Check, ChevronDown, ChevronRight } from 'lucide-react';
 import { getMonthDates, getMonthName, isSameDay, getTwoYearsAgo, isWithinTwoYears, formatDateKey, isFutureDate } from '../utils/dateHelpers';
 import { ConfirmationModal } from './ConfirmationModal';
@@ -99,57 +100,67 @@ const HabitItem = ({ habit, isCompleted, subtasks, subtaskCompletions, dailyTask
         {isCompleted && <Check size={14} color={habit.color} />}
       </div>
 
-      {isExpanded && (
-        <div className="habit-details">
-          {/* Static Subtasks */}
-          {subtasks.length > 0 && (
-             <div className="habit-subtasks">
-              <div className="subtasks-header">Checklist</div>
-              {subtasks.map(st => {
-                const isStCompleted = subtaskCompletions[habit.id]?.[dateKey]?.[st.id] === true;
-                return (
-                  <div key={st.id} className="habit-subtask-item">
-                    <div className={`subtask-dot ${isStCompleted ? 'completed' : ''}`} />
-                    <span className={`subtask-text ${isStCompleted ? 'completed' : ''}`}>
-                      {st.title}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          )}
+      {/* Accordion animation using AnimatePresence */}
+      <AnimatePresence>
+        {isExpanded && (
+          <motion.div 
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            style={{ overflow: 'hidden' }}
+            className="habit-details"
+          >
+            {/* Static Subtasks */}
+            {subtasks.length > 0 && (
+               <div className="habit-subtasks">
+                <div className="subtasks-header">Checklist</div>
+                {subtasks.map(st => {
+                  const isStCompleted = subtaskCompletions[habit.id]?.[dateKey]?.[st.id] === true;
+                  return (
+                    <motion.div whileHover={{ x: 5 }} key={st.id} className="habit-subtask-item">
+                      <div className={`subtask-dot ${isStCompleted ? 'completed' : ''}`} />
+                      <span className={`subtask-text ${isStCompleted ? 'completed' : ''}`}>
+                        {st.title}
+                      </span>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            )}
 
-          {/* Daily Tasks for this Habit */}
-          {dailyTasks.length > 0 && (
-            <div className="habit-subtasks daily-tasks-group">
-              <div className="subtasks-header">Today's Tasks</div>
-              {dailyTasks.map(task => (
-                <TaskItem 
-                  key={task.id} 
-                  task={task} 
-                  onToggle={() => onToggleTask(task.id)}
-                  onDelete={() => {
-                    setConfirmationModal({
-                      isOpen: true,
-                      title: 'Delete Task',
-                      message: 'Are you sure you want to delete this task?',
-                      confirmText: 'Delete',
-                      type: 'danger',
-                      onConfirm: () => onDeleteTask(task.id)
-                    });
-                  }}
-                  onUpdate={(title) => onUpdateTask(task.id, { title })}
-                  disabled={disabled}
-                />
-              ))}
-            </div>
-          )}
+            {/* Daily Tasks for this Habit */}
+            {dailyTasks.length > 0 && (
+              <div className="habit-subtasks daily-tasks-group">
+                <div className="subtasks-header">Today's Tasks</div>
+                {dailyTasks.map(task => (
+                  <TaskItem 
+                    key={task.id} 
+                    task={task} 
+                    onToggle={() => onToggleTask(task.id)}
+                    onDelete={() => {
+                      setConfirmationModal({
+                        isOpen: true,
+                        title: 'Delete Task',
+                        message: 'Are you sure you want to delete this task?',
+                        confirmText: 'Delete',
+                        type: 'danger',
+                        onConfirm: () => onDeleteTask(task.id)
+                      });
+                    }}
+                    onUpdate={(title) => onUpdateTask(task.id, { title })}
+                    disabled={disabled}
+                  />
+                ))}
+              </div>
+            )}
 
-          {subtasks.length === 0 && dailyTasks.length === 0 && (
-            <div className="no-subtasks">No tasks for today</div>
-          )}
-        </div>
-      )}
+            {subtasks.length === 0 && dailyTasks.length === 0 && (
+              <div className="no-subtasks">No tasks for today</div>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
@@ -582,8 +593,11 @@ export function CalendarView({ habits, completions, subtasks = [], subtaskComple
               const isMatching = matchingDates.has(dateStr);
               
               return (
-                <div 
-                  key={index} 
+                <motion.div 
+                  key={index}
+                  whileHover={{ scale: 1.05, zIndex: 1 }}
+                  whileTap={{ scale: 0.95 }}
+                  transition={{ duration: 0.2 }}
                   className={`calendar-day ${isToday ? 'today' : ''} ${isSelected ? 'selected' : ''} ${isMatching ? 'search-match' : ''}`}
                   onClick={() => handleDateClick(date)}
                   onDoubleClick={() => handleDateDoubleClick(date)}
@@ -597,7 +611,8 @@ export function CalendarView({ habits, completions, subtasks = [], subtaskComple
                           const isCompleted = completions[habit.id]?.[dateStr] === 'completed';
                           if (!isCompleted) return null;
                           return (
-                            <div 
+                            <motion.div 
+                              layoutId={`event-${habit.id}-${dateStr}`}
                               key={habit.id} 
                               className="event-dot"
                               style={{ backgroundColor: habit.color }}
@@ -608,7 +623,7 @@ export function CalendarView({ habits, completions, subtasks = [], subtaskComple
                       </div>
                     )}
                   </div>
-                </div>
+                </motion.div>
               );
             })}
         </div>

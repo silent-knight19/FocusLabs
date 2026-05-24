@@ -23,7 +23,7 @@
     background-color: var(--bg-hover);
     border-radius: var(--radius-md);
     border: 2px solid var(--border-color);
-    transition: all var(--transition-base);
+    transition: background-color var(--transition-base), border-color var(--transition-base), color var(--transition-base), opacity var(--transition-base), transform var(--transition-base), box-shadow var(--transition-base);
 }
 
 .stat-item:hover {

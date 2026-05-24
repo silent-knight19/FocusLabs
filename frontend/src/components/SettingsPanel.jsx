@@ -9,6 +9,9 @@ import { ButtonWithTooltip } from './ButtonWithTooltip';
 import { LogOut } from 'lucide-react';
 import './styles/SettingsPanel.css';
 
+const DEBUG = import.meta.env.DEV;
+const logError = DEBUG ? console.error : () => {};
+
 /**
  * Settings panel for theme, preferences, and data management
  */
@@ -75,7 +78,7 @@ export function SettingsPanel({ isOpen, onClose, settings, onUpdateSettings }) {
               firestoreData[colName] = null;
             }
           } catch (err) {
-            console.error(`Error fetching ${colName}:`, err);
+            logError(`Error fetching ${colName}:`, err);
             firestoreData[colName] = null;
           }
         }));
@@ -146,9 +149,8 @@ export function SettingsPanel({ isOpen, onClose, settings, onUpdateSettings }) {
       setSuccessMessage('Data exported successfully!');
       setTimeout(() => setSuccessMessage(''), 3000);
     } catch (error) {
-      console.error('Export error:', error);
-      setImportError('Failed to export data. Please try again.');
-      setTimeout(() => setImportError(''), 3000);
+      logError('Export error:', error);
+      alert('Failed to export data: ' + error.message);
     }
   };
 
@@ -193,6 +195,7 @@ export function SettingsPanel({ isOpen, onClose, settings, onUpdateSettings }) {
           };
 
           // Write each collection to Firestore with { value: data } structure
+          let hasError = false;
           const writePromises = Object.entries(firestoreMapping).map(
             async ([jsonKey, firestoreCollection]) => {
               const dataToWrite = importedData[jsonKey];
@@ -202,7 +205,8 @@ export function SettingsPanel({ isOpen, onClose, settings, onUpdateSettings }) {
                 const docRef = doc(db, 'users', userId, 'data', firestoreCollection);
                 await setDoc(docRef, { value: dataToWrite }, { merge: true });
               } catch (err) {
-                console.error(`Error importing ${firestoreCollection}:`, err);
+                logError(`Error importing ${firestoreCollection}:`, err);
+                hasError = true;
               }
             }
           );
@@ -227,7 +231,7 @@ export function SettingsPanel({ isOpen, onClose, settings, onUpdateSettings }) {
           window.location.reload();
         }, 1500);
       } catch (err) {
-        console.error('Import error:', err);
+        logError('Import error:', err);
         setImportError('Invalid JSON format. Please check the file.');
         setSuccessMessage('');
       }
@@ -305,9 +309,8 @@ export function SettingsPanel({ isOpen, onClose, settings, onUpdateSettings }) {
       setSuccessMessage(`Cleared ${labelMap[categoryKey] || 'focus'} time for ${rangeLabel}.`);
       setTimeout(() => setSuccessMessage(''), 3000);
     } catch (e) {
-      console.error('Error clearing focus time', e);
-      setImportError('Failed to clear focus time.');
-      setTimeout(() => setImportError(''), 3000);
+      logError('Error clearing focus time', e);
+      alert('Failed to clear focus sessions');
     }
   };
 
@@ -342,8 +345,8 @@ export function SettingsPanel({ isOpen, onClose, settings, onUpdateSettings }) {
         window.location.reload();
       }, 1500);
     } catch (error) {
-      console.error('Error clearing data:', error);
-      setImportError('Failed to clear cloud data.');
+      logError('Error clearing data:', error);
+      alert('Failed to clear data: ' + error.message);
     }
   };
 
