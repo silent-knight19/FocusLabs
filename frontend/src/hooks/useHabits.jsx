@@ -250,6 +250,42 @@ export function useHabits() {
   };
 
   /**
+   * Clear regular habit completions for all habits on the given date keys.
+   * Used when custom date habits take over specific days in the month view.
+   */
+  const clearCompletionsForDateKeys = (dateKeys) => {
+    if (!dateKeys.length) return;
+
+    const dateKeySet = new Set(dateKeys);
+
+    setCompletions(prev => {
+      let changed = false;
+      const updated = { ...prev };
+
+      for (const habitId of Object.keys(updated)) {
+        const habitCompletions = updated[habitId];
+        const nextHabitCompletions = { ...habitCompletions };
+
+        for (const dateKey of dateKeySet) {
+          if (nextHabitCompletions[dateKey]) {
+            delete nextHabitCompletions[dateKey];
+            changed = true;
+          }
+        }
+
+        if (Object.keys(nextHabitCompletions).length === 0) {
+          delete updated[habitId];
+        } else {
+          updated[habitId] = nextHabitCompletions;
+        }
+      }
+
+      return changed ? updated : prev;
+    });
+    window.dispatchEvent(new Event('habit-data-updated'));
+  };
+
+  /**
    * Get completion status for a habit on a specific date
    */
   const getCompletionStatus = (habitId, date) => {
@@ -359,6 +395,7 @@ export function useHabits() {
     deleteHabit,
     toggleCompletion,
     clearCompletion,
+    clearCompletionsForDateKeys,
     getCompletionStatus,
     getCurrentStreak,
     getLongestStreak,

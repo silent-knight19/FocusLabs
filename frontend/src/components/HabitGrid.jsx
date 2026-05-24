@@ -1,5 +1,4 @@
 import React from 'react';
-import { GridHeader } from './GridHeader';
 import { HabitRow } from './HabitRow';
 import './styles/HabitGrid.css';
 import { DndContext, useSensor, useSensors, PointerSensor } from '@dnd-kit/core';
@@ -60,7 +59,6 @@ export function HabitGrid({
             className="habit-grid-body"
             style={{ '--days-count': weekDates.length }}
           >
-            <GridHeader weekDates={weekDates} />
             {sortedHabits.map(habit => (
               <HabitRow
                 key={habit.id}

@@ -93,6 +93,7 @@ function App() {
     deleteHabit,
     toggleCompletion,
     clearCompletion,
+    clearCompletionsForDateKeys,
     getCompletionStatus,
     getCurrentStreak,
     getLongestStreak,
@@ -138,7 +139,9 @@ function App() {
     deleteCustomSubtask,
     toggleCustomSubtaskCompletion,
     getCustomSubtaskStatus,
-    getCustomSubtaskCompletionPercentage
+    getCustomSubtaskCompletionPercentage,
+    isDateBlockedByCustomHabits,
+    getDateKeysInRange
   } = useCustomHabits();
 
   // Goals hook
@@ -156,13 +159,8 @@ function App() {
     getGoalStats
   } = useGoals();
 
-  // Helper to check if a date has custom habits (blocking regular habits)
-  const isDateBlockedByCustom = (date) => {
-    return customHabits.some(habit => {
-      const dateKey = formatDateKey(date);
-      return dateKey >= habit.dateFrom && dateKey <= habit.dateTo;
-    });
-  };
+  // Helper to check if a date has custom habits (blocking regular habits in month view)
+  const isDateBlockedByCustom = isDateBlockedByCustomHabits;
 
   const { settings, updateSettings } = useSettings();
 
@@ -321,6 +319,9 @@ function App() {
   };
 
   const handleSaveCustomHabit = (habitData) => {
+    const blockedDateKeys = getDateKeysInRange(habitData.dateFrom, habitData.dateTo);
+    clearCompletionsForDateKeys(blockedDateKeys);
+
     if (editingCustomHabit) {
       updateCustomHabit(editingCustomHabit.id, habitData);
     } else {

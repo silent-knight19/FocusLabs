@@ -39,6 +39,31 @@ export function useCustomHabits() {
   };
 
   /**
+   * Check if a date is covered by any custom habit (blocks regular month-view habits)
+   */
+  const isDateBlockedByCustomHabits = (date) => {
+    return getHabitsForDate(date).length > 0;
+  };
+
+  /**
+   * Get all YYYY-MM-DD keys between two dates (inclusive)
+   */
+  const getDateKeysInRange = (dateFrom, dateTo) => {
+    const keys = [];
+    const start = new Date(dateFrom);
+    const end = new Date(dateTo);
+    start.setHours(0, 0, 0, 0);
+    end.setHours(0, 0, 0, 0);
+
+    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+      const key = formatDateKey(d);
+      if (key) keys.push(key);
+    }
+
+    return keys;
+  };
+
+  /**
    * Add a new custom habit
    */
   const addCustomHabit = (habitData) => {
@@ -269,6 +294,8 @@ export function useCustomHabits() {
     getCustomCompletionStatus,
     isDateInRange,
     getHabitsForDate,
+    isDateBlockedByCustomHabits,
+    getDateKeysInRange,
     getHabitDateRange,
     formatDateRange,
     // Subtask methods

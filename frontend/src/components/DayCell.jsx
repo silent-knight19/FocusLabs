@@ -30,13 +30,27 @@ export function DayCell({ status, onClick, date, showNumber, isCustomDate, block
     return classes;
   };
 
+  const getTitle = () => {
+    if (!date) return '';
+    if (blockedByCustom) {
+      return `${date.toLocaleDateString()} — custom habits set for this day`;
+    }
+    return date.toLocaleDateString();
+  };
+
   return (
     <button
       type="button"
       className={getCellClass()}
       onClick={disabled ? undefined : onClick}
-      aria-label={disabled ? 'Not applicable' : `Mark habit as ${!status ? 'completed' : status === 'completed' ? 'failed' : 'incomplete'}`}
-      title={date ? date.toLocaleDateString() : ''}
+      aria-label={
+        blockedByCustom
+          ? 'Custom habits set for this day — regular habit blocked'
+          : disabled
+            ? 'Not applicable'
+            : `Mark habit as ${!status ? 'completed' : status === 'completed' ? 'failed' : 'incomplete'}`
+      }
+      title={getTitle()}
       disabled={disabled}
     >
       {showNumber && !status ? (

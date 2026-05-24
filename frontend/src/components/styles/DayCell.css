@@ -248,10 +248,24 @@
     border: 1px dashed rgba(255, 122, 89, 0.5);
     cursor: not-allowed;
     color: #FFFFFF;
+    opacity: 1;
+}
+
+.day-cell.blocked-by-custom.disabled {
+    background: repeating-linear-gradient(45deg,
+            rgba(255, 122, 89, 0.15),
+            rgba(255, 122, 89, 0.15) 2px,
+            transparent 2px,
+            transparent 6px);
+    border: 1px dashed rgba(255, 122, 89, 0.5);
+    opacity: 1;
 }
 
 .day-cell.blocked-by-custom .day-number {
     opacity: 0.9;
+    color: var(--accent-primary) !important;
+    text-shadow: none;
+    font-weight: 700;
 }
 
 .day-cell.blocked-by-custom:hover {
