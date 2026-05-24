@@ -1,6 +1,5 @@
 import React, { useMemo } from 'react';
 import { useStopwatchHistory } from '../contexts/StopwatchHistoryContext';
-import { formatTime12 } from '../utils/dateHelpers';
 import './styles/AnalyticsView.css'; // Reuse analytics styles
 
 export function StudyView() {
@@ -31,7 +30,7 @@ export function StudyView() {
       }));
 
     return { totalHours, count: studyLaps.length, chartData };
-  }, []);
+  }, [history]);
 
   return (
     <div className="analytics-view">

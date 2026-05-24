@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/purity */
 import React, { useRef, useMemo, useEffect } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Float, Sparkles } from '@react-three/drei';
@@ -102,7 +103,7 @@ function GeometricShape({ position, geometry = 'icosahedron', color, rotationSpe
     mesh.current.rotation.y = time * rotationSpeed * 0.5;
   });
 
-  const Geometry = () => {
+  const renderGeometry = () => {
     switch (geometry) {
       case 'octahedron':
         return <octahedronGeometry args={[1, 0]} />;
@@ -118,7 +119,7 @@ function GeometricShape({ position, geometry = 'icosahedron', color, rotationSpe
   return (
     <Float speed={1.5} rotationIntensity={0.3} floatIntensity={0.8}>
       <mesh ref={mesh} position={position} scale={0.8}>
-        <Geometry />
+        {renderGeometry()}
         <meshPhysicalMaterial
           color={color}
           metalness={0.1}

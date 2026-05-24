@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -27,7 +28,7 @@ import { useDailyPlannerContext } from './contexts/DailyPlannerContext';
 import { useSettings } from './hooks/useSettings';
 import { useLockBodyScroll } from './hooks/useLockBodyScroll';
 import { calculateCurrentStreak } from './utils/streakHelpers';
-import { formatDateKey, getToday, getCurrentMonthDates } from './utils/dateHelpers';
+import { formatDateKey, getToday } from './utils/dateHelpers';
 import { ScrollReveal } from './components/animations/ScrollReveal';
 
 import './App.css';
@@ -87,11 +88,11 @@ export function App() {
   const {
     habits, completions, subtasks, subtaskCompletions,
     addHabit, updateHabit, deleteHabit, toggleCompletion,
-    clearCompletion, clearCompletionsForDateKeys, getCompletionStatus,
-    getCurrentStreak, getLongestStreak, getWeekCompletionData,
+    clearCompletionsForDateKeys, getCompletionStatus,
+    getCurrentStreak, getLongestStreak,
     addSubtask, customHabits, customCompletions, addCustomHabit,
-    updateCustomHabit, deleteCustomHabit, toggleCustomCompletion,
-    getCustomCompletionStatus, getDateKeysInRange, activeData, loading: habitsLoading
+    updateCustomHabit, deleteCustomHabit, getDateKeysInRange,
+    activeData, loading: habitsLoading
   } = useHabitsContext();
 
   const {

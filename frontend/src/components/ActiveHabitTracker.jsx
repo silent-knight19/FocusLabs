@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
 import { formatTime12, formatDateKey } from '../utils/dateHelpers';
 import { CheckCircle, Plus, Clock } from 'lucide-react';
 import { GoalsCarousel } from './GoalsCarousel';
@@ -75,7 +75,7 @@ export function ActiveHabitTracker({
   const [localCompletionStatus, setLocalCompletionStatus] = useState('');
   const completionStatus = useMemo(() => 
     activeHabit?.id ? (getCompletionStatus(activeHabit.id, today) || localCompletionStatus) : '',
-    [activeHabit?.id, getCompletionStatus, today, localCompletionStatus]
+    [activeHabit, getCompletionStatus, today, localCompletionStatus]
   );
   
   const [finishedHabit, setFinishedHabit] = useState(null);
@@ -123,7 +123,7 @@ export function ActiveHabitTracker({
     const newStatus = completionStatus === 'completed' ? '' : 'completed';
     setLocalCompletionStatus(newStatus);
     onToggleCompletion(activeHabit.id, today);
-  }, [activeHabit?.id, completionStatus, onToggleCompletion, today]);
+  }, [activeHabit, completionStatus, onToggleCompletion, today]);
 
   const handleAddTask = (e) => {
     e.preventDefault();

@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { doc, deleteDoc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { useAuth } from '../contexts/AuthContext';
@@ -212,6 +212,10 @@ export function SettingsPanel({ isOpen, onClose, settings, onUpdateSettings }) {
           );
 
           await Promise.all(writePromises);
+          if (hasError) {
+            setImportError('Some data collections failed to import. Check console for details.');
+            return;
+          }
         }
 
         // Also write localStorage-only data as fallback

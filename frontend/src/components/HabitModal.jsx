@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { validateHabit } from '../utils/validationHelpers';
 import { useLockBodyScroll } from '../hooks/useLockBodyScroll';
 import './styles/HabitModal.css';

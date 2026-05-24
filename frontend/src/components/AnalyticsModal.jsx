@@ -5,6 +5,29 @@ import { useAnalytics } from '../hooks/useAnalytics';
 import { useLockBodyScroll } from '../hooks/useLockBodyScroll';
 import './styles/AnalyticsModal.css';
 
+const CustomTooltip = ({ active, payload, label, activeColor }) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="custom-tooltip" style={{ 
+        backgroundColor: 'rgba(17, 24, 39, 0.9)', 
+        border: '1px solid rgba(255, 255, 255, 0.1)',
+        padding: '10px',
+        borderRadius: '8px',
+        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.3)'
+      }}>
+        <p className="label" style={{ color: '#fff', margin: '0 0 5px 0', fontWeight: '600' }}>{label}</p>
+        <p className="intro" style={{ color: activeColor, margin: 0 }}>
+          {payload[0].value} hours
+        </p>
+        <p className="desc" style={{ color: '#9ca3af', fontSize: '0.8rem', margin: '5px 0 0 0' }}>
+          {payload[0].payload.sessions} sessions
+        </p>
+      </div>
+    );
+  }
+  return null;
+};
+
 export function AnalyticsModal({ isOpen, onClose }) {
   useLockBodyScroll(isOpen);
   const [selectedCategory, setSelectedCategory] = useState('all');
@@ -40,29 +63,6 @@ export function AnalyticsModal({ isOpen, onClose }) {
 
   // Get summary for all categories (based on selected time range)
   const categorySummary = getCategorySummary(timeRange);
-
-  const CustomTooltip = ({ active, payload, label }) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="custom-tooltip" style={{ 
-          backgroundColor: 'rgba(17, 24, 39, 0.9)', 
-          border: '1px solid rgba(255, 255, 255, 0.1)',
-          padding: '10px',
-          borderRadius: '8px',
-          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.3)'
-        }}>
-          <p className="label" style={{ color: '#fff', margin: '0 0 5px 0', fontWeight: '600' }}>{label}</p>
-          <p className="intro" style={{ color: currentCat.color, margin: 0 }}>
-            {payload[0].value} hours
-          </p>
-          <p className="desc" style={{ color: '#9ca3af', fontSize: '0.8rem', margin: '5px 0 0 0' }}>
-            {payload[0].payload.sessions} sessions
-          </p>
-        </div>
-      );
-    }
-    return null;
-  };
 
   return (
     <div className="analytics-overlay" onClick={onClose}>
@@ -202,7 +202,7 @@ export function AnalyticsModal({ isOpen, onClose }) {
                       tickLine={false}
                       width={30}
                     />
-                    <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.05)' }} />
+                    <Tooltip content={<CustomTooltip activeColor={currentCat.color} />} cursor={{ fill: 'rgba(255,255,255,0.05)' }} />
                     <Bar 
                       dataKey="hours" 
                       fill={currentCat.color} 
@@ -234,7 +234,7 @@ export function AnalyticsModal({ isOpen, onClose }) {
                       tickLine={false}
                       width={30}
                     />
-                    <Tooltip content={<CustomTooltip />} />
+                    <Tooltip content={<CustomTooltip activeColor={currentCat.color} />} />
                     <Area 
                       type="monotone" 
                       dataKey="hours" 

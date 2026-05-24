@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+/* eslint-disable no-unused-vars */
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, X, Trash2, Edit2, Check, ChevronDown, ChevronRight } from 'lucide-react';
-import { getMonthDates, getMonthName, isSameDay, getTwoYearsAgo, isWithinTwoYears, formatDateKey, isFutureDate } from '../utils/dateHelpers';
+import { getMonthDates, getMonthName, isSameDay, isWithinTwoYears, formatDateKey, isFutureDate } from '../utils/dateHelpers';
 import { ConfirmationModal } from './ConfirmationModal';
 import './styles/CalendarView.css';
 
@@ -79,7 +80,7 @@ const TaskItem = ({ task, onToggle, onDelete, onUpdate, disabled = false }) => {
   );
 };
 
-const HabitItem = ({ habit, isCompleted, subtasks, subtaskCompletions, dailyTasks, dateKey, onToggleTask, onDeleteTask, onUpdateTask, disabled = false }) => {
+const HabitItem = ({ habit, isCompleted, subtasks, subtaskCompletions, dailyTasks, dateKey, onToggleTask, onDeleteTask, onUpdateTask, disabled = false, setConfirmationModal }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
   return (
@@ -395,7 +396,7 @@ export function CalendarView({ habits, completions, subtasks = [], subtaskComple
         setCurrentDate(new Date(mostRecentDate.getFullYear(), mostRecentDate.getMonth(), 1));
       }
     }
-  }, [searchTerm, completions, habits, subtasks, subtaskCompletions, dailyTasks]);
+  }, [searchTerm, completions, habits, subtasks, subtaskCompletions, dailyTasks, currentDate]);
 
   const handlePrevMonth = () => {
     const newDate = new Date(currentDate);
@@ -410,13 +411,6 @@ export function CalendarView({ habits, completions, subtasks = [], subtaskComple
     newDate.setMonth(newDate.getMonth() + 1);
     // Prevent going beyond current month + 1 year (optional limit)
     setCurrentDate(newDate);
-  };
-
-  const handleToday = () => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    setCurrentDate(today);
-    setSelectedDate(today);
   };
 
   const getDayCompletionStats = (date) => {
@@ -706,12 +700,14 @@ export function CalendarView({ habits, completions, subtasks = [], subtaskComple
                           habit={habit}
                           isCompleted={isCompleted}
                           subtasks={habitSubtasks}
+                          subtaskCompletions={subtaskCompletions}
                           dailyTasks={habitDailyTasks}
                           dateKey={habitDateKey}
                           onToggleTask={onToggleTask}
                           onUpdateTask={onUpdateTask}
                           onDeleteTask={onDeleteTask}
                           disabled={isFutureDate(selectedDate)}
+                          setConfirmationModal={setConfirmationModal}
                         />
                       );
                     })}

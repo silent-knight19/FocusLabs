@@ -1,5 +1,4 @@
 import React from 'react';
-import { getDayName, formatDateDisplay } from '../utils/dateHelpers';
 import './styles/GridHeader.css';
 
 /**

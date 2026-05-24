@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useMemo } from 'react';
 import { useHabits } from '../hooks/useHabits';
 import { useCustomHabits } from '../hooks/useCustomHabits';

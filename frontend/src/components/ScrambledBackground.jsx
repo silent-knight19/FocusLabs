@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 
 /**
  * 100+ Royalty-free images from Unsplash, Pexels, Pixabay

@@ -139,7 +139,9 @@ export function useFirestore(userId, collectionName, initialValue) {
   const userIdRef = useRef(userId);
   const performWriteRef = useRef(null);
 
-  userIdRef.current = userId;
+  useEffect(() => {
+    userIdRef.current = userId;
+  }, [userId]);
 
   useEffect(() => {
     if (!userId) {
@@ -222,7 +224,7 @@ export function useFirestore(userId, collectionName, initialValue) {
     return ok;
   }, [collectionName]);
 
-  performWriteRef.current = performWrite;
+
 
   useEffect(() => {
     performWriteRef.current = performWrite;

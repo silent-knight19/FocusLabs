@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+/* eslint-disable react-refresh/only-export-components */
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import './ToastContext.css';
 
 const ToastContext = createContext(null);
@@ -27,7 +28,9 @@ export function ToastProvider({ children }) {
     return id;
   }, [dismissToast]);
 
-  externalShowToast = addToast;
+  useEffect(() => {
+    externalShowToast = addToast;
+  }, [addToast]);
 
   return (
     <ToastContext.Provider value={{ showToast: addToast, dismissToast }}>

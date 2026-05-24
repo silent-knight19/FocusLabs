@@ -20,7 +20,6 @@ export function Stopwatch({ isOpen, onClose, onDataUpdate }) {
     reset,
     lap,
     updateLapLabel,
-    updateLapCategory,
     formatTime
   } = useStopwatch();
 
@@ -380,7 +379,7 @@ export function Stopwatch({ isOpen, onClose, onDataUpdate }) {
         </div> {/* End stopwatch-center-layout */}
         
         <div className="laps-list">
-          {laps.map((lapItem, index) => {
+          {laps.map((lapItem) => {
             const lapFormatted = formatTime(lapItem.time);
             const isEditing = editingLapId === lapItem.id;
             

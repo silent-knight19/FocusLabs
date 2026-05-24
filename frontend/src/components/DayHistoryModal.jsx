@@ -67,7 +67,7 @@ export function DayHistoryModal({
         lapCount: 0
       };
     }
-  }, [dateStr]);
+  }, [dateStr, lapHistory]);
 
   // Filter habits that were active on this date
   const activeHabits = useMemo(() => {
@@ -310,7 +310,7 @@ export function DayHistoryModal({
                       const total = dayData.totalTime;
                       return Object.entries(dayData.categoryTime)
                         .sort((a, b) => b[1] - a[1])
-                        .map(([category, time], i) => {
+                        .map(([category, time]) => {
                           const percent = time / total;
                           const startX = Math.cos(2 * Math.PI * cumulativePercent) * 50 + 50;
                           const startY = Math.sin(2 * Math.PI * cumulativePercent) * 50 + 50;

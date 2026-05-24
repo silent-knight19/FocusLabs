@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useMemo } from 'react';
 import { useMonthlyStopwatch } from '../hooks/useMonthlyStopwatch';
 import { useAuth } from './AuthContext';

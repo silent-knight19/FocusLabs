@@ -62,7 +62,117 @@ export function AnalyticsView({
     return { categories: stats, totalCompleted, totalHabits };
   }, [habits, completions, customHabits, customCompletions, today]);
 
-  // ... (Weekly, Monthly, Yearly stats remain same) ...
+  // 2. Weekly Progress (Last 7 days)
+  const weeklyStats = useMemo(() => {
+    const stats = [];
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const weekStart = getWeekStart(today);
+    
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(weekStart);
+      d.setDate(weekStart.getDate() + i);
+      const key = formatDateKey(d);
+      
+      // Filter custom habits active on this day
+      const customForDay = customHabits.filter(habit => 
+        key >= habit.dateFrom && key <= habit.dateTo
+      );
+      const dayHabits = [...habits, ...customForDay];
+      
+      // Combine regular and custom completions
+      const allCompletionsForDay = { ...completions };
+      customForDay.forEach(habit => {
+        if (customCompletions[habit.id]?.[key]) {
+          allCompletionsForDay[habit.id] = { [key]: customCompletions[habit.id][key] };
+        }
+      });
+      
+      const completed = dayHabits.filter(h => allCompletionsForDay[h.id]?.[key] === 'completed').length;
+      const total = dayHabits.length;
+      const percentage = total === 0 ? 0 : Math.round((completed / total) * 100);
+      
+      stats.push({ day: days[d.getDay()], percentage, date: d.getDate() });
+    }
+    return stats;
+  }, [habits, completions, customHabits, customCompletions, today]);
+
+  // 3. Monthly Progress (Last 30 days trend)
+  const monthlyStats = useMemo(() => {
+    const stats = [];
+    for (let i = 29; i >= 0; i--) {
+      const d = new Date(today);
+      d.setDate(today.getDate() - i);
+      const key = formatDateKey(d);
+      
+      // Filter custom habits active on this day
+      const customForDay = customHabits.filter(habit => 
+        key >= habit.dateFrom && key <= habit.dateTo
+      );
+      const dayHabits = [...habits, ...customForDay];
+      
+      // Combine regular and custom completions
+      const allCompletionsForDay = { ...completions };
+      customForDay.forEach(habit => {
+        if (customCompletions[habit.id]?.[key]) {
+          allCompletionsForDay[habit.id] = { [key]: customCompletions[habit.id][key] };
+        }
+      });
+      
+      const completed = dayHabits.filter(h => allCompletionsForDay[h.id]?.[key] === 'completed').length;
+      const total = dayHabits.length;
+      const percentage = total === 0 ? 0 : Math.round((completed / total) * 100);
+      
+      stats.push({ date: d.getDate(), percentage });
+    }
+    return stats;
+  }, [habits, completions, customHabits, customCompletions, today]);
+
+  // 4. Yearly Progress (Monthly averages)
+  const yearlyStats = useMemo(() => {
+    const stats = [];
+    const months = ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'];
+    const currentYear = today.getFullYear();
+    
+    for (let m = 0; m < 12; m++) {
+      const monthDates = getMonthDates(currentYear, m);
+      // Filter only dates in this month
+      const daysInMonth = monthDates.filter(d => d.getMonth() === m);
+      
+      let totalPercentage = 0;
+      let daysCount = 0;
+      
+      daysInMonth.forEach(d => {
+        const key = formatDateKey(d);
+        // Don't count future days
+        if (d > today) return;
+        
+        // Filter custom habits active on this day
+        const customForDay = customHabits.filter(habit => 
+          key >= habit.dateFrom && key <= habit.dateTo
+        );
+        const dayHabits = [...habits, ...customForDay];
+        
+        // Combine regular and custom completions
+        const allCompletionsForDay = { ...completions };
+        customForDay.forEach(habit => {
+          if (customCompletions[habit.id]?.[key]) {
+            allCompletionsForDay[habit.id] = { [key]: customCompletions[habit.id][key] };
+          }
+        });
+        
+        const completed = dayHabits.filter(h => allCompletionsForDay[h.id]?.[key] === 'completed').length;
+        const total = dayHabits.length;
+        if (total > 0) {
+          totalPercentage += (completed / total) * 100;
+          daysCount++;
+        }
+      });
+      
+      const avg = daysCount === 0 ? 0 : Math.round(totalPercentage / daysCount);
+      stats.push({ month: months[m], percentage: avg });
+    }
+    return stats;
+  }, [habits, completions, customHabits, customCompletions, today]);
 
   // 5. Productivity Hours (Filtered by > 60s) & Daily Average
   const { user } = useAuth();
@@ -120,7 +230,7 @@ export function AnalyticsView({
       max: maxDuration > 0 ? maxDuration : 1,
       dailyAverage: dailyAverageHours.toFixed(1)
     };
-  }, [today]);
+  }, [today, history]);
 
   return (
     <div className="analytics-view">
@@ -130,7 +240,7 @@ export function AnalyticsView({
           <h3>Daily Focus</h3>
           <div className="daily-chart concentric-chart">
             <svg viewBox="0 0 36 36" className="circular-chart">
-              {dailyStats.categories.map((cat, index) => (
+              {dailyStats.categories.map((cat) => (
                 <React.Fragment key={cat.id}>
                   <path 
                     className="circle-bg" 

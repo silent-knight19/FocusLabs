@@ -5,6 +5,35 @@ import { useAnalytics } from '../hooks/useAnalytics';
 import { ConcentricPieChart } from './ConcentricPieChart';
 import './styles/ProgressSectionRedesigned.css';
 
+// Get last completion date for a habit
+const getLastCompletionDate = (habitId, completions) => {
+  const habitCompletions = completions[habitId] || {};
+  const completedDates = Object.keys(habitCompletions)
+    .filter(date => habitCompletions[date] === 'completed')
+    .sort((a, b) => new Date(b) - new Date(a));
+  return completedDates[0] || null;
+};
+
+// Calculate days since last completion
+const getDaysSinceLastCompletion = (lastDate) => {
+  if (!lastDate) return Infinity;
+  const last = new Date(lastDate);
+  const today = new Date();
+  const diffTime = Math.abs(today - last);
+  return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+};
+
+// Get streak status
+const getStreakStatus = (current, lastDate, todayKey) => {
+  const lastCompletedToday = lastDate === todayKey;
+  const daysSince = getDaysSinceLastCompletion(lastDate);
+  
+  if (current === 0) return { type: 'broken', label: 'Start Fresh', color: '#6B7280' };
+  if (lastCompletedToday) return { type: 'active', label: 'On Fire!', color: '#22D3A6' };
+  if (daysSince === 1) return { type: 'at-risk', label: 'At Risk', color: '#FBBF24' };
+  return { type: 'broken', label: 'Streak Lost', color: '#F87171' };
+};
+
 /**
  * Redesigned progress section with beautiful circular visualizations
  * Now includes custom habit stats in today's progress
@@ -64,43 +93,17 @@ export function ProgressSection({
   const [showAllStreaks, setShowAllStreaks] = useState(false);
   const [expandedHabit, setExpandedHabit] = useState(null);
 
-  // Get last completion date for a habit - must be defined before useMemo
-  const getLastCompletionDate = (habitId) => {
-    const habitCompletions = completions[habitId] || {};
-    const completedDates = Object.keys(habitCompletions)
-      .filter(date => habitCompletions[date] === 'completed')
-      .sort((a, b) => new Date(b) - new Date(a));
-    return completedDates[0] || null;
-  };
-
-  // Calculate days since last completion
-  const getDaysSinceLastCompletion = (lastDate) => {
-    if (!lastDate) return Infinity;
-    const last = new Date(lastDate);
-    const today = new Date();
-    const diffTime = Math.abs(today - last);
-    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  };
-
-  // Get streak status
-  const getStreakStatus = (current, lastDate, todayKey) => {
-    const lastCompletedToday = lastDate === todayKey;
-    const daysSince = getDaysSinceLastCompletion(lastDate);
-    
-    if (current === 0) return { type: 'broken', label: 'Start Fresh', color: '#6B7280' };
-    if (lastCompletedToday) return { type: 'active', label: 'On Fire!', color: '#22D3A6' };
-    if (daysSince === 1) return { type: 'at-risk', label: 'At Risk', color: '#FBBF24' };
-    return { type: 'broken', label: 'Streak Lost', color: '#F87171' };
-  };
-
   // Get streaks for each habit with enhanced data
   const habitStreaks = useMemo(() => {
+    const localToday = getToday();
+    const localTodayKey = formatDateKey(localToday);
+
     return habits.map(habit => {
       const current = getCurrentStreak(habit.id);
       const best = getLongestStreak(habit.id);
-      const lastDate = getLastCompletionDate(habit.id);
-      const status = getStreakStatus(current, lastDate, todayKey);
-      const isCompletedToday = completions[habit.id]?.[todayKey] === 'completed';
+      const lastDate = getLastCompletionDate(habit.id, completions);
+      const status = getStreakStatus(current, lastDate, localTodayKey);
+      const isCompletedToday = completions[habit.id]?.[localTodayKey] === 'completed';
 
       return {
         id: habit.id,
@@ -121,7 +124,7 @@ export function ProgressSection({
       if (b.status.type === 'at-risk' && a.status.type === 'broken') return 1;
       return b.current - a.current;
     });
-  }, [habits, completions, todayKey, getCurrentStreak, getLongestStreak]);
+  }, [habits, completions, getCurrentStreak, getLongestStreak]);
 
   const activeStreaks = habitStreaks.filter(h => h.status.type === 'active').length;
   const atRiskStreaks = habitStreaks.filter(h => h.status.type === 'at-risk').length;
