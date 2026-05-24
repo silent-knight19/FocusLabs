@@ -1,8 +1,9 @@
 import React from 'react';
+import { Sentry } from '../config/monitoring';
+import './ErrorBoundary.css';
 
-// Debug logging - only enabled in development
 const DEBUG = import.meta.env.DEV;
-const error = DEBUG ? console.error : () => {};
+const logError = DEBUG ? console.error : () => {};
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -11,57 +12,35 @@ class ErrorBoundary extends React.Component {
   }
 
   static getDerivedStateFromError(error) {
-    // Update state so the next render will show the fallback UI.
     return { hasError: true, error };
   }
 
   componentDidCatch(err, errorInfo) {
-    // You can also log the error to an error reporting service
-    error('[ErrorBoundary] Uncaught error:', err, errorInfo);
+    logError('[ErrorBoundary] Uncaught error:', err, errorInfo);
+    if (import.meta.env.VITE_SENTRY_DSN) {
+      Sentry.captureException(err, { extra: { componentStack: errorInfo?.componentStack } });
+    }
     this.setState({ errorInfo });
   }
 
   render() {
     if (this.state.hasError) {
-      // You can render any custom fallback UI
       return (
-        <div style={{ 
-          padding: '2rem', 
-          textAlign: 'center', 
-          backgroundColor: 'var(--bg-secondary)', 
-          color: 'var(--text-primary)',
-          height: '100vh',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center',
-          alignItems: 'center'
-        }}>
+        <div className="error-boundary-fallback">
           <h1>Something went wrong.</h1>
-          <details style={{ whiteSpace: 'pre-wrap', marginTop: '1rem', textAlign: 'left', maxWidth: '800px' }}>
+          <details>
             {this.state.error && this.state.error.toString()}
             <br />
             {this.state.errorInfo && this.state.errorInfo.componentStack}
           </details>
-          <button 
-            onClick={() => window.location.reload()}
-            style={{
-              marginTop: '2rem',
-              padding: '0.75rem 1.5rem',
-              backgroundColor: 'var(--primary-color)',
-              color: 'white',
-              border: 'none',
-              borderRadius: '8px',
-              cursor: 'pointer',
-              fontSize: '1rem'
-            }}
-          >
+          <button type="button" onClick={() => window.location.reload()}>
             Reload Page
           </button>
         </div>
       );
     }
 
-    return this.props.children; 
+    return this.props.children;
   }
 }
 

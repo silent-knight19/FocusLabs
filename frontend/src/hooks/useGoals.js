@@ -1,17 +1,9 @@
 import { useCallback } from 'react';
 import { useFirestore } from './useFirestore';
 import { useAuth } from '../contexts/AuthContext';
+import { generateId as createId } from '../utils/idHelpers';
 
-const PRIORITY_ORDER = { high: 0, medium: 1, low: 2 };
-
-/**
- * Generate a unique ID with a given prefix
- * @param {string} prefix - ID prefix (e.g. 'goal', 'subgoal')
- * @returns {string} Unique identifier
- */
-const generateId = (prefix = 'goal') => {
-  return `${prefix}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-};
+const generateId = (prefix = 'goal') => createId(prefix);
 
 /**
  * Custom hook for managing goals and sub-goals

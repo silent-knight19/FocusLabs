@@ -1,6 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { useFirestore } from '../hooks/useFirestore';
-import { useAuth } from '../contexts/AuthContext';
+import { useStopwatchHistory } from '../contexts/StopwatchHistoryContext';
 import { X, CheckCircle, Circle, Clock, TrendingUp, Target, ListTodo, ChevronDown, FileText } from 'lucide-react';
 import { useHabitNotes } from '../hooks/useHabitNotes';
 import { formatDateKey } from '../utils/dateHelpers';
@@ -33,9 +32,7 @@ export function DayHistoryModal({
   };
 
   // Get all lap data for this day
-  const { user } = useAuth();
-  const userId = user?.uid;
-  const [lapHistory] = useFirestore(userId, 'stopwatch_history', []);
+  const { history: lapHistory } = useStopwatchHistory();
 
   const dayData = useMemo(() => {
     try {

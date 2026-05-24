@@ -1,6 +1,7 @@
-import { useFirestore } from './useFirestore';
+import { useMonthlyDailyTasks } from './useMonthlyDailyTasks';
 import { useAuth } from '../contexts/AuthContext';
 import { formatDateKey } from '../utils/dateHelpers';
+import { generateId as createId } from '../utils/idHelpers';
 
 /**
  * Custom hook for managing daily tasks
@@ -11,14 +12,12 @@ export function useDailyTasks() {
   const { user } = useAuth();
   const userId = user?.uid;
 
-  const [dailyTasks, setDailyTasks, tasksLoading] = useFirestore(userId, 'daily_tasks', []);
+  const [dailyTasks, setDailyTasks, tasksLoading] = useMonthlyDailyTasks(userId);
 
   /**
    * Generate unique ID for new daily tasks
    */
-  const generateId = () => {
-    return `task_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-  };
+  const generateId = () => createId('task');
 
   /**
    * Get tasks for a specific habit on a specific date

@@ -1,23 +1,16 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, lazy, Suspense } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import confetti from 'canvas-confetti';
 import { TopNav } from './components/TopNav';
 import { HabitGrid } from './components/HabitGrid';
-import { AddHabitButton } from './components/AddHabitButton';
 import { HabitModal } from './components/HabitModal';
 import { SettingsPanel } from './components/SettingsPanel';
 import { ProgressSection } from './components/ProgressSection';
-import { SearchBar } from './components/SearchBar';
 import { DailyOverview } from './components/DailyOverview';
-import { HabitStats } from './components/HabitStats';
 import { ActiveHabitTracker } from './components/ActiveHabitTracker';
-import { CalendarView } from './components/CalendarView';
-import { AnalyticsView } from './components/AnalyticsView';
-import { StudyView } from './components/StudyView';
 import { Stopwatch } from './components/Stopwatch';
-import { AnalyticsModal } from './components/AnalyticsModal';
 import { StudyHeatmap } from './components/StudyHeatmap';
 import { ProductivityHeatmap } from './components/ProductivityHeatmap';
-import { DayHistoryModal } from './components/DayHistoryModal';
 import { DailyPlanner } from './components/DailyPlanner';
 import { ConfirmationModal } from './components/ConfirmationModal';
 import { CustomHabitModal } from './components/CustomHabitModal';
@@ -25,6 +18,13 @@ import { CustomDateView } from './components/CustomDateView';
 import { GoalsView } from './components/GoalsView';
 import { GoalModal } from './components/GoalModal';
 import { GoalDetailModal } from './components/GoalDetailModal';
+import { HabitGridSkeleton } from './components/HabitGridSkeleton';
+import { calculateCurrentStreak } from './utils/streakHelpers';
+
+const CalendarView = lazy(() => import('./components/CalendarView').then(m => ({ default: m.CalendarView })));
+const AnalyticsModal = lazy(() => import('./components/AnalyticsModal').then(m => ({ default: m.AnalyticsModal })));
+const DayHistoryModal = lazy(() => import('./components/DayHistoryModal').then(m => ({ default: m.DayHistoryModal })));
+const StudyView = lazy(() => import('./components/StudyView').then(m => ({ default: m.StudyView })));
 
 import { useHabits } from './hooks/useHabits.jsx';
 import { useCustomHabits } from './hooks/useCustomHabits.js';
@@ -43,12 +43,15 @@ import {
 import { useLockBodyScroll } from './hooks/useLockBodyScroll';
 
 import './App.css';
-import './styles/three-d-effects.css';
 import './components/styles/CalendarOverlay.css';
 
-const CATEGORIES = ['study', 'productive', 'self growth'];
+const VIEW_ROUTES = { week: '/', daily: '/planner', custom: '/custom', study: '/study' };
+const ROUTE_VIEWS = { '/': 'week', '/planner': 'daily', '/custom': 'custom', '/study': 'study' };
 
 function App() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const currentView = ROUTE_VIEWS[location.pathname] || 'week';
   const [isHabitModalOpen, setIsHabitModalOpen] = useState(false);
   const [isSettingsPanelOpen, setIsSettingsPanelOpen] = useState(false);
   const [isStopwatchOpen, setIsStopwatchOpen] = useState(false);
@@ -80,8 +83,14 @@ function App() {
   useLockBodyScroll(isCalendarOpen);
 
   const [selectedCategory, setSelectedCategory] = useState('all');
-  const [currentView, setCurrentView] = useState('week'); // 'week' or 'daily'
   const [selectedPlannerDate, setSelectedPlannerDate] = useState(getToday());
+
+  const setView = useCallback((view) => {
+    const path = VIEW_ROUTES[view] || '/';
+    if (location.pathname !== path) {
+      navigate(path);
+    }
+  }, [navigate, location.pathname]);
 
   const {
     habits,
@@ -106,7 +115,8 @@ function App() {
     toggleSubtaskCompletion,
     getSubtaskStatus,
     getSubtaskCompletionPercentage,
-    reorderHabits
+    reorderHabits,
+    loading: habitsLoading
   } = useHabits();
 
   // Daily tasks hook
@@ -141,7 +151,8 @@ function App() {
     getCustomSubtaskStatus,
     getCustomSubtaskCompletionPercentage,
     isDateBlockedByCustomHabits,
-    getDateKeysInRange
+    getDateKeysInRange,
+    loading: customHabitsLoading
   } = useCustomHabits();
 
   // Goals hook
@@ -224,24 +235,8 @@ function App() {
     }
 
     habits.forEach(habit => {
-      // Calculate streak inline (don't use getCurrentStreak callback to avoid hook issues)
       const habitCompletions = completions[habit.id] || {};
-      let streak = 0;
-
-      if (habitCompletions[todayKey] === 'completed') {
-        streak = 1;
-        for (let i = 1; i < 365; i++) {
-          const date = new Date(today);
-          date.setDate(today.getDate() - i);
-          const dateKey = formatDateKey(date);
-          if (!dateKey) break;
-          if (habitCompletions[dateKey] === 'completed') {
-            streak++;
-          } else {
-            break;
-          }
-        }
-      }
+      const streak = calculateCurrentStreak(habitCompletions, today);
 
       // Only celebrate if streak >= 10 and not celebrated today
       if (streak >= 10 && celebratedToday[habit.id] !== todayStr) {
@@ -439,6 +434,10 @@ function App() {
     return () => window.removeEventListener('habit-data-updated', handleDataUpdate);
   }, []);
 
+  if (habitsLoading || customHabitsLoading) {
+    return <HabitGridSkeleton />;
+  }
+
   return (
     <>
       {/* TopNav - outside perspective-root for fixed positioning */}
@@ -479,7 +478,7 @@ function App() {
           <div className="view-toggle-container" style={{ display: 'flex', justifyContent: 'center', marginBottom: 'var(--spacing-lg)', marginTop: 'var(--spacing-xl)', gap: 'var(--spacing-sm)' }}>
             <button
               className={`view-toggle-btn btn-3d ${currentView === 'week' ? 'active' : ''}`}
-              onClick={() => setCurrentView('week')}
+              onClick={() => setView('week')}
               style={{ 
                 fontSize: '0.9rem', 
                 padding: '0.75rem 1.5rem', 
@@ -496,7 +495,7 @@ function App() {
             </button>
             <button
               className={`view-toggle-btn btn-3d ${currentView === 'daily' ? 'active' : ''}`}
-              onClick={() => setCurrentView('daily')}
+              onClick={() => setView('daily')}
               style={{ 
                 fontSize: '0.9rem', 
                 padding: '0.75rem 1.5rem', 
@@ -513,7 +512,7 @@ function App() {
             </button>
             <button
               className={`view-toggle-btn btn-3d ${currentView === 'custom' ? 'active' : ''}`}
-              onClick={() => setCurrentView('custom')}
+              onClick={() => setView('custom')}
               style={{ 
                 fontSize: '0.9rem', 
                 padding: '0.75rem 1.5rem', 
@@ -577,7 +576,9 @@ function App() {
               )}
 
               {currentView === 'study' && (
-                <StudyView />
+                <Suspense fallback={<HabitGridSkeleton />}>
+                  <StudyView />
+                </Suspense>
               )}
 
               {currentView === 'custom' && (
@@ -685,34 +686,39 @@ function App() {
         onDataUpdate={handleDataUpdate}
       />
 
-      <AnalyticsModal
-        isOpen={isAnalyticsOpen}
-        onClose={() => setIsAnalyticsOpen(false)}
-      />
+      <Suspense fallback={null}>
+        <AnalyticsModal
+          isOpen={isAnalyticsOpen}
+          onClose={() => setIsAnalyticsOpen(false)}
+        />
+      </Suspense>
 
       {isCalendarOpen && (
         <div className="calendar-overlay">
           <div className="calendar-modal">
             <button className="close-btn" onClick={() => setIsCalendarOpen(false)}>×</button>
-            <CalendarView
-              habits={filteredHabits}
-              completions={completions}
-              subtasks={subtasks}
-              subtaskCompletions={subtaskCompletions}
-              dailyTasks={dailyTasks}
-              onDateDoubleClick={(date) => {
-                setSelectedDate(date);
-              }}
-              onToggleTask={toggleDailyTask}
-              onUpdateTask={updateDailyTask}
-              onDeleteTask={deleteDailyTask}
-            />
+            <Suspense fallback={<HabitGridSkeleton />}>
+              <CalendarView
+                habits={filteredHabits}
+                completions={completions}
+                subtasks={subtasks}
+                subtaskCompletions={subtaskCompletions}
+                dailyTasks={dailyTasks}
+                onDateDoubleClick={(date) => {
+                  setSelectedDate(date);
+                }}
+                onToggleTask={toggleDailyTask}
+                onUpdateTask={updateDailyTask}
+                onDeleteTask={deleteDailyTask}
+              />
+            </Suspense>
           </div>
         </div>
       )}
 
       {selectedDate && (
-        <DayHistoryModal
+        <Suspense fallback={null}>
+          <DayHistoryModal
           date={selectedDate}
           habits={habits}
           completions={completions}
@@ -720,7 +726,8 @@ function App() {
           subtaskCompletions={subtaskCompletions}
           dailyTasks={dailyTasks}
           onClose={() => setSelectedDate(null)}
-        />
+          />
+        </Suspense>
       )}
 
       <ConfirmationModal

@@ -1,13 +1,10 @@
 import React, { useMemo } from 'react';
-import { useFirestore } from '../hooks/useFirestore';
-import { useAuth } from '../contexts/AuthContext';
+import { useStopwatchHistory } from '../contexts/StopwatchHistoryContext';
 import { formatTime12 } from '../utils/dateHelpers';
 import './styles/AnalyticsView.css'; // Reuse analytics styles
 
 export function StudyView() {
-  const { user } = useAuth();
-  const userId = user?.uid;
-  const [history] = useFirestore(userId, 'stopwatch_history', []);
+  const { history } = useStopwatchHistory();
 
   const studyStats = useMemo(() => {
     if (!history) return { totalHours: '0.0', count: 0, chartData: [] };

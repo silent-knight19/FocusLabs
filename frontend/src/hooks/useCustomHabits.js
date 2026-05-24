@@ -1,6 +1,8 @@
 import { useFirestore } from './useFirestore';
+import { useMonthlyCompletions } from './useMonthlyCompletions';
 import { useAuth } from '../contexts/AuthContext';
 import { formatDateKey } from '../utils/dateHelpers';
+import { generateId as createId } from '../utils/idHelpers';
 
 /**
  * Custom hook for managing custom date habits (habits that apply to specific date ranges)
@@ -12,16 +14,14 @@ export function useCustomHabits() {
   const userId = user?.uid;
 
   const [customHabits, setCustomHabits, habitsLoading] = useFirestore(userId, 'custom_habits', []);
-  const [customCompletions, setCustomCompletions, completionsLoading] = useFirestore(userId, 'custom_completions', {});
+  const [customCompletions, setCustomCompletions, completionsLoading] = useMonthlyCompletions(userId, 'custom_completions');
   const [customSubtasks, setCustomSubtasks, subtasksLoading] = useFirestore(userId, 'custom_subtasks', []);
   const [customSubtaskCompletions, setCustomSubtaskCompletions, subtaskCompletionsLoading] = useFirestore(userId, 'custom_subtask_completions', {});
 
   /**
    * Generate unique ID
    */
-  const generateId = (prefix = 'custom') => {
-    return `${prefix}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-  };
+  const generateId = (prefix = 'custom') => createId(prefix);
 
   /**
    * Check if a date falls within a habit's date range

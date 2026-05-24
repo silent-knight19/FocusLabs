@@ -1,9 +1,9 @@
 import React, { useState, useRef } from 'react';
-import { useFirestore } from '../hooks/useFirestore';
 import { doc, deleteDoc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { useAuth } from '../contexts/AuthContext';
-import { downloadDataAsJson, clearAllData } from '../utils/storageHelpers';
+import { useStopwatchHistory } from '../contexts/StopwatchHistoryContext';
+import { validateImportData, clearAllData } from '../utils/storageHelpers';
 import { useLockBodyScroll } from '../hooks/useLockBodyScroll';
 import { ButtonWithTooltip } from './ButtonWithTooltip';
 import { LogOut } from 'lucide-react';
@@ -16,7 +16,7 @@ export function SettingsPanel({ isOpen, onClose, settings, onUpdateSettings }) {
   useLockBodyScroll(isOpen);
   const { user, signOut } = useAuth();
   const userId = user?.uid;
-  const [history, setHistory] = useFirestore(userId, 'stopwatch_history', []);
+  const { history, setHistory } = useStopwatchHistory();
 
   const [importError, setImportError] = useState('');
 
@@ -162,7 +162,12 @@ export function SettingsPanel({ isOpen, onClose, settings, onUpdateSettings }) {
         const parsed = JSON.parse(event.target.result);
         const importedData = parsed.data || parsed;
 
-        // Basic validation
+        const validation = validateImportData(parsed);
+        if (!validation.valid) {
+          setImportError(validation.error || 'Invalid import data.');
+          return;
+        }
+
         if (!importedData || typeof importedData !== 'object') {
           setImportError('Invalid JSON structure.');
           return;

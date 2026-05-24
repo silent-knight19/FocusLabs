@@ -1,7 +1,9 @@
 import { useCallback } from 'react';
 import { useFirestore } from './useFirestore';
+import { useMonthlyCompletions } from './useMonthlyCompletions';
 import { useAuth } from '../contexts/AuthContext';
 import { formatDateKey } from '../utils/dateHelpers';
+import { generateId as createId } from '../utils/idHelpers';
 
 /**
  * Custom hook for managing habits and their completion status
@@ -12,16 +14,14 @@ export function useHabits() {
   const userId = user?.uid;
 
   const [habits, setHabits, habitsLoading] = useFirestore(userId, 'habits', []);
-  const [completions, setCompletions, completionsLoading] = useFirestore(userId, 'completions', {});
+  const [completions, setCompletions, completionsLoading] = useMonthlyCompletions(userId, 'completions');
   const [subtasks, setSubtasks, subtasksLoading] = useFirestore(userId, 'subtasks', []);
   const [subtaskCompletions, setSubtaskCompletions, subtaskCompletionsLoading] = useFirestore(userId, 'subtask_completions', {});
 
   /**
    * Generate unique ID for new habits/subtasks
    */
-  const generateId = (prefix = 'habit') => {
-    return `${prefix}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-  };
+  const generateId = (prefix = 'habit') => createId(prefix);
 
   /**
    * Add a new habit
@@ -390,6 +390,7 @@ export function useHabits() {
     completions,
     subtasks,
     subtaskCompletions,
+    loading: habitsLoading || completionsLoading || subtasksLoading || subtaskCompletionsLoading,
     addHabit,
     updateHabit,
     deleteHabit,

@@ -1,0 +1,65 @@
+.habit-grid-skeleton {
+  padding: 1rem;
+  width: 100%;
+}
+
+.skeleton-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+
+.skeleton-title {
+  width: 200px;
+  height: 24px;
+  border-radius: 4px;
+}
+
+.skeleton-nav {
+  width: 120px;
+  height: 24px;
+  border-radius: 4px;
+}
+
+.skeleton-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.skeleton-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.skeleton-habit-name {
+  width: 140px;
+  height: 36px;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+.skeleton-cell {
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  flex: 1;
+  max-width: 48px;
+}
+
+.habit-grid-skeleton .skeleton-loader {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.05) 25%,
+    rgba(255, 255, 255, 0.1) 50%,
+    rgba(255, 255, 255, 0.05) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeletonShimmer 1.5s ease-in-out infinite;
+}
+
+@keyframes skeletonShimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}

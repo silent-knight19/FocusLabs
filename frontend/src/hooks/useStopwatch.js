@@ -1,16 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { useFirestore } from './useFirestore';
-import { useAuth } from '../contexts/AuthContext';
+import { useStopwatchHistory } from '../contexts/StopwatchHistoryContext';
 
 export function useStopwatch() {
-  const { user } = useAuth();
-  const userId = user?.uid;
-
-  // Persist laps/history to Firestore
-  // We use 'stopwatch_laps' collection or a single document 'stopwatch' with a 'laps' field?
-  // useFirestore(userId, collectionName, initialValue)
-  // Let's use 'stopwatch_history' as the collection name to match the intent
-  const [laps, setLaps, loading] = useFirestore(userId, 'stopwatch_history', []);
+  const { history: laps, setHistory: setLaps } = useStopwatchHistory();
 
   // Local state for the running timer
   // We don't sync high-frequency timer updates to Firestore to avoid write limits

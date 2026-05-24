@@ -1,6 +1,5 @@
 import React, { useMemo } from 'react';
-import { useFirestore } from '../hooks/useFirestore';
-import { useAuth } from '../contexts/AuthContext';
+import { useStopwatchHistory } from '../contexts/StopwatchHistoryContext';
 import './styles/ProductivityHeatmap.css';
 import './styles/ProductivityHeatmap.css';
 
@@ -11,9 +10,7 @@ import './styles/ProductivityHeatmap.css';
 export function ProductivityHeatmap({ habits = [], completions = {}, dataVersion = 0 }) {
   // Get lap history from localStorage (where categories are stored)
   // Get lap history from Firestore
-  const { user } = useAuth();
-  const userId = user?.uid;
-  const [history, , loading] = useFirestore(userId, 'stopwatch_history', []);
+  const { history, loading } = useStopwatchHistory();
 
   const getLapHistory = () => {
     if (loading || !history) return [];
