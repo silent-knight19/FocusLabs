@@ -1,5 +1,6 @@
+/* eslint-disable no-unused-vars */
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { formatTime12, formatDateKey } from '../utils/dateHelpers';
 import { CheckCircle, Plus, Clock } from 'lucide-react';
 import { GoalsCarousel } from './GoalsCarousel';
