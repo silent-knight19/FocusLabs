@@ -8,8 +8,10 @@ export function StudyView() {
   const studyStats = useMemo(() => {
     if (!history) return { totalHours: '0.0', count: 0, chartData: [] };
     
-    // Filter laps labeled "study" (case insensitive)
-    const studyLaps = history.filter(l => l.label.toLowerCase().includes('study'));
+    // Filter laps that were recorded under the 'study' category.
+    // NOTE: labels default to "Session 1", "Session 2" etc., so we must filter
+    // by the category field, not by the label text.
+    const studyLaps = history.filter(l => l.category === 'study');
     
     const totalMs = studyLaps.reduce((acc, curr) => acc + curr.time, 0);
     const totalHours = (totalMs / 3600000).toFixed(1);

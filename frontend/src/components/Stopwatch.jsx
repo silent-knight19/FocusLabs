@@ -322,7 +322,9 @@ export function Stopwatch({ isOpen, onClose, onDataUpdate }) {
         
         <div className="stopwatch-display">
           {/* ... (display code) */}
-          {formatted.hours && (
+          {/* Only show hours if the stopwatch has reached 1 hour or more.
+              '00' is a truthy string, so we must check explicitly. */}
+          {formatted.hours !== '00' && (
             <>
               <span className="time-part">{formatted.hours}</span>
               <span className="time-separator">:</span>

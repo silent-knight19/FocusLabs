@@ -162,7 +162,17 @@ export function useMonthlyStopwatch(userId) {
     if (!userId) return;
 
     setSessions((prev) => {
-      const next = typeof newValue === 'function' ? newValue(prev) : newValue;
+      const rawNext = typeof newValue === 'function' ? newValue(prev) : newValue;
+
+      // Deduplicate by session ID to prevent duplicate laps being written to Firestore.
+      // This is the safety net for any race conditions or double-calls from the UI.
+      const seen = new Set();
+      const next = rawNext.filter(session => {
+        if (seen.has(session.id)) return false;
+        seen.add(session.id);
+        return true;
+      });
+
       pendingRef.current = next;
 
       if (debounceRef.current) clearTimeout(debounceRef.current);

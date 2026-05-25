@@ -21,7 +21,7 @@ export function useStopwatch() {
         const parsed = JSON.parse(savedState);
         savedIsRunning = parsed.savedIsRunning || false;
         savedLastLapTime = parsed.savedLastLapTime || 0;
-        
+
         if (savedIsRunning && parsed.savedLastActive) {
           const now = Date.now();
           const elapsed = now - parsed.savedLastActive;
@@ -47,15 +47,27 @@ export function useStopwatch() {
       initialTime: savedTime,
       initialIsRunning: savedIsRunning,
       initialLastLapTime: savedLastLapTime,
+      // We store the IDs from localStorage and later deduplicate against Firestore history.
+      // We don't use the full lap objects here because the Firestore history is the source
+      // of truth — we only need the IDs to filter the real objects from history.
       initialLaps: savedLaps
     };
   }, []);
+
+  // Derive the current session lap IDs from localStorage so we can match them
+  // against Firestore history after it loads. This prevents duplicate laps after refresh.
+  const sessionLapIds = useMemo(() => {
+    return new Set(initialLaps.map(l => l.id));
+  }, [initialLaps]);
 
   // Local state for the running timer
   const [time, setTime] = useState(initialTime);
   const [isRunning, setIsRunning] = useState(initialIsRunning);
   const [lastLapTime, setLastLapTime] = useState(initialLastLapTime);
+  // Start with localStorage laps for immediate display, then sync with Firestore laps
   const [currentSessionLaps, setCurrentSessionLaps] = useState(initialLaps);
+  // Track if we've done the initial sync against Firestore history
+  const hasSyncedRef = useRef(false);
   
   const requestRef = useRef();
   const previousTimeRef = useRef();
@@ -94,6 +106,23 @@ export function useStopwatch() {
   useEffect(() => {
     saveActiveState();
   }, [isRunning, lastLapTime, saveActiveState]);
+
+  // Once Firestore history loads (laps is populated), sync currentSessionLaps
+  // to only show laps that actually exist in Firestore — prevents duplicates after refresh.
+  useEffect(() => {
+    if (hasSyncedRef.current) return;
+    if (laps.length === 0 && sessionLapIds.size === 0) return;
+
+    // Firestore history has loaded: filter down to only laps whose IDs match
+    // what was in the localStorage session snapshot
+    if (sessionLapIds.size > 0) {
+      const firestoreLapIds = new Set(laps.map(l => l.id));
+      const validSessionLaps = initialLaps.filter(l => firestoreLapIds.has(l.id));
+      setCurrentSessionLaps(validSessionLaps);
+    }
+
+    hasSyncedRef.current = true;
+  }, [laps, sessionLapIds, initialLaps]);
 
   // Persist current session laps to localStorage
   useEffect(() => {
@@ -156,40 +185,58 @@ export function useStopwatch() {
   const reset = () => {
     setIsRunning(false);
     setTime(0);
-    setLastLapTime(0); // Reset last lap time
-    setCurrentSessionLaps([]); // Clear current session laps from UI
+    setLastLapTime(0);
+    setCurrentSessionLaps([]);
+    hasSyncedRef.current = false;
+
+    // Clear localStorage session data so a fresh start has no stale laps
+    try {
+      localStorage.removeItem('stopwatch_current_session_laps');
+      localStorage.removeItem('stopwatch_active_state');
+    } catch (e) {
+      logError('Failed to clear stopwatch localStorage on reset', e);
+    }
   };
 
   const lap = (category = 'other') => {
     // Calculate the duration of this session (time since last lap or since start)
     const sessionDuration = time - lastLapTime;
-    
+
     // Only save if there's meaningful time (at least 1 second)
     if (sessionDuration < 1000) {
       logWarn('Session too short to save (< 1 second)');
       return;
     }
 
+    // Use a stable unique ID that won't collide even if the user presses Lap
+    // multiple times quickly (Date.now() can repeat within the same millisecond)
     const newLap = {
-      id: Date.now().toString(),
-      time: sessionDuration, // ✅ Save DURATION, not cumulative time
+      id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      time: sessionDuration,
       date: new Date().toISOString(),
       category: category,
       label: `Session ${currentSessionLaps.length + 1}`
     };
 
-    // Add to Firestore for permanent history/analytics
-    setLaps(prev => [newLap, ...prev]);
-    
-    // Also add to current session laps for UI display
-    setCurrentSessionLaps(prev => [newLap, ...prev]);
-    
-    // Update last lap time to current time
-    // This allows the next lap to calculate duration correctly
+    // Add to Firestore — guard against duplicate IDs to prevent double-saves
+    setLaps(prev => {
+      const existingIds = new Set(prev.map(l => l.id));
+      if (existingIds.has(newLap.id)) {
+        logWarn('Lap with this ID already exists, skipping duplicate save:', newLap.id);
+        return prev;
+      }
+      return [newLap, ...prev];
+    });
+
+    // Update the current session display
+    setCurrentSessionLaps(prev => {
+      const existingIds = new Set(prev.map(l => l.id));
+      if (existingIds.has(newLap.id)) return prev;
+      return [newLap, ...prev];
+    });
+
+    // Move the last-lap marker forward so the next lap calculates from here
     setLastLapTime(time);
-    
-    // DON'T reset the stopwatch - it should keep running!
-    // The UI can show "split time" (time - lastLapTime) if needed
   };
 
   const updateLapLabel = (id, newLabel) => {
