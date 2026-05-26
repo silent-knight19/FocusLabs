@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ArrowLeft, Trash2, Archive, CheckCircle2, Edit2, Calendar, X } from 'lucide-react';
 import { useLockBodyScroll } from '../hooks/useLockBodyScroll';
+import { formatDateKey } from '../utils/dateHelpers';
 import './styles/GoalDetailModal.css';
 
 const RING_RADIUS = 40;
@@ -71,7 +72,7 @@ export function GoalDetailModal({
   const completedCount = subGoals.filter(sg => sg.isCompleted).length;
   const dashOffset = RING_CIRCUMFERENCE * (1 - progress / 100);
   const timelinePercent = getTimelineProgress(goal.startDate, goal.targetDate);
-  const today = new Date().toISOString().split('T')[0];
+  const today = formatDateKey(new Date());
   const isOverdue = goal.status === 'active' && goal.targetDate < today;
   const isActive = goal.status === 'active';
 

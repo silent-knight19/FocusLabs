@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
-import { doc, deleteDoc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, deleteDoc, getDoc, getDocs, setDoc, collection } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { useAuth } from '../contexts/AuthContext';
 import { useStopwatchHistory } from '../contexts/StopwatchHistoryContext';
 import { validateImportData, clearAllData } from '../utils/storageHelpers';
 import { useLockBodyScroll } from '../hooks/useLockBodyScroll';
+import { formatDateKey } from '../utils/dateHelpers';
+import { mergeMonthlyShards, shardCompletionsByMonth, dateKeyToMonthKey } from '../utils/monthKeyHelpers';
 import { ButtonWithTooltip } from './ButtonWithTooltip';
 import { LogOut } from 'lucide-react';
 import './styles/SettingsPanel.css';
@@ -19,7 +21,7 @@ export function SettingsPanel({ isOpen, onClose, settings, onUpdateSettings }) {
   useLockBodyScroll(isOpen);
   const { user, signOut } = useAuth();
   const userId = user?.uid;
-  const { history, setHistory } = useStopwatchHistory();
+  const { history, setHistory, flushNow } = useStopwatchHistory();
 
   const [importError, setImportError] = useState('');
 
@@ -47,94 +49,114 @@ export function SettingsPanel({ isOpen, onClose, settings, onUpdateSettings }) {
   const handleExport = async () => {
     try {
       setSuccessMessage('Exporting data...');
-      
-      // Fetch all data from Firestore
-      const collections = [
-        'habits', 
-        'completions', 
-        'subtasks', 
-        'subtask_completions', 
-        'stopwatch_history', 
-        'settings', 
-        'daily_tasks',
-        'notes',
-        'custom_habits',
-        'custom_completions',
-        'study_sessions',
-        'productivity_sessions'
-      ];
-      
-      const firestoreData = {};
-      
-      if (userId) {
-        // Fetch from Firestore for logged-in users
-        await Promise.all(collections.map(async (colName) => {
-          try {
-            const docRef = doc(db, 'users', userId, 'data', colName);
-            const docSnap = await getDoc(docRef);
-            if (docSnap.exists()) {
-              firestoreData[colName] = docSnap.data();
-            } else {
-              firestoreData[colName] = null;
-            }
-          } catch (err) {
-            logError(`Error fetching ${colName}:`, err);
-            firestoreData[colName] = null;
-          }
-        }));
+
+      if (!userId) {
+        setSuccessMessage('Sign in to export your data.');
+        return;
       }
-      
-      // Also get localStorage data (for anonymous users or fallback)
-      const localData = {
-        habits: localStorage.getItem('habitgrid_habits') || '[]',
-        completions: localStorage.getItem('habitgrid_completions') || '{}',
-        customHabits: localStorage.getItem('custom_habits') || '[]',
-        customCompletions: localStorage.getItem('custom_completions') || '{}',
-        customSubtasks: localStorage.getItem('custom_subtasks') || '{}',
-        dailyTasks: localStorage.getItem('daily_tasks') || '{}',
-        studySessions: localStorage.getItem('study_sessions') || '[]',
-        productivitySessions: localStorage.getItem('productivity_sessions') || '[]',
-        stopwatchLaps: localStorage.getItem('stopwatch_laps') || '[]',
-        stopwatchCategories: localStorage.getItem('stopwatch_categories') || '[]',
-        settings: localStorage.getItem('habitgrid_settings') || '{}'
-      };
-      
-      // Combine all data
+
+      // ---- Flat collections: still stored at users/{uid}/data/{colName} ----
+      const flatCollectionNames = [
+        'habits', 'subtasks', 'subtask_completions', 'stopwatch_history',
+        'settings', 'notes', 'custom_habits', 'custom_subtasks',
+        'custom_subtask_completions', 'study_sessions', 'productivity_sessions', 'goals'
+      ];
+
+      const firestoreFlat = {};
+      await Promise.all(flatCollectionNames.map(async (colName) => {
+        try {
+          const docRef = doc(db, 'users', userId, 'data', colName);
+          const docSnap = await getDoc(docRef);
+          firestoreFlat[colName] = docSnap.exists() ? docSnap.data().value : null;
+        } catch (err) {
+          logError(`Error fetching ${colName}:`, err);
+          firestoreFlat[colName] = null;
+        }
+      }));
+
+      // ---- Sharded: completions → users/{uid}/completions/{YYYY-MM} ----
+      let mergedCompletions = {};
+      try {
+        const snap = await getDocs(collection(db, 'users', userId, 'completions'));
+        const shards = {};
+        snap.forEach(d => { shards[d.id] = d.data().habits || {}; });
+        mergedCompletions = Object.keys(shards).length > 0
+          ? mergeMonthlyShards(shards)
+          : (firestoreFlat.completions || {});
+      } catch (err) {
+        logError('Error fetching completions shards:', err);
+        mergedCompletions = firestoreFlat.completions || {};
+      }
+
+      // ---- Sharded: custom_completions → users/{uid}/custom_completions/{YYYY-MM} ----
+      let mergedCustomCompletions = {};
+      try {
+        const snap = await getDocs(collection(db, 'users', userId, 'custom_completions'));
+        const shards = {};
+        snap.forEach(d => { shards[d.id] = d.data().habits || {}; });
+        mergedCustomCompletions = Object.keys(shards).length > 0
+          ? mergeMonthlyShards(shards)
+          : {};
+      } catch (err) {
+        logError('Error fetching custom_completions shards:', err);
+      }
+
+      // ---- Sharded: daily_tasks → users/{uid}/daily_tasks/{YYYY-MM} ----
+      let mergedDailyTasks = [];
+      try {
+        const snap = await getDocs(collection(db, 'users', userId, 'daily_tasks'));
+        snap.forEach(d => { mergedDailyTasks.push(...(d.data().tasks || [])); });
+        // Fall back to legacy path if no shards exist yet
+        if (mergedDailyTasks.length === 0 && Array.isArray(firestoreFlat.daily_tasks)) {
+          mergedDailyTasks = firestoreFlat.daily_tasks;
+        }
+      } catch (err) {
+        logError('Error fetching daily_tasks shards:', err);
+      }
+
+      // ---- Sharded: stopwatch → users/{uid}/stopwatch/{YYYY-MM} ----
+      let mergedStopwatch = [];
+      try {
+        const snap = await getDocs(collection(db, 'users', userId, 'stopwatch'));
+        snap.forEach(d => { mergedStopwatch.push(...(d.data().sessions || [])); });
+        if (mergedStopwatch.length === 0 && Array.isArray(firestoreFlat.stopwatch_history)) {
+          mergedStopwatch = firestoreFlat.stopwatch_history;
+        }
+      } catch (err) {
+        logError('Error fetching stopwatch shards:', err);
+      }
+
       const exportData = {
         version: '2.0.0',
         exportDate: new Date().toISOString(),
         appName: 'FocusLabs',
-        userId: userId || 'anonymous',
+        userId,
         data: {
-          // Firestore data (prioritized) — stored under 'value' key by useFirestore hook
-          habits: firestoreData.habits?.value || JSON.parse(localData.habits),
-          completions: firestoreData.completions?.value || JSON.parse(localData.completions),
-          subtasks: firestoreData.subtasks?.value || {},
-          subtaskCompletions: firestoreData.subtask_completions?.value || {},
-          stopwatchHistory: firestoreData.stopwatch_history?.value || [],
-          dailyTasks: firestoreData.daily_tasks?.value || JSON.parse(localData.dailyTasks),
-          notes: firestoreData.notes?.value || [],
-          customHabits: firestoreData.custom_habits?.value || JSON.parse(localData.customHabits),
-          customCompletions: firestoreData.custom_completions?.value || JSON.parse(localData.customCompletions),
-          studySessions: firestoreData.study_sessions?.value || JSON.parse(localData.studySessions),
-          productivitySessions: firestoreData.productivity_sessions?.value || JSON.parse(localData.productivitySessions),
-          settings: firestoreData.settings?.value || JSON.parse(localData.settings),
-          
-          // LocalStorage only data
-          stopwatchLaps: JSON.parse(localData.stopwatchLaps),
-          stopwatchCategories: JSON.parse(localData.stopwatchCategories),
-          customSubtasks: JSON.parse(localData.customSubtasks)
+          habits: firestoreFlat.habits || [],
+          completions: mergedCompletions,
+          subtasks: firestoreFlat.subtasks || [],
+          subtaskCompletions: firestoreFlat.subtask_completions || {},
+          stopwatchHistory: mergedStopwatch,
+          dailyTasks: mergedDailyTasks,
+          notes: firestoreFlat.notes || [],
+          customHabits: firestoreFlat.custom_habits || [],
+          customCompletions: mergedCustomCompletions,
+          studySessions: firestoreFlat.study_sessions || [],
+          productivitySessions: firestoreFlat.productivity_sessions || [],
+          settings: firestoreFlat.settings || {},
+          goals: firestoreFlat.goals || [],
+          customSubtasks: firestoreFlat.custom_subtasks || [],
+          customSubtaskCompletions: firestoreFlat.custom_subtask_completions || {}
         },
         exportSummary: {
-          totalHabits: (firestoreData.habits?.value || JSON.parse(localData.habits)).length,
-          totalCustomHabits: (firestoreData.custom_habits?.value || JSON.parse(localData.customHabits)).length,
-          totalStudySessions: (firestoreData.study_sessions?.value || JSON.parse(localData.studySessions)).length,
-          totalProductivitySessions: (firestoreData.productivity_sessions?.value || JSON.parse(localData.productivitySessions)).length,
-          totalStopwatchLaps: JSON.parse(localData.stopwatchLaps).length
+          totalHabits: (firestoreFlat.habits || []).length,
+          totalCustomHabits: (firestoreFlat.custom_habits || []).length,
+          totalGoals: (firestoreFlat.goals || []).length,
+          totalDailyTasks: mergedDailyTasks.length,
+          totalStopwatchSessions: mergedStopwatch.length
         }
       };
-      
-      // Create and download the JSON file
+
       const dataStr = JSON.stringify(exportData, null, 2);
       const blob = new Blob([dataStr], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
@@ -145,7 +167,7 @@ export function SettingsPanel({ isOpen, onClose, settings, onUpdateSettings }) {
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
-      
+
       setSuccessMessage('Data exported successfully!');
       setTimeout(() => setSuccessMessage(''), 3000);
     } catch (error) {
@@ -178,62 +200,121 @@ export function SettingsPanel({ isOpen, onClose, settings, onUpdateSettings }) {
         setSuccessMessage('Importing data...');
 
         if (userId) {
-          // Map exported JSON keys → Firestore collection names
-          const firestoreMapping = {
+          // ---- Flat collections → users/{uid}/data/{colName} ----
+          // These are small documents that don't need sharding.
+          const flatMapping = {
             habits: 'habits',
-            completions: 'completions',
             subtasks: 'subtasks',
             subtaskCompletions: 'subtask_completions',
-            stopwatchHistory: 'stopwatch_history',
-            dailyTasks: 'daily_tasks',
             notes: 'notes',
             customHabits: 'custom_habits',
-            customCompletions: 'custom_completions',
+            customSubtasks: 'custom_subtasks',
+            customSubtaskCompletions: 'custom_subtask_completions',
             studySessions: 'study_sessions',
             productivitySessions: 'productivity_sessions',
-            settings: 'settings'
+            settings: 'settings',
+            goals: 'goals'
           };
 
-          // Write each collection to Firestore with { value: data } structure
           let hasError = false;
-          const writePromises = Object.entries(firestoreMapping).map(
-            async ([jsonKey, firestoreCollection]) => {
+
+            const flatWrites = Object.entries(flatMapping).map(async ([jsonKey, colName]) => {
               const dataToWrite = importedData[jsonKey];
               if (dataToWrite === undefined || dataToWrite === null) return;
-
               try {
-                const docRef = doc(db, 'users', userId, 'data', firestoreCollection);
-                await setDoc(docRef, { value: dataToWrite }, { merge: true });
+                // Use setDoc WITHOUT merge so the import fully replaces existing data.
+                // merge:true would silently keep old data not present in the backup file.
+                await setDoc(
+                  doc(db, 'users', userId, 'data', colName),
+                  { value: dataToWrite }
+                );
               } catch (err) {
-                logError(`Error importing ${firestoreCollection}:`, err);
+                logError(`Error importing ${colName}:`, err);
                 hasError = true;
               }
-            }
-          );
+            });
 
-          await Promise.all(writePromises);
+          // ---- Sharded: completions → users/{uid}/completions/{YYYY-MM} ----
+          const shardedWrites = [];
+
+          if (importedData.completions && typeof importedData.completions === 'object') {
+            const shards = shardCompletionsByMonth(importedData.completions);
+            for (const [monthKey, monthData] of Object.entries(shards)) {
+              shardedWrites.push(
+                setDoc(
+                  doc(db, 'users', userId, 'completions', monthKey),
+                  { habits: monthData, _v: Date.now() },
+                  { merge: true }
+                ).catch(err => { logError(`Error importing completions/${monthKey}:`, err); hasError = true; })
+              );
+            }
+          }
+
+          // ---- Sharded: custom_completions → users/{uid}/custom_completions/{YYYY-MM} ----
+          if (importedData.customCompletions && typeof importedData.customCompletions === 'object') {
+            const shards = shardCompletionsByMonth(importedData.customCompletions);
+            for (const [monthKey, monthData] of Object.entries(shards)) {
+              shardedWrites.push(
+                setDoc(
+                  doc(db, 'users', userId, 'custom_completions', monthKey),
+                  { habits: monthData, _v: Date.now() },
+                  { merge: true }
+                ).catch(err => { logError(`Error importing custom_completions/${monthKey}:`, err); hasError = true; })
+              );
+            }
+          }
+
+          // ---- Sharded: daily_tasks → users/{uid}/daily_tasks/{YYYY-MM} ----
+          if (importedData.dailyTasks && Array.isArray(importedData.dailyTasks)) {
+            const byMonth = {};
+            importedData.dailyTasks.forEach(task => {
+              if (!task.date) return;
+              const monthKey = dateKeyToMonthKey(task.date) || task.date.slice(0, 7);
+              if (!byMonth[monthKey]) byMonth[monthKey] = [];
+              byMonth[monthKey].push(task);
+            });
+            for (const [monthKey, tasks] of Object.entries(byMonth)) {
+              shardedWrites.push(
+                setDoc(
+                  doc(db, 'users', userId, 'daily_tasks', monthKey),
+                  { tasks, _v: Date.now() },
+                  { merge: true }
+                ).catch(err => { logError(`Error importing daily_tasks/${monthKey}:`, err); hasError = true; })
+              );
+            }
+          }
+
+          // ---- Sharded: stopwatch → users/{uid}/stopwatch/{YYYY-MM} ----
+          if (importedData.stopwatchHistory && Array.isArray(importedData.stopwatchHistory)) {
+            const byMonth = {};
+            importedData.stopwatchHistory.forEach(session => {
+              if (!session.date) return;
+              const monthKey = new Date(session.date).toISOString().slice(0, 7);
+              if (!byMonth[monthKey]) byMonth[monthKey] = [];
+              byMonth[monthKey].push(session);
+            });
+            for (const [monthKey, sessions] of Object.entries(byMonth)) {
+              shardedWrites.push(
+                setDoc(
+                  doc(db, 'users', userId, 'stopwatch', monthKey),
+                  { sessions, _v: Date.now() },
+                  { merge: true }
+                ).catch(err => { logError(`Error importing stopwatch/${monthKey}:`, err); hasError = true; })
+              );
+            }
+          }
+
+          await Promise.all([...flatWrites, ...shardedWrites]);
+
           if (hasError) {
             setImportError('Some data collections failed to import. Check console for details.');
             return;
           }
         }
 
-        // Also write localStorage-only data as fallback
-        if (importedData.stopwatchLaps) {
-          localStorage.setItem('stopwatch_laps', JSON.stringify(importedData.stopwatchLaps));
-        }
-        if (importedData.stopwatchCategories) {
-          localStorage.setItem('stopwatch_categories', JSON.stringify(importedData.stopwatchCategories));
-        }
-        if (importedData.customSubtasks) {
-          localStorage.setItem('custom_subtasks', JSON.stringify(importedData.customSubtasks));
-        }
-
         setImportError('');
         setSuccessMessage('Data imported successfully! Refreshing page...');
-        setTimeout(() => {
-          window.location.reload();
-        }, 1500);
+        setTimeout(() => { window.location.reload(); }, 1500);
       } catch (err) {
         logError('Import error:', err);
         setImportError('Invalid JSON format. Please check the file.');
@@ -277,10 +358,10 @@ export function SettingsPanel({ isOpen, onClose, settings, onUpdateSettings }) {
 
       let filtered;
       if (windowType === 'day') {
-        const todayKey = now.toISOString().split('T')[0];
+        const todayKey = formatDateKey(now);
         filtered = history.filter(lap => {
           if (!matchesCategory(lap)) return true;
-          const lapDateKey = new Date(lap.date).toISOString().split('T')[0];
+          const lapDateKey = formatDateKey(new Date(lap.date));
           return lapDateKey !== todayKey;
         });
       } else {
@@ -296,8 +377,9 @@ export function SettingsPanel({ isOpen, onClose, settings, onUpdateSettings }) {
 
 
       setHistory(filtered);
-      // localStorage.setItem('habitgrid_lap_history', JSON.stringify(filtered));
-      // window.dispatchEvent(new Event('habit-data-updated'));
+      // Force an immediate Firestore write so the deletion persists even if
+      // the user closes the tab before the 2-second debounce fires.
+      if (flushNow) flushNow();
 
       const labelMap = {
         study: 'Study',
@@ -320,34 +402,41 @@ export function SettingsPanel({ isOpen, onClose, settings, onUpdateSettings }) {
 
   const handleClearData = async () => {
     try {
-      // 1. Clear Firestore Data
       if (userId) {
-        const collections = [
-          'habits', 
-          'completions', 
-          'subtasks', 
-          'subtask_completions', 
-          'stopwatch_history', 
-          'settings', 
-          'daily_tasks',
-          'notes'
+        // 1. Clear flat documents at users/{uid}/data/{colName}
+        const flatCollections = [
+          'habits', 'completions', 'subtasks', 'subtask_completions',
+          'stopwatch_history', 'settings', 'daily_tasks', 'notes',
+          'custom_habits', 'custom_completions', 'custom_subtasks',
+          'custom_subtask_completions', 'goals', 'study_sessions', 'productivity_sessions'
         ];
-        
-        await Promise.all(collections.map(colName => {
-          const docRef = doc(db, 'users', userId, 'data', colName);
-          return deleteDoc(docRef);
-        }));
+
+        const flatDeletes = flatCollections.map(colName =>
+          deleteDoc(doc(db, 'users', userId, 'data', colName)).catch(() => {})
+        );
+
+        // 2. Clear monthly shard subcollections where real data now lives
+        const shardedSubcollections = ['completions', 'custom_completions', 'daily_tasks', 'stopwatch'];
+
+        const shardDeletes = shardedSubcollections.map(async (subColName) => {
+          try {
+            const snap = await getDocs(collection(db, 'users', userId, subColName));
+            return Promise.all(snap.docs.map(d => deleteDoc(d.ref)));
+          } catch (err) {
+            logError(`Error clearing ${subColName} shards:`, err);
+          }
+        });
+
+        await Promise.all([...flatDeletes, ...shardDeletes]);
       }
 
-      // 2. Clear Local Storage
+      // 3. Clear Local Storage
       clearAllData();
-      
+
       setShowClearConfirm(false);
       setSuccessMessage('All data cleared from Cloud & Local! Refreshing...');
-      
-      setTimeout(() => {
-        window.location.reload();
-      }, 1500);
+
+      setTimeout(() => { window.location.reload(); }, 1500);
     } catch (error) {
       logError('Error clearing data:', error);
       alert('Failed to clear data: ' + error.message);

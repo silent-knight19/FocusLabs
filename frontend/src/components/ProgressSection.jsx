@@ -17,10 +17,18 @@ const getLastCompletionDate = (habitId, completions) => {
 // Calculate days since last completion
 const getDaysSinceLastCompletion = (lastDate) => {
   if (!lastDate) return Infinity;
-  const last = new Date(lastDate);
+
+  // Parse lastDate (a YYYY-MM-DD string) as LOCAL midnight, not UTC midnight.
+  // Using `new Date('YYYY-MM-DD')` would parse as UTC, which causes the
+  // day boundary to shift in non-UTC timezones — leading to early "Streak Lost" warnings.
+  const [year, month, day] = lastDate.split('-').map(Number);
+  const last = new Date(year, month - 1, day); // local midnight
+
   const today = new Date();
-  const diffTime = Math.abs(today - last);
-  return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  today.setHours(0, 0, 0, 0); // local midnight for today
+
+  const diffMs = today - last;
+  return Math.floor(diffMs / (1000 * 60 * 60 * 24));
 };
 
 // Get streak status

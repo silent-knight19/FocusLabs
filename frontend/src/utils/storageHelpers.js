@@ -46,6 +46,35 @@ export function validateImportData(data) {
     }
   }
 
+  // Validate custom habits array if present
+  const customHabitsData = data.data?.customHabits || data.customHabits;
+  if (customHabitsData !== undefined && customHabitsData !== null) {
+    if (!Array.isArray(customHabitsData)) {
+      return { valid: false, error: 'customHabits must be an array' };
+    }
+    if (customHabitsData.length > 100) {
+      return { valid: false, error: 'Too many custom habits (max 100)' };
+    }
+    for (const habit of customHabitsData) {
+      if (!habit.id || !habit.name) {
+        return { valid: false, error: 'Custom habit missing required fields (id, name)' };
+      }
+    }
+  }
+
+  // Validate goals array if present
+  const goalsData = data.data?.goals || data.goals;
+  if (goalsData !== undefined && goalsData !== null) {
+    if (!Array.isArray(goalsData)) {
+      return { valid: false, error: 'goals must be an array' };
+    }
+    for (const goal of goalsData) {
+      if (!goal.id || !goal.title) {
+        return { valid: false, error: 'Goal missing required fields (id, title)' };
+      }
+    }
+  }
+
   return { valid: true };
 }
 
@@ -74,6 +103,7 @@ export function clearAllData() {
   // Stopwatch data
   localStorage.removeItem('stopwatch_laps');
   localStorage.removeItem('stopwatch_categories');
+  localStorage.removeItem('habitgrid_lap_history'); // Legacy key — may exist on older installs
   
   // Active habit tracking
   localStorage.removeItem('active_habit_data');

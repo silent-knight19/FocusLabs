@@ -95,9 +95,14 @@ export function validateHabit(habit) {
     errors.name = nameValidation.error;
   }
   
-  const timeValidation = validateTime(habit.time);
-  if (!timeValidation.valid) {
-    errors.time = timeValidation.error;
+  const startTimeValidation = validateTime(habit.startTime);
+  if (!startTimeValidation.valid) {
+    errors.startTime = startTimeValidation.error;
+  }
+  
+  const endTimeValidation = validateTime(habit.endTime);
+  if (!endTimeValidation.valid) {
+    errors.endTime = endTimeValidation.error;
   }
   
   const targetValidation = validateWeeklyTarget(habit.weeklyTarget);

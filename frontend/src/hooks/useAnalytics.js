@@ -1,4 +1,5 @@
 import { useStopwatchHistory } from '../contexts/StopwatchHistoryContext';
+import { formatDateKey } from '../utils/dateHelpers';
 
 /**
  * Hook for analyzing stopwatch lap data
@@ -109,10 +110,10 @@ export function useAnalytics() {
       for (let i = days - 1; i >= 0; i--) {
         const date = new Date(now);
         date.setDate(now.getDate() - i);
-        const dateKey = date.toISOString().split('T')[0];
+        const dateKey = formatDateKey(date);
         
         const dayLaps = allLaps.filter(lap => {
-          const lapDate = new Date(lap.date).toISOString().split('T')[0];
+          const lapDate = formatDateKey(new Date(lap.date));
           const matchesDate = lapDate === dateKey;
           const matchesCategory = !category || lap.category === category;
           return matchesDate && matchesCategory;

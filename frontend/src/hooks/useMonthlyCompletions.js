@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { doc, setDoc, onSnapshot } from 'firebase/firestore';
+import { doc, setDoc, onSnapshot, deleteDoc } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { showToast } from '../contexts/ToastContext';
 import {
@@ -42,6 +42,7 @@ if (typeof window !== 'undefined') {
  */
 export function useMonthlyCompletions(userId, collectionName = 'completions') {
   const [value, setValue] = useState({});
+  const valueRef = useRef({});
   const [loading, setLoading] = useState(true);
   const shardsRef = useRef({});
   const legacyRef = useRef(null);
@@ -53,18 +54,37 @@ export function useMonthlyCompletions(userId, collectionName = 'completions') {
 
   const rebuildMerged = useCallback(() => {
     const fromShards = mergeMonthlyShards(shardsRef.current);
+
+    // Only backfill legacy entries that don't exist in shards.
+    // Shards are the source of truth after migration — we must never let
+    // old legacy data overwrite newer shard values.
     if (legacyRef.current && Object.keys(legacyRef.current).length > 0) {
       for (const [habitId, dates] of Object.entries(legacyRef.current)) {
         if (!fromShards[habitId]) fromShards[habitId] = {};
-        Object.assign(fromShards[habitId], dates);
+        for (const [dateKey, status] of Object.entries(dates)) {
+          if (fromShards[habitId][dateKey] === undefined) {
+            fromShards[habitId][dateKey] = status;
+          }
+        }
       }
     }
+
     setValue(fromShards);
+    valueRef.current = fromShards;
   }, []);
 
   const flushWrites = useCallback(async (completions) => {
     if (!userId) return;
+    
+    // Split legacy/active completions object into monthly shards
     const shards = shardCompletionsByMonth(completions);
+
+    // Pre-initialize all loaded monthKeys to empty objects so emptied months are cleared in Firestore
+    for (const mk of monthKeys) {
+      if (!shards[mk]) {
+        shards[mk] = {};
+      }
+    }
 
     try {
       await Promise.all(
@@ -76,12 +96,11 @@ export function useMonthlyCompletions(userId, collectionName = 'completions') {
           )
         )
       );
-      shardsRef.current = shards;
     } catch (err) {
       logError('Failed to save completions to Firestore', err);
       showToast('Failed to save completion changes. Please check your network connection.', 'error');
     }
-  }, [userId, collectionName]);
+  }, [userId, collectionName, monthKeys]);
 
   const flushPendingWrite = useCallback(() => {
     if (debounceRef.current) {
@@ -110,6 +129,7 @@ export function useMonthlyCompletions(userId, collectionName = 'completions') {
   useEffect(() => {
     if (!userId) {
       setValue({});
+      valueRef.current = {};
       setLoading(false);
       return;
     }
@@ -146,6 +166,9 @@ export function useMonthlyCompletions(userId, collectionName = 'completions') {
             migratedRef.current = true;
             try {
               await flushWrites(legacyRef.current);
+              // Delete the legacy doc after migration so it doesn't overwrite
+              // newer shard data on subsequent app loads.
+              await deleteDoc(legacyDoc);
             } catch {
               showToast('Migration in progress — some data may sync shortly.', 'info');
             }
@@ -167,17 +190,15 @@ export function useMonthlyCompletions(userId, collectionName = 'completions') {
   const updateValue = useCallback((newValue) => {
     if (!userId) return;
 
-    setValue((prev) => {
-      const next = typeof newValue === 'function' ? newValue(prev) : newValue;
-      pendingRef.current = next;
+    const next = typeof newValue === 'function' ? newValue(valueRef.current) : newValue;
+    setValue(next);
+    valueRef.current = next;
+    pendingRef.current = next;
 
-      if (debounceRef.current) clearTimeout(debounceRef.current);
-      debounceRef.current = setTimeout(() => {
-        if (pendingRef.current) flushPendingWrite();
-      }, DEBOUNCE_MS);
-
-      return next;
-    });
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      if (pendingRef.current) flushPendingWrite();
+    }, DEBOUNCE_MS);
   }, [userId, flushPendingWrite]);
 
   return [value, updateValue, loading];

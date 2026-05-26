@@ -65,9 +65,19 @@ exports.validateDataWrite = functions.firestore
 exports.validateMonthlyWrite = functions.firestore
   .document('users/{userId}/{collectionName}/{monthKey}')
   .onWrite(async (change, context) => {
-    const { collectionName } = context.params;
+    const { collectionName, monthKey } = context.params;
     const allowedCollections = new Set(['completions', 'custom_completions', 'stopwatch', 'daily_tasks']);
     if (!allowedCollections.has(collectionName)) {
+      return null;
+    }
+
+    // Reject any document whose ID is not a valid YYYY-MM month key.
+    // This prevents path-traversal tricks like '../../admin' from being stored.
+    const validMonthKey = /^\d{4}-\d{2}$/.test(monthKey);
+    if (!validMonthKey) {
+      if (change.after.exists) {
+        await change.after.ref.delete();
+      }
       return null;
     }
 
@@ -165,26 +175,33 @@ exports.validateImport = functions.https.onCall(async (data, context) => {
     if (err) throw new functions.https.HttpsError('invalid-argument', err);
   }
 
+  // Collect all write operations as plain objects so we can chunk them.
+  // Firestore batches are limited to 500 operations; large imports with many
+  // months of history can exceed this easily.
+  const BATCH_CHUNK_SIZE = 400;
+  const writeOps = []; // Each entry: { ref, data }
+
   const mapping = {
     habits: 'habits',
     subtasks: 'subtasks',
+    subtaskCompletions: 'subtask_completions',
+    customSubtasks: 'custom_subtasks',
+    customSubtaskCompletions: 'custom_subtask_completions',
     customHabits: 'custom_habits',
     settings: 'settings',
     goals: 'goals',
     notes: 'notes'
   };
 
-  const shardedCollections = ['completions', 'custom_completions', 'subtask_completions'];
-
-  const batch = db.batch();
-
   for (const [jsonKey, colName] of Object.entries(mapping)) {
     const val = importData[jsonKey] ?? importData.data?.[jsonKey];
     if (val !== undefined && val !== null) {
       const ref = db.doc(`users/${userId}/data/${colName}`);
-      batch.set(ref, { value: val, _v: Date.now() }, { merge: true });
+      writeOps.push({ ref, data: { value: val, _v: Date.now() } });
     }
   }
+
+  const shardedCollections = ['completions', 'custom_completions'];
 
   for (const colName of shardedCollections) {
     let jsonKey = colName;
@@ -196,7 +213,7 @@ exports.validateImport = functions.https.onCall(async (data, context) => {
       const shards = shardDataByMonth(val);
       for (const [monthKey, monthData] of Object.entries(shards)) {
         const ref = db.doc(`users/${userId}/${colName}/${monthKey}`);
-        batch.set(ref, { habits: monthData, _v: Date.now() }, { merge: true });
+        writeOps.push({ ref, data: { habits: monthData, _v: Date.now() } });
       }
     }
   }
@@ -206,7 +223,7 @@ exports.validateImport = functions.https.onCall(async (data, context) => {
     const shards = shardArrayByMonth(stopwatchData);
     for (const [monthKey, monthSessions] of Object.entries(shards)) {
       const ref = db.doc(`users/${userId}/stopwatch/${monthKey}`);
-      batch.set(ref, { sessions: monthSessions, _v: Date.now() }, { merge: true });
+      writeOps.push({ ref, data: { sessions: monthSessions, _v: Date.now() } });
     }
   }
 
@@ -215,10 +232,18 @@ exports.validateImport = functions.https.onCall(async (data, context) => {
     const shards = shardArrayByMonth(dailyTasksData);
     for (const [monthKey, monthTasks] of Object.entries(shards)) {
       const ref = db.doc(`users/${userId}/daily_tasks/${monthKey}`);
-      batch.set(ref, { tasks: monthTasks, _v: Date.now() }, { merge: true });
+      writeOps.push({ ref, data: { tasks: monthTasks, _v: Date.now() } });
     }
   }
 
-  await batch.commit();
+  // Commit in chunks to stay safely under the 500-operation batch limit.
+  for (let i = 0; i < writeOps.length; i += BATCH_CHUNK_SIZE) {
+    const chunk = writeOps.slice(i, i + BATCH_CHUNK_SIZE);
+    const batch = db.batch();
+    chunk.forEach(({ ref, data: opData }) => batch.set(ref, opData, { merge: true }));
+    await batch.commit();
+  }
+
   return { success: true };
 });
+

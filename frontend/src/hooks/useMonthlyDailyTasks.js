@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { doc, setDoc, onSnapshot } from 'firebase/firestore';
+import { doc, setDoc, onSnapshot, deleteDoc } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { showToast } from '../contexts/ToastContext';
 import { getRecentMonthKeys, getMonthKey, dateKeyToMonthKey } from '../utils/monthKeyHelpers';
@@ -37,6 +37,7 @@ if (typeof window !== 'undefined') {
  */
 export function useMonthlyDailyTasks(userId) {
   const [value, setValue] = useState([]);
+  const valueRef = useRef([]);
   const [loading, setLoading] = useState(true);
   const shardsRef = useRef({});
   const legacyRef = useRef(null);
@@ -69,13 +70,18 @@ export function useMonthlyDailyTasks(userId) {
     });
     
     setValue(merged);
+    valueRef.current = merged;
   }, []);
 
   const flushWrites = useCallback(async (allTasks) => {
     if (!userId) return;
 
-    // Group tasks by their monthKey
+    // Group tasks by their monthKey, pre-initializing all loaded monthKeys with empty arrays
     const byMonth = {};
+    for (const mk of monthKeys) {
+      byMonth[mk] = [];
+    }
+
     for (const task of allTasks) {
       const mk = dateKeyToMonthKey(task.date) || getMonthKey(new Date(task.date));
       if (!byMonth[mk]) byMonth[mk] = [];
@@ -92,12 +98,11 @@ export function useMonthlyDailyTasks(userId) {
           )
         )
       );
-      shardsRef.current = byMonth;
     } catch (err) {
       logError('Failed to save daily tasks to Firestore', err);
       showToast('Failed to save task changes. Please check your network connection.', 'error');
     }
-  }, [userId]);
+  }, [userId, monthKeys]);
 
   const flushPendingWrite = useCallback(() => {
     if (debounceRef.current) {
@@ -126,6 +131,7 @@ export function useMonthlyDailyTasks(userId) {
   useEffect(() => {
     if (!userId) {
       setValue([]);
+      valueRef.current = [];
       setLoading(false);
       return;
     }
@@ -161,6 +167,9 @@ export function useMonthlyDailyTasks(userId) {
             migratedRef.current = true;
             try {
               await flushWrites(legacyRef.current);
+              // Delete the legacy doc after migration so it doesn't re-duplicate
+              // tasks on every subsequent app load.
+              await deleteDoc(legacyDoc);
             } catch {
               showToast('Syncing planner tasks to shards...', 'info');
             }
@@ -182,17 +191,15 @@ export function useMonthlyDailyTasks(userId) {
   const updateValue = useCallback((newValue) => {
     if (!userId) return;
 
-    setValue((prev) => {
-      const next = typeof newValue === 'function' ? newValue(prev) : newValue;
-      pendingRef.current = next;
+    const next = typeof newValue === 'function' ? newValue(valueRef.current) : newValue;
+    setValue(next);
+    valueRef.current = next;
+    pendingRef.current = next;
 
-      if (debounceRef.current) clearTimeout(debounceRef.current);
-      debounceRef.current = setTimeout(() => {
-        if (pendingRef.current) flushPendingWrite();
-      }, DEBOUNCE_MS);
-
-      return next;
-    });
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      if (pendingRef.current) flushPendingWrite();
+    }, DEBOUNCE_MS);
   }, [userId, flushPendingWrite]);
 
   return [value, updateValue, loading];

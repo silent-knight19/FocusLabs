@@ -68,7 +68,7 @@ export function useCustomHabits() {
    * Add a new custom habit
    */
   const addCustomHabit = useCallback((habitData) => {
-    const newHabit = {
+    const baseHabit = {
       id: generateId('custom_habit'),
       name: habitData.name,
       description: habitData.description || '',
@@ -79,13 +79,18 @@ export function useCustomHabits() {
       dateFrom: habitData.dateFrom,
       dateTo: habitData.dateTo,
       isCustomDate: true,
-      createdAt: new Date().toISOString(),
-      order: customHabits.length
+      createdAt: new Date().toISOString()
     };
 
-    setCustomHabits(prev => [...prev, newHabit]);
+    // Derive order synchronously so the returned object is always fully defined.
+    const newHabit = { ...baseHabit, order: customHabits.length };
+
+    setCustomHabits(prev => {
+      return [...prev, { ...newHabit, order: prev.length }];
+    });
+
     return newHabit;
-  }, [customHabits.length, generateId, setCustomHabits]);
+  }, [generateId, setCustomHabits, customHabits.length]);
 
   /**
    * Update an existing custom habit
@@ -179,18 +184,21 @@ export function useCustomHabits() {
    * Add a subtask to a custom habit
    */
   const addCustomSubtask = useCallback((habitId, title) => {
-    const habitSubtasks = getCustomSubtasks(habitId);
     const newSubtask = {
       id: generateId('custom_subtask'),
       habitId,
       title,
-      order: habitSubtasks.length,
+      // Compute order synchronously to avoid stale closure issues.
+      order: customSubtasks.filter(st => st.habitId === habitId).length,
       createdAt: new Date().toISOString()
     };
 
-    setCustomSubtasks(prev => [...prev, newSubtask]);
+    setCustomSubtasks(prev => [
+      ...prev,
+      { ...newSubtask, order: prev.filter(st => st.habitId === habitId).length }
+    ]);
     return newSubtask;
-  }, [generateId, getCustomSubtasks, setCustomSubtasks]);
+  }, [generateId, setCustomSubtasks, customSubtasks]);
 
   /**
    * Update a custom subtask

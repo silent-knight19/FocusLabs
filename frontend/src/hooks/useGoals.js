@@ -2,6 +2,7 @@ import { useCallback, useMemo } from 'react';
 import { useFirestore } from './useFirestore';
 import { useAuth } from '../contexts/AuthContext';
 import { generateId as createId } from '../utils/idHelpers';
+import { formatDateKey } from '../utils/dateHelpers';
 
 const generateId = (prefix = 'goal') => createId(prefix);
 
@@ -23,7 +24,9 @@ export function useGoals() {
    * @returns {object} Created goal
    */
   const addGoal = useCallback((goalData) => {
-    const newGoal = {
+    // Build the base goal without order first so the returned object is always
+    // fully defined — avoids the race where the setGoals updater hasn't run yet.
+    const baseGoal = {
       id: generateId('goal'),
       title: goalData.title,
       description: goalData.description || '',
@@ -31,15 +34,19 @@ export function useGoals() {
       color: goalData.color || '#FF5A1F',
       priority: goalData.priority || 'medium',
       status: 'active',
-      startDate: goalData.startDate || new Date().toISOString().split('T')[0],
+      startDate: goalData.startDate || formatDateKey(new Date()),
       targetDate: goalData.targetDate,
       completedAt: null,
       createdAt: new Date().toISOString(),
-      order: goals.length,
       subGoals: goalData.subGoals || []
     };
 
-    setGoals(prev => [...prev, newGoal]);
+    // Derive order from the current goals snapshot (safe for the common case).
+    // The updater re-derives it from prev.length to handle concurrent adds.
+    const newGoal = { ...baseGoal, order: goals.length };
+
+    setGoals(prev => [...prev, { ...newGoal, order: prev.length }]);
+
     return newGoal;
   }, [goals.length, setGoals]);
 
@@ -249,7 +256,7 @@ export function useGoals() {
    * @returns {object[]} Overdue goals
    */
   const getOverdueGoals = useCallback(() => {
-    const today = new Date().toISOString().split('T')[0];
+    const today = formatDateKey(new Date());
     return goals.filter(g => g.status === 'active' && g.targetDate < today);
   }, [goals]);
 
@@ -262,8 +269,8 @@ export function useGoals() {
     const today = new Date();
     const future = new Date(today);
     future.setDate(today.getDate() + days);
-    const todayStr = today.toISOString().split('T')[0];
-    const futureStr = future.toISOString().split('T')[0];
+    const todayStr = formatDateKey(today);
+    const futureStr = formatDateKey(future);
 
     return goals.filter(g =>
       g.status === 'active' && g.targetDate >= todayStr && g.targetDate <= futureStr
@@ -275,7 +282,7 @@ export function useGoals() {
    * @returns {object} Stats object
    */
   const getGoalStats = useCallback(() => {
-    const today = new Date().toISOString().split('T')[0];
+    const today = formatDateKey(new Date());
     const active = goals.filter(g => g.status === 'active');
     const completed = goals.filter(g => g.status === 'completed');
     const overdue = active.filter(g => g.targetDate < today);

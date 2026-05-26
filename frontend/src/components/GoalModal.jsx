@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLockBodyScroll } from '../hooks/useLockBodyScroll';
+import { formatDateKey } from '../utils/dateHelpers';
 import './styles/HabitModal.css';
 import './styles/GoalModal.css';
 
@@ -29,7 +30,7 @@ export function GoalModal({ isOpen, onClose, onSave, goal = null }) {
     category: 'personal',
     color: '#FF6B35',
     priority: 'medium',
-    startDate: new Date().toISOString().split('T')[0],
+    startDate: formatDateKey(new Date()),
     targetDate: ''
   });
 
@@ -48,7 +49,7 @@ export function GoalModal({ isOpen, onClose, onSave, goal = null }) {
         category: goal.category || 'personal',
         color: goal.color || '#FF6B35',
         priority: goal.priority || 'medium',
-        startDate: goal.startDate || new Date().toISOString().split('T')[0],
+        startDate: goal.startDate || formatDateKey(new Date()),
         targetDate: goal.targetDate || ''
       });
       setInitialSubGoals([]);
@@ -59,7 +60,7 @@ export function GoalModal({ isOpen, onClose, onSave, goal = null }) {
         category: 'personal',
         color: '#FF6B35',
         priority: 'medium',
-        startDate: new Date().toISOString().split('T')[0],
+        startDate: formatDateKey(new Date()),
         targetDate: ''
       });
       setInitialSubGoals([]);

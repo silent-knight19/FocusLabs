@@ -10,9 +10,12 @@ service cloud.firestore {
     }
 
     function isValidDataCollection(name) {
+      // Note: 'completions' and 'custom_completions' are intentionally
+      // excluded here — they now live in dedicated shard subcollections
+      // (users/{uid}/completions/{YYYY-MM}), not in the flat /data/ path.
       return name in [
-        'habits', 'completions', 'subtasks', 'subtask_completions',
-        'custom_habits', 'custom_completions', 'custom_subtasks', 'custom_subtask_completions',
+        'habits', 'subtasks', 'subtask_completions',
+        'custom_habits', 'custom_subtasks', 'custom_subtask_completions',
         'daily_tasks', 'settings', 'stopwatch_history', 'notes', 'goals',
         'study_sessions', 'productivity_sessions'
       ];
@@ -60,6 +63,12 @@ service cloud.firestore {
 
       match /devices/{deviceId} {
         allow read, write, delete: if isOwner(userId);
+      }
+
+      // Rate-limiting metadata written by the validateImport Cloud Function
+      // (via the Admin SDK). These rules protect client-side access.
+      match /meta/{docId} {
+        allow read, write: if isOwner(userId);
       }
     }
   }

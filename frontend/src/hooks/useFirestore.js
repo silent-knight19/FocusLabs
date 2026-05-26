@@ -195,6 +195,15 @@ export function useFirestore(userId, collectionName, initialValue) {
     }
 
     const now = Date.now();
+
+    // Initialize lastReset on the very first performWrite call for this collection,
+    // preventing `now - undefined = NaN` which caused the reset block to never fire.
+    if (!globalCircuitBreaker.lastReset[collectionName]) {
+      globalCircuitBreaker.lastReset[collectionName] = now;
+      globalCircuitBreaker.writes[collectionName] = 0;
+      globalCircuitBreaker.broken[collectionName] = false;
+    }
+
     if (now - globalCircuitBreaker.lastReset[collectionName] > WINDOW_MS) {
       globalCircuitBreaker.writes[collectionName] = 0;
       globalCircuitBreaker.lastReset[collectionName] = now;
@@ -270,10 +279,6 @@ export function useFirestore(userId, collectionName, initialValue) {
       globalCircuitBreaker.broken[collectionName] = false;
     }
 
-    if (globalCircuitBreaker.broken[collectionName]) {
-      warn(`[FIRESTORE] Circuit breaker active for "${collectionName}". Queuing write.`);
-    }
-
     try {
       const valueToStore = newValue instanceof Function ? newValue(valueRef.current) : newValue;
 
@@ -281,9 +286,18 @@ export function useFirestore(userId, collectionName, initialValue) {
         return;
       }
 
+      // Always update local state immediately so the UI stays responsive.
       setValue(valueToStore);
       valueRef.current = valueToStore;
       pendingValueRef.current = valueToStore;
+
+      if (globalCircuitBreaker.broken[collectionName]) {
+        // Circuit breaker is active: skip the debounce/throttle machinery.
+        // performWrite will schedule a queued retry when the reset window expires.
+        warn(`[FIRESTORE] Circuit breaker active for "${collectionName}". Write will auto-retry.`);
+        performWrite(valueToStore);
+        return;
+      }
 
       if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
       if (pendingUpdateRef.current) clearTimeout(pendingUpdateRef.current);

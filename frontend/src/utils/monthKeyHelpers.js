@@ -22,7 +22,11 @@ export function getMonthKeysForRange(startDate, endDate) {
 export function getRecentMonthKeys(count = 2) {
   const keys = [];
   const now = new Date();
-  for (let i = 0; i < count; i++) {
+
+  // Include one month ahead so tasks added near month-end
+  // (e.g. navigating to next month in the planner) are also loaded.
+  // Total returned: 1 future month + 1 current month + (count - 1) past months = count + 1 months.
+  for (let i = -1; i < count; i++) {
     const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
     keys.push(getMonthKey(d));
   }

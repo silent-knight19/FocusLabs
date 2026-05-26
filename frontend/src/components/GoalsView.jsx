@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Plus, Target, CheckCircle2, AlertTriangle, TrendingUp, X } from 'lucide-react';
 import { useLockBodyScroll } from '../hooks/useLockBodyScroll';
+import { formatDateKey } from '../utils/dateHelpers';
 import { GoalCard } from './GoalCard';
 import './styles/GoalsView.css';
 
@@ -24,7 +25,7 @@ export function GoalsView({
   const [sortBy, setSortBy] = useState('deadline');
 
   const stats = getGoalStats();
-  const today = new Date().toISOString().split('T')[0];
+  const today = formatDateKey(new Date());
 
   /**
    * Filter goals based on selected tab

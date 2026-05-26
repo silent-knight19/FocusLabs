@@ -111,7 +111,13 @@ export function useStopwatch() {
   // to only show laps that actually exist in Firestore — prevents duplicates after refresh.
   useEffect(() => {
     if (hasSyncedRef.current) return;
-    if (laps.length === 0 && sessionLapIds.size === 0) return;
+
+    // For a brand-new user, both Firestore history and localStorage laps are empty.
+    // Mark as synced immediately so this effect doesn't re-run on every future update.
+    if (laps.length === 0 && sessionLapIds.size === 0) {
+      hasSyncedRef.current = true;
+      return;
+    }
 
     // Firestore history has loaded: filter down to only laps whose IDs match
     // what was in the localStorage session snapshot

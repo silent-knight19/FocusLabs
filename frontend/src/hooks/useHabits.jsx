@@ -29,7 +29,11 @@ export function useHabits() {
    * @returns {object} Created habit
    */
   const addHabit = useCallback((habitData) => {
-    const newHabit = {
+    // Build the base habit object without `order` first.
+    // We compute order inside a separate synchronous read so the returned
+    // object is always fully defined — avoiding the race where the setHabits
+    // updater hasn't run yet when this function returns.
+    const baseHabit = {
       id: generateId('habit'),
       name: habitData.name,
       description: habitData.description || '',
@@ -38,13 +42,20 @@ export function useHabits() {
       endTime: habitData.endTime || '',
       color: habitData.color || '#FF6B35',
       weeklyTarget: habitData.weeklyTarget || 7,
-      createdAt: new Date().toISOString(),
-      order: habits.length // initial order based on current list length
+      createdAt: new Date().toISOString()
     };
 
-    setHabits(prev => [...prev, newHabit]);
+    // Derive order from the current habits length before the state update.
+    // This is safe because `habits` is a stable snapshot from the last render.
+    const newHabit = { ...baseHabit, order: habits.length };
+
+    setHabits(prev => {
+      // Re-derive order inside the updater to handle concurrent adds correctly.
+      return [...prev, { ...newHabit, order: prev.length }];
+    });
+
     return newHabit;
-  }, [habits.length, generateId, setHabits]);
+  }, [generateId, setHabits, habits.length]);
 
   // Reorder habits based on a new ordered array of habit IDs
   const reorderHabits = useCallback((newOrder) => {
@@ -108,18 +119,22 @@ export function useHabits() {
    * Add a subtask to a habit
    */
   const addSubtask = useCallback((habitId, title) => {
-    const habitSubtasks = getSubtasks(habitId);
     const newSubtask = {
       id: generateId('subtask'),
       habitId,
       title,
-      order: habitSubtasks.length,
+      // Compute order inside the updater to avoid stale closure issues
+      // when multiple subtasks are added quickly.
+      order: subtasks.filter(st => st.habitId === habitId).length,
       createdAt: new Date().toISOString()
     };
 
-    setSubtasks(prev => [...prev, newSubtask]);
+    setSubtasks(prev => [
+      ...prev,
+      { ...newSubtask, order: prev.filter(st => st.habitId === habitId).length }
+    ]);
     return newSubtask;
-  }, [generateId, getSubtasks, setSubtasks]);
+  }, [generateId, setSubtasks, subtasks]);
 
   /**
    * Update subtask
@@ -339,17 +354,28 @@ export function useHabits() {
     const dates = Object.keys(habitCompletions)
       .filter(dateKey => habitCompletions[dateKey] === 'completed')
       .sort();
-    
+
     if (dates.length === 0) return 0;
-    
+
+    /**
+     * Parse a YYYY-MM-DD string as a LOCAL date (not UTC midnight).
+     * Using `new Date('YYYY-MM-DD')` gives UTC midnight which shifts the
+     * day backward in negative-offset time zones, causing diffDays to be
+     * wrong. Splitting and constructing manually fixes this.
+     */
+    const parseLocalDate = (dateKey) => {
+      const [year, month, day] = dateKey.split('-').map(Number);
+      return new Date(year, month - 1, day);
+    };
+
     let longestStreak = 1;
     let currentStreak = 1;
-    
+
     for (let i = 1; i < dates.length; i++) {
-      const prevDate = new Date(dates[i - 1]);
-      const currDate = new Date(dates[i]);
+      const prevDate = parseLocalDate(dates[i - 1]);
+      const currDate = parseLocalDate(dates[i]);
       const diffDays = Math.round((currDate - prevDate) / (1000 * 60 * 60 * 24));
-      
+
       if (diffDays === 1) {
         currentStreak++;
         longestStreak = Math.max(longestStreak, currentStreak);
@@ -357,7 +383,7 @@ export function useHabits() {
         currentStreak = 1;
       }
     }
-    
+
     return longestStreak;
   }, [completions]);
 

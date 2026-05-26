@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { doc, setDoc, onSnapshot, getDocs, collection, query, orderBy, limit } from 'firebase/firestore';
+import { doc, setDoc, onSnapshot, deleteDoc, getDocs, collection, query, orderBy, limit } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { showToast } from '../contexts/ToastContext';
 import { getMonthKey, getRecentMonthKeys } from '../utils/monthKeyHelpers';
@@ -38,6 +38,7 @@ if (typeof window !== 'undefined') {
  */
 export function useMonthlyStopwatch(userId) {
   const [sessions, setSessions] = useState([]);
+  const sessionsRef = useRef([]);
   const [loading, setLoading] = useState(true);
   const migratedRef = useRef(false);
   const debounceRef = useRef(null);
@@ -49,12 +50,18 @@ export function useMonthlyStopwatch(userId) {
     const all = monthSessions.flat();
     all.sort((a, b) => new Date(b.date) - new Date(a.date));
     setSessions(all);
+    sessionsRef.current = all;
   }, []);
 
   const writeSessions = useCallback(async (allSessions) => {
     if (!userId) return;
 
+    // Group sessions by their monthKey, pre-initializing all loaded monthKeys to empty arrays
     const byMonth = {};
+    for (const mk of monthKeys) {
+      byMonth[mk] = [];
+    }
+
     for (const session of allSessions) {
       const mk = getMonthKey(new Date(session.date));
       if (!byMonth[mk]) byMonth[mk] = [];
@@ -75,7 +82,7 @@ export function useMonthlyStopwatch(userId) {
       logError('Failed to save stopwatch sessions to Firestore', err);
       showToast('Failed to save stopwatch changes. Please check your network connection.', 'error');
     }
-  }, [userId]);
+  }, [userId, monthKeys]);
 
   const flushPendingWrite = useCallback(() => {
     if (debounceRef.current) {
@@ -104,6 +111,7 @@ export function useMonthlyStopwatch(userId) {
   useEffect(() => {
     if (!userId) {
       setSessions([]);
+      sessionsRef.current = [];
       setLoading(false);
       return;
     }
@@ -144,6 +152,8 @@ export function useMonthlyStopwatch(userId) {
           if (!migratedRef.current) {
             migratedRef.current = true;
             await writeSessions(legacy);
+            // Delete legacy doc after migration to prevent re-migration on load.
+            try { await deleteDoc(legacyDoc); } catch { /* ignore */ }
           }
           monthData.legacy = legacy;
         }
@@ -161,34 +171,35 @@ export function useMonthlyStopwatch(userId) {
   const setSessionsUpdater = useCallback((newValue) => {
     if (!userId) return;
 
-    setSessions((prev) => {
-      const rawNext = typeof newValue === 'function' ? newValue(prev) : newValue;
+    const rawNext = typeof newValue === 'function' ? newValue(sessionsRef.current) : newValue;
 
-      // Deduplicate by session ID to prevent duplicate laps being written to Firestore.
-      // This is the safety net for any race conditions or double-calls from the UI.
-      const seen = new Set();
-      const next = rawNext.filter(session => {
-        if (seen.has(session.id)) return false;
-        seen.add(session.id);
-        return true;
-      });
-
-      pendingRef.current = next;
-
-      if (debounceRef.current) clearTimeout(debounceRef.current);
-      debounceRef.current = setTimeout(() => {
-        if (pendingRef.current) flushPendingWrite();
-      }, 2000);
-
-      return next;
+    // Deduplicate by session ID to prevent duplicate laps being written to Firestore.
+    // This is the safety net for any race conditions or double-calls from the UI.
+    const seen = new Set();
+    const next = rawNext.filter(session => {
+      if (seen.has(session.id)) return false;
+      seen.add(session.id);
+      return true;
     });
+
+    setSessions(next);
+    sessionsRef.current = next;
+    pendingRef.current = next;
+
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      if (pendingRef.current) flushPendingWrite();
+    }, 2000);
   }, [userId, flushPendingWrite]);
 
   const loadMore = useCallback(async () => {
     if (!userId) return [];
+    // Order by document name (month key) descending to get newest months first.
+    // Ordering by '_v' would require a composite index and doesn't reliably
+    // produce chronological order across months.
     const q = query(
       collection(db, 'users', userId, 'stopwatch'),
-      orderBy('_v', 'desc'),
+      orderBy('__name__', 'desc'),
       limit(PAGE_SIZE)
     );
     const snap = await getDocs(q);
@@ -197,10 +208,11 @@ export function useMonthlyStopwatch(userId) {
       const ids = new Set(prev.map((s) => s.id));
       const merged = [...prev, ...extra.filter((s) => !ids.has(s.id))];
       merged.sort((a, b) => new Date(b.date) - new Date(a.date));
+      sessionsRef.current = merged;
       return merged;
     });
     return extra;
   }, [userId]);
 
-  return [sessions, setSessionsUpdater, loading, loadMore];
+  return [sessions, setSessionsUpdater, loading, loadMore, flushPendingWrite];
 }

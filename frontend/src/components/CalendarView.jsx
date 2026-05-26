@@ -200,6 +200,10 @@ export function CalendarView({ habits, completions, subtasks = [], subtaskComple
   // Keyboard Navigation
   useEffect(() => {
     const handleKeyDown = (e) => {
+      // Don't intercept arrow keys when the user is typing in an input or textarea.
+      const activeTag = document.activeElement?.tagName;
+      if (activeTag === 'INPUT' || activeTag === 'TEXTAREA') return;
+
       if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
         e.preventDefault();
         const newDate = new Date(selectedDate);
@@ -386,17 +390,23 @@ export function CalendarView({ habits, completions, subtasks = [], subtaskComple
     setMatchingDates(matches);
     setSearchResults(results);
 
-    // Auto-navigate to the most recent matching month
+    // Auto-navigate to the most recent matching month.
+    // We read currentDate via a ref to avoid adding it to the deps array
+    // (doing so would trigger this effect on every month navigation, creating
+    // an extra render cycle each time the user searches and changes months).
     if (results.length > 0) {
       const mostRecentDate = new Date(results[0].date + 'T00:00:00');
-      if (
-        mostRecentDate.getMonth() !== currentDate.getMonth() ||
-        mostRecentDate.getFullYear() !== currentDate.getFullYear()
-      ) {
-        setCurrentDate(new Date(mostRecentDate.getFullYear(), mostRecentDate.getMonth(), 1));
-      }
+      setCurrentDate(prev => {
+        if (
+          mostRecentDate.getMonth() !== prev.getMonth() ||
+          mostRecentDate.getFullYear() !== prev.getFullYear()
+        ) {
+          return new Date(mostRecentDate.getFullYear(), mostRecentDate.getMonth(), 1);
+        }
+        return prev;
+      });
     }
-  }, [searchTerm, completions, habits, subtasks, subtaskCompletions, dailyTasks, currentDate]);
+  }, [searchTerm, completions, habits, subtasks, subtaskCompletions, dailyTasks]);
 
   const handlePrevMonth = () => {
     const newDate = new Date(currentDate);

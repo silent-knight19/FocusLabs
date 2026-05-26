@@ -192,13 +192,14 @@ export function AnalyticsView({
     for (let i = 0; i < 7; i++) {
       const d = new Date(weekStart);
       d.setDate(weekStart.getDate() + i);
-      const dateStr = d.toISOString().split('T')[0];
+      const dateStr = formatDateKey(d);
       
       // Filter laps for this date AND (category is prod/self OR label contains "self")
       const dailyLaps = validLaps.filter(l => {
         const isProductive = l.category === 'prod' || l.category === 'self' || l.category === 'self growth';
         const isSelfLabel = l.label && l.label.toLowerCase().includes('self');
-        return l.date.startsWith(dateStr) && (isProductive || isSelfLabel);
+        const lapDateKey = l.date ? formatDateKey(new Date(l.date)) : null;
+        return lapDateKey === dateStr && (isProductive || isSelfLabel);
       });
       
       const ms = dailyLaps.reduce((acc, curr) => acc + curr.time, 0);

@@ -8,9 +8,12 @@ const StopwatchHistoryContext = createContext(null);
 export function StopwatchHistoryProvider({ children }) {
   const { user } = useAuth();
   const userId = user?.uid;
-  const [history, setHistory, loading, loadMore] = useMonthlyStopwatch(userId);
+  const [history, setHistory, loading, loadMore, flushNow] = useMonthlyStopwatch(userId);
 
-  const value = useMemo(() => ({ history, setHistory, loading, loadMore }), [history, setHistory, loading, loadMore]);
+  const value = useMemo(
+    () => ({ history, setHistory, loading, loadMore, flushNow }),
+    [history, setHistory, loading, loadMore, flushNow]
+  );
 
   return (
     <StopwatchHistoryContext.Provider value={value}>

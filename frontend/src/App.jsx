@@ -131,11 +131,16 @@ export function App() {
     const today = getToday();
     const todayKey = formatDateKey(today);
 
+    // Guard: only fire the all-completed confetti once per day using sessionStorage.
+    const celebratedAllKey = `all_completed_${todayKey}`;
+    const alreadyCelebrated = sessionStorage.getItem(celebratedAllKey);
+
     const allCompleted = habits.length > 0 && habits.every(habit =>
       completions[habit.id]?.[todayKey] === 'completed'
     );
 
-    if (allCompleted) {
+    if (allCompleted && !alreadyCelebrated) {
+      sessionStorage.setItem(celebratedAllKey, '1');
       confetti({
         particleCount: 100, spread: 70, origin: { y: 0.6 },
         colors: ['#FF6B35', '#00FF9F', '#0080FF']
@@ -167,11 +172,16 @@ export function App() {
 
   // Habit operations
   const handleSaveHabit = (habitData) => {
-    let habitId = editingHabit ? editingHabit.id : addHabit(habitData).id;
-    if (editingHabit) updateHabit(editingHabit.id, habitData);
-
-    if (habitData.subtasks && habitData.subtasks.length > 0) {
-      habitData.subtasks.forEach(title => addSubtask(habitId, title));
+    if (editingHabit) {
+      // Editing an existing habit — only update fields, never re-add subtasks.
+      // Subtask management is handled separately via the modal's own subtask UI.
+      updateHabit(editingHabit.id, habitData);
+    } else {
+      // Creating a new habit — add it then attach any initial subtasks.
+      const newHabit = addHabit(habitData);
+      if (habitData.subtasks && habitData.subtasks.length > 0) {
+        habitData.subtasks.forEach(title => addSubtask(newHabit.id, title));
+      }
     }
     handleDataUpdate();
   };
