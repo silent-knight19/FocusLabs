@@ -21,8 +21,15 @@ service cloud.firestore {
       ];
     }
 
-    function isValidSize() {
-      return request.resource.size < 500000;
+    function hasValidTopLevelShape(maxFields) {
+      // Firestore rules cannot compute serialized byte size reliably.
+      // Cloud Functions enforce the 500 KB payload cap after writes; this
+      // rule keeps document shapes bounded without blocking valid saves.
+      return request.resource.data.keys().size() <= maxFields;
+    }
+
+    function isValidMonthKey(monthKey) {
+      return monthKey.matches('^\\d{4}-\\d{2}$');
     }
 
     match /users/{userId} {
@@ -32,31 +39,39 @@ service cloud.firestore {
         allow read: if isOwner(userId);
         allow create, update: if isOwner(userId)
           && isValidDataCollection(collectionName)
-          && isValidSize();
+          && hasValidTopLevelShape(3);
         allow delete: if isOwner(userId);
       }
 
       match /completions/{monthKey} {
         allow read: if isOwner(userId);
-        allow create, update: if isOwner(userId) && isValidSize();
+        allow create, update: if isOwner(userId)
+          && isValidMonthKey(monthKey)
+          && hasValidTopLevelShape(4);
         allow delete: if isOwner(userId);
       }
 
       match /custom_completions/{monthKey} {
         allow read: if isOwner(userId);
-        allow create, update: if isOwner(userId) && isValidSize();
+        allow create, update: if isOwner(userId)
+          && isValidMonthKey(monthKey)
+          && hasValidTopLevelShape(4);
         allow delete: if isOwner(userId);
       }
 
       match /stopwatch/{monthKey} {
         allow read: if isOwner(userId);
-        allow create, update: if isOwner(userId) && isValidSize();
+        allow create, update: if isOwner(userId)
+          && isValidMonthKey(monthKey)
+          && hasValidTopLevelShape(4);
         allow delete: if isOwner(userId);
       }
 
       match /daily_tasks/{monthKey} {
         allow read: if isOwner(userId);
-        allow create, update: if isOwner(userId) && isValidSize();
+        allow create, update: if isOwner(userId)
+          && isValidMonthKey(monthKey)
+          && hasValidTopLevelShape(4);
         allow delete: if isOwner(userId);
       }
 

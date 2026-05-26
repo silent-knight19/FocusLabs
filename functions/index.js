@@ -137,6 +137,82 @@ function shardArrayByMonth(data) {
   return shards;
 }
 
+function normalizeSessionCategory(category, label = '') {
+  const normalizedCategory = String(category || '').trim().toLowerCase();
+  const normalizedLabel = String(label || '').trim().toLowerCase();
+
+  if (normalizedCategory === 'study' || normalizedLabel.includes('study')) return 'study';
+  if (['prod', 'productive', 'productivity', 'work'].includes(normalizedCategory)) return 'prod';
+  if (
+    ['self', 'self growth', 'self-growth', 'personal', 'health', 'fitness', 'social'].includes(normalizedCategory) ||
+    normalizedLabel.includes('self') ||
+    normalizedLabel.includes('growth') ||
+    normalizedLabel.includes('fitness') ||
+    normalizedLabel.includes('health')
+  ) {
+    return 'self';
+  }
+
+  return 'other';
+}
+
+function normalizeSessionArray(data, fallbackCategory = 'other') {
+  if (!Array.isArray(data)) return [];
+
+  return data.map((session, index) => {
+    if (!session || typeof session !== 'object') return null;
+
+    const rawDate = session.date || session.createdAt || session.timestamp || session.startedAt || session.startTime;
+    const parsedDate = new Date(rawDate);
+    const time = Number(session.time ?? session.duration ?? session.durationMs ?? 0);
+
+    if (Number.isNaN(parsedDate.getTime()) || !Number.isFinite(time) || time < 0) {
+      return null;
+    }
+
+    const label = typeof session.label === 'string' && session.label.trim()
+      ? session.label
+      : `Session ${index + 1}`;
+    const category = normalizeSessionCategory(session.category || fallbackCategory, label);
+
+    return {
+      ...session,
+      id: session.id || `${parsedDate.toISOString()}_${time}_${category}_${label}`,
+      date: parsedDate.toISOString(),
+      time,
+      category,
+      label
+    };
+  }).filter(Boolean);
+}
+
+function mergeUniqueSessions(...groups) {
+  const merged = [];
+  const seen = new Set();
+
+  groups.flat().forEach((session) => {
+    if (!session || seen.has(session.id)) return;
+    seen.add(session.id);
+    merged.push(session);
+  });
+
+  merged.sort((a, b) => new Date(b.date) - new Date(a.date));
+  return merged;
+}
+
+async function deleteCollectionDocs(collectionRef) {
+  const snap = await collectionRef.get();
+  const BATCH_CHUNK_SIZE = 400;
+
+  for (let i = 0; i < snap.docs.length; i += BATCH_CHUNK_SIZE) {
+    const batch = db.batch();
+    snap.docs.slice(i, i + BATCH_CHUNK_SIZE).forEach((snapshotDoc) => {
+      batch.delete(snapshotDoc.ref);
+    });
+    await batch.commit();
+  }
+}
+
 exports.validateImport = functions.https.onCall(async (data, context) => {
   if (context.app === undefined) {
     throw new functions.https.HttpsError('failed-precondition', 'The function must be called from an App Check verified app.');
@@ -180,6 +256,22 @@ exports.validateImport = functions.https.onCall(async (data, context) => {
   // months of history can exceed this easily.
   const BATCH_CHUNK_SIZE = 400;
   const writeOps = []; // Each entry: { ref, data }
+  const userRef = db.collection('users').doc(userId);
+
+  const flatCollectionsToReset = [
+    'habits', 'subtasks', 'subtask_completions', 'notes',
+    'custom_habits', 'custom_subtasks', 'custom_subtask_completions',
+    'study_sessions', 'productivity_sessions', 'settings', 'goals',
+    'completions', 'custom_completions', 'daily_tasks', 'stopwatch_history'
+  ];
+
+  await Promise.all(flatCollectionsToReset.map((colName) =>
+    userRef.collection('data').doc(colName).delete().catch(() => null)
+  ));
+
+  await Promise.all(['completions', 'custom_completions', 'daily_tasks', 'stopwatch'].map((colName) =>
+    deleteCollectionDocs(userRef.collection(colName))
+  ));
 
   const mapping = {
     habits: 'habits',
@@ -218,8 +310,13 @@ exports.validateImport = functions.https.onCall(async (data, context) => {
     }
   }
 
-  const stopwatchData = importData.stopwatchHistory ?? importData.data?.stopwatchHistory;
-  if (stopwatchData && Array.isArray(stopwatchData)) {
+  const stopwatchData = mergeUniqueSessions(
+    normalizeSessionArray(importData.stopwatchHistory ?? importData.data?.stopwatchHistory),
+    normalizeSessionArray(importData.studySessions ?? importData.data?.studySessions, 'study'),
+    normalizeSessionArray(importData.productivitySessions ?? importData.data?.productivitySessions, 'prod')
+  );
+
+  if (stopwatchData.length > 0) {
     const shards = shardArrayByMonth(stopwatchData);
     for (const [monthKey, monthSessions] of Object.entries(shards)) {
       const ref = db.doc(`users/${userId}/stopwatch/${monthKey}`);
@@ -240,10 +337,9 @@ exports.validateImport = functions.https.onCall(async (data, context) => {
   for (let i = 0; i < writeOps.length; i += BATCH_CHUNK_SIZE) {
     const chunk = writeOps.slice(i, i + BATCH_CHUNK_SIZE);
     const batch = db.batch();
-    chunk.forEach(({ ref, data: opData }) => batch.set(ref, opData, { merge: true }));
+    chunk.forEach(({ ref, data: opData }) => batch.set(ref, opData));
     await batch.commit();
   }
 
   return { success: true };
 });
-

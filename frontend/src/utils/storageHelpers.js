@@ -104,6 +104,8 @@ export function clearAllData() {
   localStorage.removeItem('stopwatch_laps');
   localStorage.removeItem('stopwatch_categories');
   localStorage.removeItem('habitgrid_lap_history'); // Legacy key — may exist on older installs
+  localStorage.removeItem('stopwatch_active_state');
+  localStorage.removeItem('stopwatch_current_session_laps');
   
   // Active habit tracking
   localStorage.removeItem('active_habit_data');

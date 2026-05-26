@@ -4,6 +4,7 @@ import { X, CheckCircle, Circle, Clock, TrendingUp, Target, ListTodo, ChevronDow
 import { useHabitNotes } from '../hooks/useHabitNotes';
 import { formatDateKey } from '../utils/dateHelpers';
 import { useLockBodyScroll } from '../hooks/useLockBodyScroll';
+import { normalizeFocusCategory } from '../utils/focusSessionHelpers';
 import './styles/DayHistoryModal.css';
 
 /**
@@ -45,7 +46,7 @@ export function DayHistoryModal({
       // Group by category
       const categoryTime = {};
       dayLaps.forEach(lap => {
-        const category = lap.category || 'uncategorized';
+        const category = normalizeFocusCategory(lap.category, lap.label) || 'uncategorized';
         categoryTime[category] = (categoryTime[category] || 0) + (lap.time || 0);
       });
 

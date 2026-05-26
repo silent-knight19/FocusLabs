@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useStopwatchHistory } from '../contexts/StopwatchHistoryContext';
+import { normalizeFocusCategory } from '../utils/focusSessionHelpers';
 
 const DEBUG = import.meta.env.DEV;
 const logError = DEBUG ? console.error : () => {};
@@ -71,6 +72,7 @@ export function useStopwatch() {
   
   const requestRef = useRef();
   const previousTimeRef = useRef();
+  const hiddenAtRef = useRef(null);
 
   // Synchronous refs for unload and visibilitychange tracking
   const timeRef = useRef(0);
@@ -141,16 +143,47 @@ export function useStopwatch() {
 
   // Handle tab unload or backgrounding for robust updates
   useEffect(() => {
-    const handleUnloadOrHide = () => {
+    const restoreElapsedAfterHide = () => {
+      try {
+        const savedState = localStorage.getItem('stopwatch_active_state');
+        if (!savedState) return;
+
+        const parsed = JSON.parse(savedState);
+        if (!parsed.savedIsRunning || !parsed.savedLastActive) return;
+
+        const recoveredTime = (parsed.savedTime || 0) + Math.max(0, Date.now() - parsed.savedLastActive);
+        setTime(recoveredTime);
+        timeRef.current = recoveredTime;
+        previousTimeRef.current = undefined;
+        saveActiveState();
+      } catch (e) {
+        logError('Failed to restore stopwatch elapsed time after backgrounding', e);
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        hiddenAtRef.current = Date.now();
+        saveActiveState();
+        return;
+      }
+
+      if (hiddenAtRef.current && isRunningRef.current) {
+        restoreElapsedAfterHide();
+      }
+      hiddenAtRef.current = null;
+    };
+
+    const handlePageHide = () => {
       saveActiveState();
     };
 
-    window.addEventListener('pagehide', handleUnloadOrHide);
-    document.addEventListener('visibilitychange', handleUnloadOrHide);
+    window.addEventListener('pagehide', handlePageHide);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
-      window.removeEventListener('pagehide', handleUnloadOrHide);
-      document.removeEventListener('visibilitychange', handleUnloadOrHide);
+      window.removeEventListener('pagehide', handlePageHide);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [saveActiveState]);
 
@@ -220,7 +253,7 @@ export function useStopwatch() {
       id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
       time: sessionDuration,
       date: new Date().toISOString(),
-      category: category,
+      category: normalizeFocusCategory(category),
       label: `Session ${currentSessionLaps.length + 1}`
     };
 
@@ -255,11 +288,12 @@ export function useStopwatch() {
   };
 
   const updateLapCategory = (id, newCategory) => {
+    const normalizedCategory = normalizeFocusCategory(newCategory);
     // Update in Firestore history
-    const updatedLaps = laps.map(l => l.id === id ? { ...l, category: newCategory } : l);
+    const updatedLaps = laps.map(l => l.id === id ? { ...l, category: normalizedCategory } : l);
     setLaps(updatedLaps);
     // Also update in current session
-    const updatedSessionLaps = currentSessionLaps.map(l => l.id === id ? { ...l, category: newCategory } : l);
+    const updatedSessionLaps = currentSessionLaps.map(l => l.id === id ? { ...l, category: normalizedCategory } : l);
     setCurrentSessionLaps(updatedSessionLaps);
   };
 

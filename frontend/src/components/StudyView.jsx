@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import { useStopwatchHistory } from '../contexts/StopwatchHistoryContext';
+import { isStudySession } from '../utils/focusSessionHelpers';
 import './styles/AnalyticsView.css'; // Reuse analytics styles
 
 export function StudyView() {
@@ -11,7 +12,7 @@ export function StudyView() {
     // Filter laps that were recorded under the 'study' category.
     // NOTE: labels default to "Session 1", "Session 2" etc., so we must filter
     // by the category field, not by the label text.
-    const studyLaps = history.filter(l => l.category === 'study');
+    const studyLaps = history.filter(isStudySession);
     
     const totalMs = studyLaps.reduce((acc, curr) => acc + curr.time, 0);
     const totalHours = (totalMs / 3600000).toFixed(1);

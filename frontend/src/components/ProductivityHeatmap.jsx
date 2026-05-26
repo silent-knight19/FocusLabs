@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { useStopwatchHistory } from '../contexts/StopwatchHistoryContext';
-import './styles/ProductivityHeatmap.css';
+import { isProductiveSession } from '../utils/focusSessionHelpers';
 import './styles/ProductivityHeatmap.css';
 
 /**
@@ -63,7 +63,7 @@ export function ProductivityHeatmap({ dataVersion = 0 }) {
           const lapDateObj = new Date(lap.date);
           // Use local date components to avoid timezone issues
           const lapDateLocal = `${lapDateObj.getFullYear()}-${String(lapDateObj.getMonth() + 1).padStart(2, '0')}-${String(lapDateObj.getDate()).padStart(2, '0')}`;
-          return lapDateLocal === dateKey && (lap.category === 'prod' || lap.category === 'self' || lap.category === 'self growth');
+          return lapDateLocal === dateKey && isProductiveSession(lap);
         });
         const stopwatchMs = dayLaps.reduce((sum, lap) => sum + (lap.time || 0), 0);
         let totalHours = stopwatchMs / (1000 * 60 * 60);
@@ -118,9 +118,7 @@ export function ProductivityHeatmap({ dataVersion = 0 }) {
   const stats = useMemo(() => {
     const _ = dataVersion; // Keep dependency
     // Filter relevant laps first
-    const relevantLaps = lapHistory.filter(lap => 
-      lap.category === 'prod' || lap.category === 'self' || lap.category === 'self growth'
-    );
+    const relevantLaps = lapHistory.filter(isProductiveSession);
 
     // Group by date to calculate daily totals
     const dailyTotals = {};

@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { useStopwatchHistory } from '../contexts/StopwatchHistoryContext';
-import './styles/StudyHeatmap.css';
+import { isStudySession } from '../utils/focusSessionHelpers';
 import './styles/StudyHeatmap.css';
 
 /**
@@ -63,7 +63,7 @@ export function StudyHeatmap({ dataVersion = 0 }) {
           const lapDateObj = new Date(lap.date);
           // Use local date components to avoid timezone issues
           const lapDateLocal = `${lapDateObj.getFullYear()}-${String(lapDateObj.getMonth() + 1).padStart(2, '0')}-${String(lapDateObj.getDate()).padStart(2, '0')}`;
-          return lapDateLocal === dateKey && lap.category === 'study';
+          return lapDateLocal === dateKey && isStudySession(lap);
         });
         
         const totalMs = dayLaps.reduce((sum, lap) => sum + (lap.time || 0), 0);
@@ -111,7 +111,7 @@ export function StudyHeatmap({ dataVersion = 0 }) {
   const stats = useMemo(() => {
     const _ = dataVersion; // Keep dependency
     // Filter relevant laps first
-    const relevantLaps = lapHistory.filter(lap => lap.category === 'study');
+    const relevantLaps = lapHistory.filter(isStudySession);
 
     // Group by date to calculate daily totals
     const dailyTotals = {};

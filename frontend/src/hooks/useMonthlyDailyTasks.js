@@ -1,16 +1,57 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { doc, setDoc, onSnapshot, deleteDoc } from 'firebase/firestore';
+import { doc, setDoc, onSnapshot, deleteDoc, runTransaction } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { showToast } from '../contexts/ToastContext';
 import { getRecentMonthKeys, getMonthKey, dateKeyToMonthKey } from '../utils/monthKeyHelpers';
 
-const MONTHS_TO_LOAD = 6;
+const MONTHS_TO_LOAD = 25;
 const DEBOUNCE_MS = 2000;
 
 const DEBUG = import.meta.env.DEV;
 const logError = DEBUG ? console.error : () => {};
 
 const pendingDailyTasksFlushes = new Map();
+
+function getTaskDedupKey(task) {
+  if (task?.id) return `id:${task.id}`;
+  return [
+    task?.date || '',
+    task?.habitId || '',
+    task?.title || '',
+    task?.createdAt || '',
+    task?.order ?? ''
+  ].join('|');
+}
+
+function groupTasksByMonth(tasks) {
+  const byMonth = {};
+
+  if (!Array.isArray(tasks)) return byMonth;
+
+  for (const task of tasks) {
+    if (!task?.date) continue;
+    const mk = dateKeyToMonthKey(task.date) || getMonthKey(new Date(task.date));
+    if (!mk) continue;
+    if (!byMonth[mk]) byMonth[mk] = [];
+    byMonth[mk].push(task);
+  }
+
+  return byMonth;
+}
+
+function mergeTasksPreservingExisting(existingTasks, legacyTasks) {
+  const merged = Array.isArray(existingTasks) ? [...existingTasks] : [];
+  const seen = new Set(merged.map(getTaskDedupKey));
+
+  for (const task of legacyTasks || []) {
+    const key = getTaskDedupKey(task);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    merged.push(task);
+  }
+
+  return merged;
+}
 
 function flushAllDailyTasks() {
   pendingDailyTasksFlushes.forEach((flushFn) => {
@@ -52,12 +93,12 @@ export function useMonthlyDailyTasks(userId) {
     const fromShards = Object.values(shardsRef.current).flat();
     
     // Add legacy tasks if they are not already in the shards
-    const shardIds = new Set(fromShards.map(t => t.id));
+    const shardIds = new Set(fromShards.map(getTaskDedupKey));
     const merged = [...fromShards];
     
     if (legacyRef.current && Array.isArray(legacyRef.current)) {
       legacyRef.current.forEach(t => {
-        if (!shardIds.has(t.id)) {
+        if (!shardIds.has(getTaskDedupKey(t))) {
           merged.push(t);
         }
       });
@@ -104,6 +145,32 @@ export function useMonthlyDailyTasks(userId) {
     }
   }, [userId, monthKeys]);
 
+  const migrateLegacyTasks = useCallback(async (legacyTasks, legacyDoc) => {
+    if (!userId) return;
+
+    const byMonth = groupTasksByMonth(legacyTasks);
+
+    await Promise.all(Object.entries(byMonth).map(async ([monthKey, monthTasks]) => {
+      const shardRef = doc(db, 'users', userId, 'daily_tasks', monthKey);
+
+      await runTransaction(db, async (transaction) => {
+        const shardSnap = await transaction.get(shardRef);
+        const existingTasks = shardSnap.exists() ? (shardSnap.data().tasks || []) : [];
+        const mergedTasks = mergeTasksPreservingExisting(existingTasks, monthTasks);
+
+        if (mergedTasks.length !== existingTasks.length) {
+          transaction.set(
+            shardRef,
+            { tasks: mergedTasks, _v: Date.now() },
+            { merge: true }
+          );
+        }
+      });
+    }));
+
+    await deleteDoc(legacyDoc);
+  }, [userId]);
+
   const flushPendingWrite = useCallback(() => {
     if (debounceRef.current) {
       clearTimeout(debounceRef.current);
@@ -132,9 +199,20 @@ export function useMonthlyDailyTasks(userId) {
     if (!userId) {
       setValue([]);
       valueRef.current = [];
+      shardsRef.current = {};
+      legacyRef.current = null;
+      migratedRef.current = false;
       setLoading(false);
       return;
     }
+
+    setLoading(true);
+    setValue([]);
+    valueRef.current = [];
+    shardsRef.current = {};
+    legacyRef.current = null;
+    migratedRef.current = false;
+    pendingRef.current = null;
 
     const unsubs = [];
     let pending = monthKeys.length + 1;
@@ -142,9 +220,18 @@ export function useMonthlyDailyTasks(userId) {
       pending--;
       if (pending <= 0) setLoading(false);
     };
+    const createLoadedMarker = () => {
+      let loaded = false;
+      return () => {
+        if (loaded) return;
+        loaded = true;
+        markLoaded();
+      };
+    };
 
     monthKeys.forEach((monthKey) => {
       const docRef = doc(db, 'users', userId, 'daily_tasks', monthKey);
+      const markMonthLoaded = createLoadedMarker();
       unsubs.push(
         onSnapshot(docRef, (snap) => {
           if (snap.exists()) {
@@ -153,12 +240,13 @@ export function useMonthlyDailyTasks(userId) {
             shardsRef.current[monthKey] = [];
           }
           rebuildMerged();
-          markLoaded();
-        }, markLoaded)
+          markMonthLoaded();
+        }, markMonthLoaded)
       );
     });
 
     const legacyDoc = doc(db, 'users', userId, 'data', 'daily_tasks');
+    const markLegacyLoaded = createLoadedMarker();
     unsubs.push(
       onSnapshot(legacyDoc, async (snap) => {
         if (snap.exists() && snap.data().value) {
@@ -166,11 +254,9 @@ export function useMonthlyDailyTasks(userId) {
           if (!migratedRef.current && legacyRef.current.length > 0) {
             migratedRef.current = true;
             try {
-              await flushWrites(legacyRef.current);
-              // Delete the legacy doc after migration so it doesn't re-duplicate
-              // tasks on every subsequent app load.
-              await deleteDoc(legacyDoc);
-            } catch {
+              await migrateLegacyTasks(legacyRef.current, legacyDoc);
+            } catch (err) {
+              logError('Failed to migrate legacy daily tasks', err);
               showToast('Syncing planner tasks to shards...', 'info');
             }
           }
@@ -178,15 +264,15 @@ export function useMonthlyDailyTasks(userId) {
           legacyRef.current = null;
         }
         rebuildMerged();
-        markLoaded();
-      }, markLoaded)
+        markLegacyLoaded();
+      }, markLegacyLoaded)
     );
 
     return () => {
       unsubs.forEach((u) => u());
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, [userId, monthKeys, rebuildMerged, flushWrites]);
+  }, [userId, monthKeys, rebuildMerged, migrateLegacyTasks]);
 
   const updateValue = useCallback((newValue) => {
     if (!userId) return;

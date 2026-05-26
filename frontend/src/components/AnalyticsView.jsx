@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { useStopwatchHistory } from '../contexts/StopwatchHistoryContext';
 import { getToday, formatDateKey, getWeekStart, getMonthDates } from '../utils/dateHelpers';
+import { isProductiveSession } from '../utils/focusSessionHelpers';
 import './styles/AnalyticsView.css';
 
 export function AnalyticsView({ 
@@ -196,10 +197,8 @@ export function AnalyticsView({
       
       // Filter laps for this date AND (category is prod/self OR label contains "self")
       const dailyLaps = validLaps.filter(l => {
-        const isProductive = l.category === 'prod' || l.category === 'self' || l.category === 'self growth';
-        const isSelfLabel = l.label && l.label.toLowerCase().includes('self');
         const lapDateKey = l.date ? formatDateKey(new Date(l.date)) : null;
-        return lapDateKey === dateStr && (isProductive || isSelfLabel);
+        return lapDateKey === dateStr && isProductiveSession(l);
       });
       
       const ms = dailyLaps.reduce((acc, curr) => acc + curr.time, 0);

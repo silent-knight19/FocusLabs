@@ -1,5 +1,6 @@
 import { useStopwatchHistory } from '../contexts/StopwatchHistoryContext';
 import { formatDateKey } from '../utils/dateHelpers';
+import { isStudySession, isProductiveSession, normalizeFocusCategory } from '../utils/focusSessionHelpers';
 
 /**
  * Hook for analyzing stopwatch lap data
@@ -47,7 +48,8 @@ export function useAnalytics() {
 
     return allLaps.filter(lap => {
       const lapDate = new Date(lap.date);
-      const matchesCategory = !category || lap.category === category;
+      const normalizedCategory = normalizeFocusCategory(lap.category, lap.label);
+      const matchesCategory = !category || normalizedCategory === category;
       const matchesRange = lapDate >= startDate;
       return matchesCategory && matchesRange;
     });
@@ -115,7 +117,7 @@ export function useAnalytics() {
         const dayLaps = allLaps.filter(lap => {
           const lapDate = formatDateKey(new Date(lap.date));
           const matchesDate = lapDate === dateKey;
-          const matchesCategory = !category || lap.category === category;
+          const matchesCategory = !category || normalizeFocusCategory(lap.category, lap.label) === category;
           return matchesDate && matchesCategory;
         });
 
@@ -146,6 +148,14 @@ export function useAnalytics() {
     }));
   };
 
+  const getFocusSummary = (lap) => {
+    if (isStudySession(lap)) return 'study';
+    if (isProductiveSession(lap)) {
+      return normalizeFocusCategory(lap.category, lap.label);
+    }
+    return normalizeFocusCategory(lap.category, lap.label);
+  };
+
   /**
    * Format milliseconds to readable time
    */
@@ -169,6 +179,7 @@ export function useAnalytics() {
     getSessionCount,
     getChartData,
     getCategorySummary,
+    getFocusSummary,
     formatTime
   };
 }

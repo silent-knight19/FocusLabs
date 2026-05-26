@@ -7,12 +7,53 @@ import { validateImportData, clearAllData } from '../utils/storageHelpers';
 import { useLockBodyScroll } from '../hooks/useLockBodyScroll';
 import { formatDateKey } from '../utils/dateHelpers';
 import { mergeMonthlyShards, shardCompletionsByMonth, dateKeyToMonthKey } from '../utils/monthKeyHelpers';
+import { normalizeSessionList, mergeUniqueSessions, normalizeFocusCategory, isStudySession, isProductiveSession } from '../utils/focusSessionHelpers';
 import { ButtonWithTooltip } from './ButtonWithTooltip';
 import { LogOut } from 'lucide-react';
 import './styles/SettingsPanel.css';
 
 const DEBUG = import.meta.env.DEV;
 const logError = DEBUG ? console.error : () => {};
+
+async function deleteSubcollectionDocs(userId, subcollectionName) {
+  const snap = await getDocs(collection(db, 'users', userId, subcollectionName));
+  await Promise.all(snap.docs.map((snapshotDoc) => deleteDoc(snapshotDoc.ref)));
+}
+
+function groupTasksByMonth(tasks) {
+  const byMonth = {};
+
+  tasks.forEach((task) => {
+    if (!task?.date) return;
+    const monthKey = dateKeyToMonthKey(task.date) || task.date.slice(0, 7);
+    if (!byMonth[monthKey]) byMonth[monthKey] = [];
+    byMonth[monthKey].push(task);
+  });
+
+  return byMonth;
+}
+
+function groupSessionsByMonth(sessions) {
+  const byMonth = {};
+
+  sessions.forEach((session) => {
+    if (!session?.date) return;
+    const monthKey = dateKeyToMonthKey(session.date.slice(0, 10)) || session.date.slice(0, 7);
+    if (!byMonth[monthKey]) byMonth[monthKey] = [];
+    byMonth[monthKey].push(session);
+  });
+
+  return byMonth;
+}
+
+function getUnifiedStopwatchHistory(data, firestoreFlat = {}) {
+  return mergeUniqueSessions(
+    normalizeSessionList(data?.stopwatchHistory),
+    normalizeSessionList(firestoreFlat.stopwatch_history),
+    normalizeSessionList(data?.studySessions ?? firestoreFlat.study_sessions, { fallbackCategory: 'study' }),
+    normalizeSessionList(data?.productivitySessions ?? firestoreFlat.productivity_sessions, { fallbackCategory: 'prod' })
+  );
+}
 
 /**
  * Settings panel for theme, preferences, and data management
@@ -59,6 +100,7 @@ export function SettingsPanel({ isOpen, onClose, settings, onUpdateSettings }) {
       const flatCollectionNames = [
         'habits', 'subtasks', 'subtask_completions', 'stopwatch_history',
         'settings', 'notes', 'custom_habits', 'custom_subtasks',
+        'completions', 'custom_completions', 'daily_tasks',
         'custom_subtask_completions', 'study_sessions', 'productivity_sessions', 'goals'
       ];
 
@@ -96,9 +138,10 @@ export function SettingsPanel({ isOpen, onClose, settings, onUpdateSettings }) {
         snap.forEach(d => { shards[d.id] = d.data().habits || {}; });
         mergedCustomCompletions = Object.keys(shards).length > 0
           ? mergeMonthlyShards(shards)
-          : {};
+          : (firestoreFlat.custom_completions || {});
       } catch (err) {
         logError('Error fetching custom_completions shards:', err);
+        mergedCustomCompletions = firestoreFlat.custom_completions || {};
       }
 
       // ---- Sharded: daily_tasks → users/{uid}/daily_tasks/{YYYY-MM} ----
@@ -115,13 +158,13 @@ export function SettingsPanel({ isOpen, onClose, settings, onUpdateSettings }) {
       }
 
       // ---- Sharded: stopwatch → users/{uid}/stopwatch/{YYYY-MM} ----
-      let mergedStopwatch = [];
+      let mergedStopwatch = getUnifiedStopwatchHistory(null, firestoreFlat);
       try {
         const snap = await getDocs(collection(db, 'users', userId, 'stopwatch'));
-        snap.forEach(d => { mergedStopwatch.push(...(d.data().sessions || [])); });
-        if (mergedStopwatch.length === 0 && Array.isArray(firestoreFlat.stopwatch_history)) {
-          mergedStopwatch = firestoreFlat.stopwatch_history;
-        }
+        const shardedSessions = normalizeSessionList(
+          snap.docs.flatMap((snapshotDoc) => snapshotDoc.data().sessions || [])
+        );
+        mergedStopwatch = mergeUniqueSessions(shardedSessions, mergedStopwatch);
       } catch (err) {
         logError('Error fetching stopwatch shards:', err);
       }
@@ -141,8 +184,8 @@ export function SettingsPanel({ isOpen, onClose, settings, onUpdateSettings }) {
           notes: firestoreFlat.notes || [],
           customHabits: firestoreFlat.custom_habits || [],
           customCompletions: mergedCustomCompletions,
-          studySessions: firestoreFlat.study_sessions || [],
-          productivitySessions: firestoreFlat.productivity_sessions || [],
+          studySessions: normalizeSessionList(firestoreFlat.study_sessions, { fallbackCategory: 'study' }),
+          productivitySessions: normalizeSessionList(firestoreFlat.productivity_sessions, { fallbackCategory: 'prod' }),
           settings: firestoreFlat.settings || {},
           goals: firestoreFlat.goals || [],
           customSubtasks: firestoreFlat.custom_subtasks || [],
@@ -200,8 +243,9 @@ export function SettingsPanel({ isOpen, onClose, settings, onUpdateSettings }) {
         setSuccessMessage('Importing data...');
 
         if (userId) {
+          const unifiedStopwatchHistory = getUnifiedStopwatchHistory(importedData);
+
           // ---- Flat collections → users/{uid}/data/{colName} ----
-          // These are small documents that don't need sharding.
           const flatMapping = {
             habits: 'habits',
             subtasks: 'subtasks',
@@ -218,21 +262,38 @@ export function SettingsPanel({ isOpen, onClose, settings, onUpdateSettings }) {
 
           let hasError = false;
 
-            const flatWrites = Object.entries(flatMapping).map(async ([jsonKey, colName]) => {
+          const flatCollectionsToReset = [
+            'habits', 'subtasks', 'subtask_completions', 'notes',
+            'custom_habits', 'custom_subtasks', 'custom_subtask_completions',
+            'study_sessions', 'productivity_sessions', 'settings', 'goals',
+            'completions', 'custom_completions', 'daily_tasks', 'stopwatch_history'
+          ];
+
+          const flatWrites = [
+            ...flatCollectionsToReset.map((colName) =>
+              deleteDoc(doc(db, 'users', userId, 'data', colName)).catch(() => {})
+            ),
+            ...Object.entries(flatMapping).map(async ([jsonKey, colName]) => {
               const dataToWrite = importedData[jsonKey];
               if (dataToWrite === undefined || dataToWrite === null) return;
               try {
-                // Use setDoc WITHOUT merge so the import fully replaces existing data.
-                // merge:true would silently keep old data not present in the backup file.
-                await setDoc(
-                  doc(db, 'users', userId, 'data', colName),
-                  { value: dataToWrite }
-                );
+                await setDoc(doc(db, 'users', userId, 'data', colName), { value: dataToWrite });
               } catch (err) {
                 logError(`Error importing ${colName}:`, err);
                 hasError = true;
               }
-            });
+            })
+          ];
+
+          const subcollectionsToReset = ['completions', 'custom_completions', 'daily_tasks', 'stopwatch'];
+          await Promise.all(
+            subcollectionsToReset.map((subcollectionName) =>
+              deleteSubcollectionDocs(userId, subcollectionName).catch((err) => {
+                logError(`Error clearing ${subcollectionName} before import:`, err);
+                hasError = true;
+              })
+            )
+          );
 
           // ---- Sharded: completions → users/{uid}/completions/{YYYY-MM} ----
           const shardedWrites = [];
@@ -243,8 +304,7 @@ export function SettingsPanel({ isOpen, onClose, settings, onUpdateSettings }) {
               shardedWrites.push(
                 setDoc(
                   doc(db, 'users', userId, 'completions', monthKey),
-                  { habits: monthData, _v: Date.now() },
-                  { merge: true }
+                  { habits: monthData, _v: Date.now() }
                 ).catch(err => { logError(`Error importing completions/${monthKey}:`, err); hasError = true; })
               );
             }
@@ -257,8 +317,7 @@ export function SettingsPanel({ isOpen, onClose, settings, onUpdateSettings }) {
               shardedWrites.push(
                 setDoc(
                   doc(db, 'users', userId, 'custom_completions', monthKey),
-                  { habits: monthData, _v: Date.now() },
-                  { merge: true }
+                  { habits: monthData, _v: Date.now() }
                 ).catch(err => { logError(`Error importing custom_completions/${monthKey}:`, err); hasError = true; })
               );
             }
@@ -266,39 +325,25 @@ export function SettingsPanel({ isOpen, onClose, settings, onUpdateSettings }) {
 
           // ---- Sharded: daily_tasks → users/{uid}/daily_tasks/{YYYY-MM} ----
           if (importedData.dailyTasks && Array.isArray(importedData.dailyTasks)) {
-            const byMonth = {};
-            importedData.dailyTasks.forEach(task => {
-              if (!task.date) return;
-              const monthKey = dateKeyToMonthKey(task.date) || task.date.slice(0, 7);
-              if (!byMonth[monthKey]) byMonth[monthKey] = [];
-              byMonth[monthKey].push(task);
-            });
+            const byMonth = groupTasksByMonth(importedData.dailyTasks);
             for (const [monthKey, tasks] of Object.entries(byMonth)) {
               shardedWrites.push(
                 setDoc(
                   doc(db, 'users', userId, 'daily_tasks', monthKey),
-                  { tasks, _v: Date.now() },
-                  { merge: true }
+                  { tasks, _v: Date.now() }
                 ).catch(err => { logError(`Error importing daily_tasks/${monthKey}:`, err); hasError = true; })
               );
             }
           }
 
           // ---- Sharded: stopwatch → users/{uid}/stopwatch/{YYYY-MM} ----
-          if (importedData.stopwatchHistory && Array.isArray(importedData.stopwatchHistory)) {
-            const byMonth = {};
-            importedData.stopwatchHistory.forEach(session => {
-              if (!session.date) return;
-              const monthKey = new Date(session.date).toISOString().slice(0, 7);
-              if (!byMonth[monthKey]) byMonth[monthKey] = [];
-              byMonth[monthKey].push(session);
-            });
+          if (unifiedStopwatchHistory.length > 0) {
+            const byMonth = groupSessionsByMonth(unifiedStopwatchHistory);
             for (const [monthKey, sessions] of Object.entries(byMonth)) {
               shardedWrites.push(
                 setDoc(
                   doc(db, 'users', userId, 'stopwatch', monthKey),
-                  { sessions, _v: Date.now() },
-                  { merge: true }
+                  { sessions, _v: Date.now() }
                 ).catch(err => { logError(`Error importing stopwatch/${monthKey}:`, err); hasError = true; })
               );
             }
@@ -337,23 +382,10 @@ export function SettingsPanel({ isOpen, onClose, settings, onUpdateSettings }) {
 
       const matchesCategory = (lap) => {
         if (!lap) return false;
-        const label = (lap.label || '').toLowerCase();
-
-        if (categoryKey === 'study') {
-          // Study analytics sometimes key off label containing "study"
-          return lap.category === 'study' || label.includes('study');
-        }
-
-        if (categoryKey === 'prod') {
-          return lap.category === 'prod';
-        }
-
-        if (categoryKey === 'self') {
-          // Self-growth often uses category 'self' or label containing 'self'
-          return lap.category === 'self' || label.includes('self');
-        }
-
-        return false;
+        if (categoryKey === 'study') return isStudySession(lap);
+        if (categoryKey === 'prod') return normalizeFocusCategory(lap.category, lap.label) === 'prod';
+        if (categoryKey === 'self') return normalizeFocusCategory(lap.category, lap.label) === 'self';
+        return isProductiveSession(lap);
       };
 
       let filtered;
@@ -420,8 +452,7 @@ export function SettingsPanel({ isOpen, onClose, settings, onUpdateSettings }) {
 
         const shardDeletes = shardedSubcollections.map(async (subColName) => {
           try {
-            const snap = await getDocs(collection(db, 'users', userId, subColName));
-            return Promise.all(snap.docs.map(d => deleteDoc(d.ref)));
+            await deleteSubcollectionDocs(userId, subColName);
           } catch (err) {
             logError(`Error clearing ${subColName} shards:`, err);
           }

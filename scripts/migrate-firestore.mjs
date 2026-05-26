@@ -40,6 +40,41 @@ function shardStopwatchByMonth(sessions) {
   return shards;
 }
 
+function getMissingCompletionEntries(existingShard, legacyShard) {
+  const missing = {};
+
+  for (const [habitId, legacyDays] of Object.entries(legacyShard || {})) {
+    if (!legacyDays || typeof legacyDays !== 'object') continue;
+
+    const existingDays = existingShard?.[habitId] || {};
+    for (const [day, status] of Object.entries(legacyDays)) {
+      if (existingDays[day] === undefined) {
+        if (!missing[habitId]) missing[habitId] = {};
+        missing[habitId][day] = status;
+      }
+    }
+  }
+
+  return missing;
+}
+
+function mergeUniqueSessions(existingSessions = [], legacySessions = []) {
+  const merged = [];
+  const seen = new Set();
+
+  [...existingSessions, ...legacySessions].forEach((session) => {
+    if (!session) return;
+    const sessionId = session.id || `${session.date || ''}_${session.time ?? session.duration ?? ''}_${session.category || ''}_${session.label || ''}`;
+    if (seen.has(sessionId)) return;
+    seen.add(sessionId);
+    if (!session.id) session = { ...session, id: sessionId };
+    merged.push(session);
+  });
+
+  merged.sort((a, b) => new Date(b.date) - new Date(a.date));
+  return merged;
+}
+
 async function migrateUser(db, userId) {
   const userRef = db.collection('users').doc(userId);
   let migrated = 0;
@@ -51,11 +86,18 @@ async function migrateUser(db, userId) {
     const shards = shardCompletionsByMonth(legacySnap.data().value);
     for (const [monthKey, data] of Object.entries(shards)) {
       const ref = userRef.collection(col).doc(monthKey);
+      const existingSnap = await ref.get();
+      const existing = existingSnap.exists ? (existingSnap.data().habits || {}) : {};
+      const missing = getMissingCompletionEntries(existing, data);
+      const missingHabitCount = Object.keys(missing).length;
+
       if (!dryRun) {
-        await ref.set({ habits: data, _v: Date.now(), migratedAt: new Date().toISOString() }, { merge: true });
+        if (missingHabitCount > 0) {
+          await ref.set({ habits: missing, _v: Date.now(), migratedAt: new Date().toISOString() }, { merge: true });
+        }
       }
       migrated++;
-      console.log(`  ${col}/${monthKey}: ${Object.keys(data).length} habits`);
+      console.log(`  ${col}/${monthKey}: ${missingHabitCount} habits backfilled`);
     }
   }
 
@@ -64,11 +106,17 @@ async function migrateUser(db, userId) {
     const shards = shardStopwatchByMonth(stopSnap.data().value);
     for (const [monthKey, sessions] of Object.entries(shards)) {
       const ref = userRef.collection('stopwatch').doc(monthKey);
+      const existingSnap = await ref.get();
+      const existingSessions = existingSnap.exists ? (existingSnap.data().sessions || []) : [];
+      const mergedSessions = mergeUniqueSessions(existingSessions, sessions);
+
       if (!dryRun) {
-        await ref.set({ sessions, _v: Date.now(), migratedAt: new Date().toISOString() }, { merge: true });
+        if (mergedSessions.length !== existingSessions.length) {
+          await ref.set({ sessions: mergedSessions, _v: Date.now(), migratedAt: new Date().toISOString() }, { merge: true });
+        }
       }
       migrated++;
-      console.log(`  stopwatch/${monthKey}: ${sessions.length} sessions`);
+      console.log(`  stopwatch/${monthKey}: ${mergedSessions.length - existingSessions.length} sessions backfilled`);
     }
   }
 

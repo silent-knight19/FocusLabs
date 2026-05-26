@@ -1,16 +1,37 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { doc, setDoc, onSnapshot, deleteDoc, getDocs, collection, query, orderBy, limit } from 'firebase/firestore';
+import { doc, setDoc, onSnapshot, deleteDoc, getDocs, collection, query, orderBy, limit, runTransaction } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { showToast } from '../contexts/ToastContext';
 import { getMonthKey, getRecentMonthKeys } from '../utils/monthKeyHelpers';
+import { normalizeSessionList, mergeUniqueSessions } from '../utils/focusSessionHelpers';
 
-const MONTHS_TO_LOAD = 6;
+const MONTHS_TO_LOAD = 25;
 const PAGE_SIZE = 500;
 
 const DEBUG = import.meta.env.DEV;
 const logError = DEBUG ? console.error : () => {};
 
 const pendingStopwatchFlushes = new Map();
+
+function emptyMigrationState() {
+  return {
+    stopwatch_history: false,
+    study_sessions: false,
+    productivity_sessions: false
+  };
+}
+
+function groupSessionsByMonth(sessions) {
+  const byMonth = {};
+
+  for (const session of normalizeSessionList(sessions)) {
+    const monthKey = getMonthKey(new Date(session.date));
+    if (!byMonth[monthKey]) byMonth[monthKey] = [];
+    byMonth[monthKey].push(session);
+  }
+
+  return byMonth;
+}
 
 function flushAllStopwatch() {
   pendingStopwatchFlushes.forEach((flushFn) => {
@@ -40,15 +61,14 @@ export function useMonthlyStopwatch(userId) {
   const [sessions, setSessions] = useState([]);
   const sessionsRef = useRef([]);
   const [loading, setLoading] = useState(true);
-  const migratedRef = useRef(false);
+  const migratedRef = useRef(emptyMigrationState());
   const debounceRef = useRef(null);
   const pendingRef = useRef(null);
 
   const monthKeys = useMemo(() => getRecentMonthKeys(MONTHS_TO_LOAD), []);
 
-  const mergeSessions = useCallback((monthSessions) => {
-    const all = monthSessions.flat();
-    all.sort((a, b) => new Date(b.date) - new Date(a.date));
+  const mergeSessions = useCallback((sessionGroups) => {
+    const all = mergeUniqueSessions(...sessionGroups);
     setSessions(all);
     sessionsRef.current = all;
   }, []);
@@ -56,13 +76,15 @@ export function useMonthlyStopwatch(userId) {
   const writeSessions = useCallback(async (allSessions) => {
     if (!userId) return;
 
+    const normalizedSessions = normalizeSessionList(allSessions);
+
     // Group sessions by their monthKey, pre-initializing all loaded monthKeys to empty arrays
     const byMonth = {};
     for (const mk of monthKeys) {
       byMonth[mk] = [];
     }
 
-    for (const session of allSessions) {
+    for (const session of normalizedSessions) {
       const mk = getMonthKey(new Date(session.date));
       if (!byMonth[mk]) byMonth[mk] = [];
       byMonth[mk].push(session);
@@ -83,6 +105,34 @@ export function useMonthlyStopwatch(userId) {
       showToast('Failed to save stopwatch changes. Please check your network connection.', 'error');
     }
   }, [userId, monthKeys]);
+
+  const migrateLegacySessions = useCallback(async (legacySessions, legacyDoc) => {
+    if (!userId) return;
+
+    const byMonth = groupSessionsByMonth(legacySessions);
+
+    await Promise.all(Object.entries(byMonth).map(async ([monthKey, monthSessions]) => {
+      const shardRef = doc(db, 'users', userId, 'stopwatch', monthKey);
+
+      await runTransaction(db, async (transaction) => {
+        const shardSnap = await transaction.get(shardRef);
+        const existingSessions = shardSnap.exists()
+          ? normalizeSessionList(shardSnap.data().sessions || [])
+          : [];
+        const mergedSessions = mergeUniqueSessions(existingSessions, monthSessions);
+
+        if (mergedSessions.length !== existingSessions.length) {
+          transaction.set(
+            shardRef,
+            { sessions: mergedSessions, _v: Date.now() },
+            { merge: true }
+          );
+        }
+      });
+    }));
+
+    await deleteDoc(legacyDoc);
+  }, [userId]);
 
   const flushPendingWrite = useCallback(() => {
     if (debounceRef.current) {
@@ -112,13 +162,20 @@ export function useMonthlyStopwatch(userId) {
     if (!userId) {
       setSessions([]);
       sessionsRef.current = [];
+      migratedRef.current = emptyMigrationState();
       setLoading(false);
       return;
     }
 
+    setLoading(true);
+    setSessions([]);
+    sessionsRef.current = [];
+    migratedRef.current = emptyMigrationState();
+    pendingRef.current = null;
+
     const unsubs = [];
     const monthData = {};
-    let pending = monthKeys.length + 1;
+    let pending = monthKeys.length + 4;
 
     const tryMerge = () => {
       mergeSessions(Object.values(monthData));
@@ -128,59 +185,92 @@ export function useMonthlyStopwatch(userId) {
       pending--;
       if (pending <= 0) setLoading(false);
     };
+    const createLoadedMarker = () => {
+      let loaded = false;
+      return () => {
+        if (loaded) return;
+        loaded = true;
+        markLoaded();
+      };
+    };
 
     monthKeys.forEach((monthKey) => {
       const docRef = doc(db, 'users', userId, 'stopwatch', monthKey);
+      const markMonthLoaded = createLoadedMarker();
       unsubs.push(
         onSnapshot(docRef, (snap) => {
           if (snap.exists()) {
-            monthData[monthKey] = snap.data().sessions || [];
+            monthData[monthKey] = normalizeSessionList(snap.data().sessions || []);
           } else {
             monthData[monthKey] = [];
           }
           tryMerge();
-          markLoaded();
-        }, markLoaded)
+          markMonthLoaded();
+        }, markMonthLoaded)
       );
     });
 
-    const legacyDoc = doc(db, 'users', userId, 'data', 'stopwatch_history');
-    unsubs.push(
-      onSnapshot(legacyDoc, async (snap) => {
-        if (snap.exists() && snap.data().value?.length) {
-          const legacy = snap.data().value;
-          if (!migratedRef.current) {
-            migratedRef.current = true;
-            await writeSessions(legacy);
-            // Delete legacy doc after migration to prevent re-migration on load.
-            try { await deleteDoc(legacyDoc); } catch { /* ignore */ }
+    const legacySources = [
+      { docName: 'stopwatch_history', key: 'legacy_stopwatch' },
+      { docName: 'study_sessions', key: 'legacy_study', forcedCategory: 'study' },
+      { docName: 'productivity_sessions', key: 'legacy_productivity', forcedCategory: 'prod' }
+    ];
+
+    legacySources.forEach(({ docName, key, forcedCategory }) => {
+      const legacyDoc = doc(db, 'users', userId, 'data', docName);
+      const markLegacyLoaded = createLoadedMarker();
+      unsubs.push(
+        onSnapshot(legacyDoc, async (snap) => {
+          if (snap.exists() && Array.isArray(snap.data().value) && snap.data().value.length > 0) {
+            const legacy = normalizeSessionList(snap.data().value, {
+              fallbackCategory: forcedCategory || 'other'
+            });
+
+            if (!migratedRef.current[docName]) {
+              migratedRef.current[docName] = true;
+              try {
+                await migrateLegacySessions(legacy, legacyDoc);
+              } catch (err) {
+                logError(`Failed to migrate legacy ${docName}`, err);
+                showToast('Syncing legacy stopwatch data...', 'info');
+              }
+            }
+
+            monthData[key] = legacy;
+          } else {
+            monthData[key] = [];
           }
-          monthData.legacy = legacy;
-        }
+          tryMerge();
+          markLegacyLoaded();
+        }, markLegacyLoaded)
+      );
+    });
+
+    getDocs(collection(db, 'users', userId, 'stopwatch'))
+      .then((snap) => {
+        snap.forEach((snapshotDoc) => {
+          if (!monthData[snapshotDoc.id]) {
+            monthData[snapshotDoc.id] = normalizeSessionList(snapshotDoc.data().sessions || []);
+          }
+        });
         tryMerge();
-        markLoaded();
-      }, markLoaded)
-    );
+      })
+      .catch((err) => {
+        logError('Failed to fetch full stopwatch history', err);
+      })
+      .finally(markLoaded);
 
     return () => {
       unsubs.forEach((u) => u());
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, [userId, monthKeys, mergeSessions, writeSessions]);
+  }, [userId, monthKeys, mergeSessions, migrateLegacySessions]);
 
   const setSessionsUpdater = useCallback((newValue) => {
     if (!userId) return;
 
     const rawNext = typeof newValue === 'function' ? newValue(sessionsRef.current) : newValue;
-
-    // Deduplicate by session ID to prevent duplicate laps being written to Firestore.
-    // This is the safety net for any race conditions or double-calls from the UI.
-    const seen = new Set();
-    const next = rawNext.filter(session => {
-      if (seen.has(session.id)) return false;
-      seen.add(session.id);
-      return true;
-    });
+    const next = mergeUniqueSessions(normalizeSessionList(rawNext));
 
     setSessions(next);
     sessionsRef.current = next;
@@ -203,11 +293,9 @@ export function useMonthlyStopwatch(userId) {
       limit(PAGE_SIZE)
     );
     const snap = await getDocs(q);
-    const extra = snap.docs.flatMap((d) => d.data().sessions || []);
+    const extra = normalizeSessionList(snap.docs.flatMap((d) => d.data().sessions || []));
     setSessions((prev) => {
-      const ids = new Set(prev.map((s) => s.id));
-      const merged = [...prev, ...extra.filter((s) => !ids.has(s.id))];
-      merged.sort((a, b) => new Date(b.date) - new Date(a.date));
+      const merged = mergeUniqueSessions(prev, extra);
       sessionsRef.current = merged;
       return merged;
     });

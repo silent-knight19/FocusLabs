@@ -83,7 +83,9 @@ if (typeof window !== 'undefined') {
 
 async function writeWithRetry(docRef, payload, collectionName, attempt = 0) {
   try {
-    await setDoc(docRef, payload, { merge: true });
+    // Replace the app-managed payload so deleted nested keys do not survive
+    // Firestore's recursive merge semantics.
+    await setDoc(docRef, payload);
     return true;
   } catch (err) {
     errorLog(`[FIRESTORE] Write failed for "${collectionName}" (attempt ${attempt + 1}):`, err);
