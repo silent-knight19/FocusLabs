@@ -588,9 +588,9 @@ export function CalendarView({ habits, completions, subtasks = [], subtaskComple
 
         <div className="calendar-grid">
           {calendarDays
-            .filter(date => date.getMonth() === currentDate.getMonth())
             .map((date, index) => {
-              const stats = getDayCompletionStats(date);
+              const isOtherMonth = date.getMonth() !== currentDate.getMonth();
+              const stats = isOtherMonth ? { count: 0, total: 0 } : getDayCompletionStats(date);
               const isToday = isSameDay(date, new Date());
               const isSelected = isSameDay(date, selectedDate);
               const dateStr = formatDateKey(date);
@@ -599,15 +599,16 @@ export function CalendarView({ habits, completions, subtasks = [], subtaskComple
               return (
                 <motion.div 
                   key={index}
-                  whileHover={{ scale: 1.05, zIndex: 1 }}
-                  whileTap={{ scale: 0.95 }}
+                  whileHover={isOtherMonth ? {} : { scale: 1.05, zIndex: 1 }}
+                  whileTap={isOtherMonth ? {} : { scale: 0.95 }}
                   transition={{ duration: 0.2 }}
-                  className={`calendar-day ${isToday ? 'today' : ''} ${isSelected ? 'selected' : ''} ${isMatching ? 'search-match' : ''}`}
-                  onClick={() => handleDateClick(date)}
-                  onDoubleClick={() => handleDateDoubleClick(date)}
+                  className={`calendar-day ${isToday ? 'today' : ''} ${isSelected ? 'selected' : ''} ${isMatching ? 'search-match' : ''} ${isOtherMonth ? 'other-month' : ''}`}
+                  onClick={() => !isOtherMonth && handleDateClick(date)}
+                  onDoubleClick={() => !isOtherMonth && handleDateDoubleClick(date)}
                 >
                   <div className="day-number">{date.getDate()}</div>
                   
+                  {!isOtherMonth && (
                   <div className="day-content">
                     {stats.total > 0 && (
                       <div className="event-dots">
@@ -627,6 +628,7 @@ export function CalendarView({ habits, completions, subtasks = [], subtaskComple
                       </div>
                     )}
                   </div>
+                  )}
                 </motion.div>
               );
             })}

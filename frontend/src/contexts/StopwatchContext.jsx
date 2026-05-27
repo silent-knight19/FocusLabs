@@ -182,6 +182,14 @@ export function StopwatchProvider({ children }) {
   const start = useCallback(() => {
     if (!isRunningRef.current) {
       const now = Date.now();
+
+      // When resuming after a pause, reset the lap marker to the current
+      // accumulated time so the first lap of this run measures only the
+      // time elapsed since pressing Start — not from a previous session's
+      // lap marker which would produce wildly wrong durations.
+      setLastLapTime(accumulatedTimeRef.current);
+      lastLapTimeRef.current = accumulatedTimeRef.current;
+
       setStartTime(now);
       startTimeRef.current = now;
       setIsRunning(true);
@@ -204,6 +212,21 @@ export function StopwatchProvider({ children }) {
       setIsRunning(false);
       isRunningRef.current = false;
       setTime(nextAccumulated);
+
+      // Immediately persist the stopped state to localStorage so that a
+      // page refresh cannot restore a stale "running" state. Without this,
+      // the useEffect-based save may not fire before the page unloads,
+      // causing a phantom timer on reload.
+      try {
+        localStorage.setItem('stopwatch_active_state', JSON.stringify({
+          savedTime: nextAccumulated,
+          savedIsRunning: false,
+          savedLastActive: null,
+          savedLastLapTime: lastLapTimeRef.current
+        }));
+      } catch (e) {
+        logError('Failed to persist stopped state', e);
+      }
     }
   }, []);
 
@@ -242,7 +265,17 @@ export function StopwatchProvider({ children }) {
     const sessionDuration = currentElapsedTime - lastLapTimeRef.current;
 
     if (sessionDuration < 1000) {
-      logWarn('Session too short to save (< 1 second)');
+      logWarn('Session too short to save (< 1 second), duration:', sessionDuration);
+      return;
+    }
+
+    // Guard: if the duration is negative (e.g., stale lastLapTime from a
+    // previous session), skip silently. This should not happen after the
+    // start() fix, but provides a safety net.
+    if (sessionDuration < 0) {
+      logWarn('Negative session duration detected, resetting lap marker');
+      setLastLapTime(currentElapsedTime);
+      lastLapTimeRef.current = currentElapsedTime;
       return;
     }
 

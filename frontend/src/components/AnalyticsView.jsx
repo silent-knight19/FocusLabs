@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { useStopwatchHistory } from '../contexts/StopwatchHistoryContext';
 import { getToday, formatDateKey, getWeekStart, getMonthDates } from '../utils/dateHelpers';
-import { isProductiveSession } from '../utils/focusSessionHelpers';
+import { isProductiveSession, normalizeFocusCategory } from '../utils/focusSessionHelpers';
 import './styles/AnalyticsView.css';
 
 export function AnalyticsView({ 
@@ -43,10 +43,10 @@ export function AnalyticsView({
     ];
 
     const stats = categories.map(cat => {
-      const catHabits = allHabits.filter(h => 
-        h.category?.toLowerCase().includes(cat.id) || 
-        (cat.id === 'prod' && ['work', 'fitness', 'health'].includes(h.category?.toLowerCase()))
-      );
+      const catHabits = allHabits.filter(h => {
+        const normalized = normalizeFocusCategory(h.category, h.name);
+        return normalized === cat.id;
+      });
       
       const total = catHabits.length;
       const completed = catHabits.filter(h => allCompletions[h.id]?.[todayKey] === 'completed').length;
@@ -239,7 +239,10 @@ export function AnalyticsView({
           <h3>Daily Focus</h3>
           <div className="daily-chart concentric-chart">
             <svg viewBox="0 0 36 36" className="circular-chart">
-              {dailyStats.categories.map((cat) => (
+              {dailyStats.categories.map((cat) => {
+                const circumference = 2 * Math.PI * cat.radius;
+                const dashLength = (cat.percentage / 100) * circumference;
+                return (
                 <React.Fragment key={cat.id}>
                   <path 
                     className="circle-bg" 
@@ -248,12 +251,13 @@ export function AnalyticsView({
                   />
                   <path 
                     className="circle" 
-                    strokeDasharray={`${cat.percentage}, 100`} 
+                    strokeDasharray={`${dashLength} ${circumference}`} 
                     d={`M18 2.0845 a ${cat.radius} ${cat.radius} 0 0 1 0 ${cat.radius * 2} a ${cat.radius} ${cat.radius} 0 0 1 0 -${cat.radius * 2}`} 
                     style={{ stroke: cat.color, strokeWidth: '2.5' }}
                   />
                 </React.Fragment>
-              ))}
+                );
+              })}
               <text x="18" y="16" className="percentage-label">
                 <tspan x="18" dy="0" style={{ fontSize: '8px', fill: '#fff', fontWeight: 'bold' }}>
                   {dailyStats.totalCompleted}

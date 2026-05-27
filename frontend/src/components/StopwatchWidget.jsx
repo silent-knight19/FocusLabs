@@ -30,7 +30,7 @@ export function StopwatchWidget({ activeHabit }) {
           <span>
             {(() => {
               const t = formatStopwatchTime(stopwatchTime);
-              return t.hours ? `${t.hours}:${t.minutes}:${t.seconds}` : `${t.minutes}:${t.seconds}`;
+              return t.hours !== '00' ? `${t.hours}:${t.minutes}:${t.seconds}` : `${t.minutes}:${t.seconds}`;
             })()}
           </span>
         </div>

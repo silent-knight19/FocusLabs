@@ -119,9 +119,7 @@ export function DayHistoryModal({
     'study': '#3b82f6',
     'prod': '#8b5cf6',
     'self': '#10b981',
-    'self growth': '#10b981',
-    'health': '#ef4444',
-    'uncategorized': '#6b7280'
+    'other': '#6b7280'
   };
 
   // Format date
@@ -408,18 +406,21 @@ export function DayHistoryModal({
             <div className="history-section">
               <h3 className="section-title">Sessions ({dayData.laps.length})</h3>
               <div className="sessions-list">
-                {dayData.laps.slice(0, 10).map((lap, idx) => (
+                {dayData.laps.slice(0, 10).map((lap, idx) => {
+                  const normalizedCat = normalizeFocusCategory(lap.category, lap.label);
+                  return (
                   <div key={idx} className="session-item">
                     <div className="session-info">
                       <span 
                         className="session-dot" 
-                        style={{ backgroundColor: categoryColors[lap.category] || '#6b7280' }}
+                        style={{ backgroundColor: categoryColors[normalizedCat] || '#6b7280' }}
                       />
-                      <span className="session-category">{lap.category || 'uncategorized'}</span>
+                      <span className="session-category">{normalizedCat}</span>
                     </div>
                     <span className="session-time">{formatTime(lap.time || 0)}</span>
                   </div>
-                ))}
+                  );
+                })}
                 {dayData.laps.length > 10 && (
                   <p className="more-sessions">+ {dayData.laps.length - 10} more sessions</p>
                 )}

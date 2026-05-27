@@ -10,7 +10,11 @@ const getLastCompletionDate = (habitId, completions) => {
   const habitCompletions = completions[habitId] || {};
   const completedDates = Object.keys(habitCompletions)
     .filter(date => habitCompletions[date] === 'completed')
-    .sort((a, b) => new Date(b) - new Date(a));
+    .sort((a, b) => {
+      // Parse as local dates (YYYY-MM-DD) to avoid UTC midnight offset issues.
+      // String comparison is safe here since format is always YYYY-MM-DD.
+      return b.localeCompare(a);
+    });
   return completedDates[0] || null;
 };
 

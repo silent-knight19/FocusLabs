@@ -91,7 +91,8 @@ export function useAnalytics() {
           const lapDate = new Date(lap.date);
           const lapMonthKey = `${lapDate.getFullYear()}-${lapDate.getMonth()}`;
           const matchesMonth = lapMonthKey === monthKey;
-          const matchesCategory = !category || lap.category === category;
+          const normalizedCategory = normalizeFocusCategory(lap.category, lap.label);
+          const matchesCategory = !category || normalizedCategory === category;
           return matchesMonth && matchesCategory;
         });
 

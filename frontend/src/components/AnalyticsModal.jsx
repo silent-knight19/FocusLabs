@@ -140,6 +140,8 @@ export function AnalyticsModal({ isOpen, onClose }) {
                     
                     // Radius decreases for each ring (5% smaller than previous 10% increase)
                     const radius = Math.round(16.72 - (index * 4.18)); // 17.6 * 0.95 = 16.72, 4.4 * 0.95 = 4.18
+                    const circumference = 2 * Math.PI * radius;
+                    const dashLength = (percentage / 100) * circumference;
                     
                     return (
                       <React.Fragment key={cat.value}>
@@ -150,7 +152,7 @@ export function AnalyticsModal({ isOpen, onClose }) {
                         />
                         <path 
                           className="circle" 
-                          strokeDasharray={`${percentage}, 100`} 
+                          strokeDasharray={`${dashLength} ${circumference}`} 
                           d={`M18 18 m 0 -${radius} a ${radius} ${radius} 0 1 1 0 ${radius * 2} a ${radius} ${radius} 0 1 1 0 -${radius * 2}`} 
                           style={{ stroke: cat.color, strokeWidth: '1.67', strokeLinecap: 'round' }}
                         />
