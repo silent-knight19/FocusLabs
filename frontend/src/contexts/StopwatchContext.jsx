@@ -93,10 +93,7 @@ export function StopwatchProvider({ children }) {
   const accumulatedTimeRef = useRef(accumulatedTime);
   const lastLapTimeRef = useRef(lastLapTime);
 
-  useEffect(() => { isRunningRef.current = isRunning; }, [isRunning]);
-  useEffect(() => { startTimeRef.current = startTime; }, [startTime]);
-  useEffect(() => { accumulatedTimeRef.current = accumulatedTime; }, [accumulatedTime]);
-  useEffect(() => { lastLapTimeRef.current = lastLapTime; }, [lastLapTime]);
+  // Callback Definitions (Declared before use in useEffects)
 
   /**
    * Save the current active stopwatch state to localStorage
@@ -113,81 +110,6 @@ export function StopwatchProvider({ children }) {
       logError('Failed to save stopwatch active state to localStorage', e);
     }
   }, []);
-
-  // Save active state to localStorage on state changes (but NOT on time updates)
-  useEffect(() => {
-    saveActiveState();
-  }, [isRunning, startTime, accumulatedTime, lastLapTime, saveActiveState]);
-
-  // Save current session laps to localStorage
-  useEffect(() => {
-    try {
-      localStorage.setItem('stopwatch_current_session_laps', JSON.stringify(currentSessionLaps));
-    } catch (e) {
-      logError('Failed to save stopwatch session laps to localStorage', e);
-    }
-  }, [currentSessionLaps]);
-
-  // Sync laps list with Firestore after it loads to prevent duplicates
-  useEffect(() => {
-    if (hasSynced) return;
-
-    if (allHistory.length === 0 && sessionLapIds.size === 0) {
-      setHasSynced(true);
-      return;
-    }
-
-    if (sessionLapIds.size > 0) {
-      const firestoreLapIds = new Set(allHistory.map(l => l.id));
-      const validSessionLaps = initialLaps.filter(l => firestoreLapIds.has(l.id));
-      setCurrentSessionLaps(validSessionLaps);
-    }
-
-    setHasSynced(true);
-  }, [allHistory, sessionLapIds, initialLaps, hasSynced]);
-
-  // Safe pageunload active state saver
-  useEffect(() => {
-    const handlePageHide = () => {
-      saveActiveState();
-    };
-
-    window.addEventListener('pagehide', handlePageHide);
-    return () => {
-      window.removeEventListener('pagehide', handlePageHide);
-    };
-  }, [saveActiveState]);
-
-  // Auto-lap on load if the stopwatch was paused with unlapped time
-  useEffect(() => {
-    if (!initialIsRunning && initialAccumulatedTime > initialLastLapTime + 1000) {
-      const savedCategory = localStorage.getItem('stopwatch_selected_category') || 'study';
-      // Use a slight delay to ensure contexts are fully mounted before triggering a lap
-      // which modifies allHistory and triggers Firestore syncs.
-      const timerId = setTimeout(() => {
-        lap(savedCategory);
-      }, 500);
-      return () => clearTimeout(timerId);
-    }
-  }, [initialIsRunning, initialAccumulatedTime, initialLastLapTime, lap]);
-
-  // Smooth animation frame loop for updating the visible timer
-  useEffect(() => {
-    const tick = () => {
-      if (isRunningRef.current && startTimeRef.current) {
-        setTime(accumulatedTimeRef.current + (Date.now() - startTimeRef.current));
-        requestRef.current = requestAnimationFrame(tick);
-      }
-    };
-
-    if (isRunning) {
-      requestRef.current = requestAnimationFrame(tick);
-    } else {
-      cancelAnimationFrame(requestRef.current);
-    }
-
-    return () => cancelAnimationFrame(requestRef.current);
-  }, [isRunning]);
 
   /**
    * Starts the stopwatch.
@@ -343,6 +265,91 @@ export function StopwatchProvider({ children }) {
       centiseconds: String(Math.floor(date.getUTCMilliseconds() / 10)).padStart(2, '0')
     };
   }, []);
+
+  // Lifecycle & Effect Hooks
+
+  // Keep references updated for unload handlers
+  useEffect(() => { isRunningRef.current = isRunning; }, [isRunning]);
+  useEffect(() => { startTimeRef.current = startTime; }, [startTime]);
+  useEffect(() => { accumulatedTimeRef.current = accumulatedTime; }, [accumulatedTime]);
+  useEffect(() => { lastLapTimeRef.current = lastLapTime; }, [lastLapTime]);
+
+  // Save active state to localStorage on state changes (but NOT on time updates)
+  useEffect(() => {
+    saveActiveState();
+  }, [isRunning, startTime, accumulatedTime, lastLapTime, saveActiveState]);
+
+  // Save current session laps to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem('stopwatch_current_session_laps', JSON.stringify(currentSessionLaps));
+    } catch (e) {
+      logError('Failed to save stopwatch session laps to localStorage', e);
+    }
+  }, [currentSessionLaps]);
+
+  // Sync laps list with Firestore after it loads to prevent duplicates
+  useEffect(() => {
+    if (hasSynced) return;
+
+    if (allHistory.length === 0 && sessionLapIds.size === 0) {
+      setHasSynced(true);
+      return;
+    }
+
+    if (sessionLapIds.size > 0) {
+      const firestoreLapIds = new Set(allHistory.map(l => l.id));
+      const validSessionLaps = initialLaps.filter(l => firestoreLapIds.has(l.id));
+      setCurrentSessionLaps(validSessionLaps);
+    }
+
+    setHasSynced(true);
+  }, [allHistory, sessionLapIds, initialLaps, hasSynced]);
+
+  // Safe pageunload active state saver
+  useEffect(() => {
+    const handlePageHide = () => {
+      saveActiveState();
+    };
+
+    window.addEventListener('pagehide', handlePageHide);
+    return () => {
+      window.removeEventListener('pagehide', handlePageHide);
+    };
+  }, [saveActiveState]);
+
+  // Auto-lap on load if the stopwatch was paused with unlapped time
+  useEffect(() => {
+    if (!initialIsRunning && initialAccumulatedTime > initialLastLapTime + 1000) {
+      const savedCategory = localStorage.getItem('stopwatch_selected_category') || 'study';
+      // Use a slight delay to ensure contexts are fully mounted before triggering a lap
+      // which modifies allHistory and triggers Firestore syncs.
+      const timerId = setTimeout(() => {
+        lap(savedCategory);
+      }, 500);
+      return () => clearTimeout(timerId);
+    }
+  }, [initialIsRunning, initialAccumulatedTime, initialLastLapTime, lap]);
+
+  // Smooth animation frame loop for updating the visible timer
+  useEffect(() => {
+    const tick = () => {
+      if (isRunningRef.current && startTimeRef.current) {
+        setTime(accumulatedTimeRef.current + (Date.now() - startTimeRef.current));
+        requestRef.current = requestAnimationFrame(tick);
+      }
+    };
+
+    if (isRunning) {
+      requestRef.current = requestAnimationFrame(tick);
+    } else {
+      cancelAnimationFrame(requestRef.current);
+    }
+
+    return () => cancelAnimationFrame(requestRef.current);
+  }, [isRunning]);
+
+  // Value Definition for Context Provider
 
   const value = useMemo(() => ({
     time,
