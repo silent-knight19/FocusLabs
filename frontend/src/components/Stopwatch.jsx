@@ -24,7 +24,14 @@ export function Stopwatch({ isOpen, onClose, onDataUpdate }) {
   } = useStopwatch();
 
   const [editingLapId, setEditingLapId] = useState(null);
-  const [selectedCategory, setSelectedCategory] = useState('other');
+  const [selectedCategory, setSelectedCategory] = useState(() => {
+    return localStorage.getItem('stopwatch_selected_category') || 'study';
+  });
+
+  useEffect(() => {
+    localStorage.setItem('stopwatch_selected_category', selectedCategory);
+  }, [selectedCategory]);
+
   const [hasAlarmTriggered, setHasAlarmTriggered] = useState(false);
   const [isAlarmRinging, setIsAlarmRinging] = useState(false);
   const [alarmDuration, setAlarmDuration] = useState(0); // in minutes, 0 means disabled

@@ -158,6 +158,19 @@ export function StopwatchProvider({ children }) {
     };
   }, [saveActiveState]);
 
+  // Auto-lap on load if the stopwatch was paused with unlapped time
+  useEffect(() => {
+    if (!initialIsRunning && initialAccumulatedTime > initialLastLapTime + 1000) {
+      const savedCategory = localStorage.getItem('stopwatch_selected_category') || 'study';
+      // Use a slight delay to ensure contexts are fully mounted before triggering a lap
+      // which modifies allHistory and triggers Firestore syncs.
+      const timerId = setTimeout(() => {
+        lap(savedCategory);
+      }, 500);
+      return () => clearTimeout(timerId);
+    }
+  }, [initialIsRunning, initialAccumulatedTime, initialLastLapTime, lap]);
+
   // Smooth animation frame loop for updating the visible timer
   useEffect(() => {
     const tick = () => {
@@ -182,13 +195,6 @@ export function StopwatchProvider({ children }) {
   const start = useCallback(() => {
     if (!isRunningRef.current) {
       const now = Date.now();
-
-      // When resuming after a pause, reset the lap marker to the current
-      // accumulated time so the first lap of this run measures only the
-      // time elapsed since pressing Start — not from a previous session's
-      // lap marker which would produce wildly wrong durations.
-      setLastLapTime(accumulatedTimeRef.current);
-      lastLapTimeRef.current = accumulatedTimeRef.current;
 
       setStartTime(now);
       startTimeRef.current = now;
