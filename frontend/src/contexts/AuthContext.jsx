@@ -1,7 +1,8 @@
 /* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import {
-  signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signOut as firebaseSignOut,
@@ -30,6 +31,14 @@ export function AuthProvider({ children }) {
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    // Check for errors from redirect flow
+    getRedirectResult(auth).catch((err) => {
+      logError('[Auth] Error from redirect result:', err);
+      if (err.code !== 'auth/popup-closed-by-user') {
+        setError(err.message);
+      }
+    });
+
     // Listen for auth state changes
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
@@ -43,15 +52,13 @@ export function AuthProvider({ children }) {
     try {
       setError(null);
       setLoading(true);
-      const result = await signInWithPopup(auth, googleProvider);
-      setUser(result.user);
-      return result.user;
+      await signInWithRedirect(auth, googleProvider);
+      // The page will redirect away. State will be handled on reload by getRedirectResult and onAuthStateChanged.
     } catch (err) {
       logError('[Auth] Error signing in with Google:', err);
       setError(err.message);
-      throw err;
-    } finally {
       setLoading(false);
+      throw err;
     }
   }, []);
 
