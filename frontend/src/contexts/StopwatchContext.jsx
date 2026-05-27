@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, useEffect, useRef, useCallback, useMemo } from 'react';
+/* eslint-disable react-refresh/only-export-components */
+import React, { createContext, useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useStopwatchHistory } from './StopwatchHistoryContext';
 import { normalizeFocusCategory } from '../utils/focusSessionHelpers';
 
