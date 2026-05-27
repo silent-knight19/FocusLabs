@@ -68,7 +68,7 @@
   color: var(--text-secondary);
   cursor: pointer; border-radius: var(--radius-sm);
   display: flex; align-items: center; justify-content: center;
-  transition: all var(--transition-fast);
+  transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), opacity var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .goal-detail-back:hover {
@@ -98,7 +98,7 @@
   font-weight: 600;
   border-radius: var(--radius-md);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: background-color 0.2s, border-color 0.2s, color 0.2s, opacity 0.2s, transform 0.2s, box-shadow 0.2s;
 }
 
 .goal-detail-edit-btn:hover {
@@ -306,7 +306,7 @@
   flex-shrink: 0; cursor: pointer;
   background: transparent; padding: 0;
   color: transparent; font-size: 0.7rem;
-  transition: all 0.2s var(--ease-spring);
+  transition: background-color 0.2s var(--ease-spring), border-color 0.2s var(--ease-spring), color 0.2s var(--ease-spring), opacity 0.2s var(--ease-spring), transform 0.2s var(--ease-spring), box-shadow 0.2s var(--ease-spring);
 }
 
 .subgoal-checkbox:hover {
@@ -423,7 +423,7 @@
   font-weight: 600;
   cursor: pointer;
   display: flex; align-items: center; justify-content: center; gap: 6px;
-  transition: all 0.2s var(--ease-standard);
+  transition: background-color 0.2s var(--ease-standard), border-color 0.2s var(--ease-standard), color 0.2s var(--ease-standard), opacity 0.2s var(--ease-standard), transform 0.2s var(--ease-standard), box-shadow 0.2s var(--ease-standard);
 }
 
 .goal-action-btn.complete {

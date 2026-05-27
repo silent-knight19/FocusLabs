@@ -30,6 +30,8 @@ export function ConcentricPieChart({ data }) {
       <svg viewBox="0 0 36 36" className="circular-chart">
         {rings.map((ring) => {
           const percentage = Math.max(0, Math.min(100, (ring.value / safeTotal) * 100));
+          const circumference = 2 * Math.PI * ring.radius;
+          const dashLength = (percentage / 100) * circumference;
 
           return (
             <React.Fragment key={ring.id}>
@@ -42,7 +44,7 @@ export function ConcentricPieChart({ data }) {
               />
               <path
                 className="circle"
-                strokeDasharray={`${percentage}, 100`}
+                strokeDasharray={`${dashLength} ${circumference}`}
                 d={`M18 18 m 0 -${ring.radius} a ${ring.radius} ${ring.radius} 0 1 1 0 ${
                   ring.radius * 2
                 } a ${ring.radius} ${ring.radius} 0 1 1 0 -${ring.radius * 2}`}

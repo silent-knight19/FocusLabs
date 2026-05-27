@@ -72,7 +72,7 @@
     color: var(--text-secondary);
     border-radius: 50%;
     cursor: pointer;
-    transition: all 0.3s var(--ease-elastic);
+    transition: background-color 0.3s var(--ease-elastic), border-color 0.3s var(--ease-elastic), color 0.3s var(--ease-elastic), opacity 0.3s var(--ease-elastic), transform 0.3s var(--ease-elastic), box-shadow 0.3s var(--ease-elastic);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -103,7 +103,7 @@
     display: flex;
     align-items: center;
     gap: var(--spacing-md);
-    transition: all 0.3s var(--ease-smooth);
+    transition: background-color 0.3s var(--ease-smooth), border-color 0.3s var(--ease-smooth), color 0.3s var(--ease-smooth), opacity 0.3s var(--ease-smooth), transform 0.3s var(--ease-smooth), box-shadow 0.3s var(--ease-smooth);
     position: relative;
     overflow: hidden;
 }
@@ -220,7 +220,7 @@
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 16px;
     padding: var(--spacing-lg);
-    transition: all 0.3s;
+    transition: background-color 0.3s, border-color 0.3s, color 0.3s, opacity 0.3s, transform 0.3s, box-shadow 0.3s;
 }
 
 .habit-item:hover {

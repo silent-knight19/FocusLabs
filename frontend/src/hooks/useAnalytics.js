@@ -1,17 +1,13 @@
-import { useMemo } from 'react';
-import { useFirestore } from './useFirestore';
-import { useAuth } from '../contexts/AuthContext';
+import { useStopwatchHistory } from '../contexts/StopwatchHistoryContext';
+import { formatDateKey } from '../utils/dateHelpers';
+import { isStudySession, isProductiveSession, normalizeFocusCategory } from '../utils/focusSessionHelpers';
 
 /**
  * Hook for analyzing stopwatch lap data
  * Aggregates laps by category and time period
  */
 export function useAnalytics() {
-  // Get lap history from localStorage
-  // Get lap history from Firestore
-  const { user } = useAuth();
-  const userId = user?.uid;
-  const [history] = useFirestore(userId, 'stopwatch_history', []);
+  const { history } = useStopwatchHistory();
 
   const getLapHistory = () => {
     if (!history) return [];
@@ -28,9 +24,12 @@ export function useAnalytics() {
     
     let startDate;
     switch (dateRange) {
-      case 'day':
-        startDate = new Date(now.setHours(0, 0, 0, 0));
+      case 'day': {
+        const d = new Date(now);
+        d.setHours(0, 0, 0, 0);
+        startDate = d;
         break;
+      }
       case 'week':
         startDate = new Date(now);
         startDate.setDate(now.getDate() - 7);
@@ -49,7 +48,8 @@ export function useAnalytics() {
 
     return allLaps.filter(lap => {
       const lapDate = new Date(lap.date);
-      const matchesCategory = !category || lap.category === category;
+      const normalizedCategory = normalizeFocusCategory(lap.category, lap.label);
+      const matchesCategory = !category || normalizedCategory === category;
       const matchesRange = lapDate >= startDate;
       return matchesCategory && matchesRange;
     });
@@ -91,7 +91,8 @@ export function useAnalytics() {
           const lapDate = new Date(lap.date);
           const lapMonthKey = `${lapDate.getFullYear()}-${lapDate.getMonth()}`;
           const matchesMonth = lapMonthKey === monthKey;
-          const matchesCategory = !category || lap.category === category;
+          const normalizedCategory = normalizeFocusCategory(lap.category, lap.label);
+          const matchesCategory = !category || normalizedCategory === category;
           return matchesMonth && matchesCategory;
         });
 
@@ -112,12 +113,12 @@ export function useAnalytics() {
       for (let i = days - 1; i >= 0; i--) {
         const date = new Date(now);
         date.setDate(now.getDate() - i);
-        const dateKey = date.toISOString().split('T')[0];
+        const dateKey = formatDateKey(date);
         
         const dayLaps = allLaps.filter(lap => {
-          const lapDate = new Date(lap.date).toISOString().split('T')[0];
+          const lapDate = formatDateKey(new Date(lap.date));
           const matchesDate = lapDate === dateKey;
-          const matchesCategory = !category || lap.category === category;
+          const matchesCategory = !category || normalizeFocusCategory(lap.category, lap.label) === category;
           return matchesDate && matchesCategory;
         });
 
@@ -148,6 +149,14 @@ export function useAnalytics() {
     }));
   };
 
+  const getFocusSummary = (lap) => {
+    if (isStudySession(lap)) return 'study';
+    if (isProductiveSession(lap)) {
+      return normalizeFocusCategory(lap.category, lap.label);
+    }
+    return normalizeFocusCategory(lap.category, lap.label);
+  };
+
   /**
    * Format milliseconds to readable time
    */
@@ -171,6 +180,7 @@ export function useAnalytics() {
     getSessionCount,
     getChartData,
     getCategorySummary,
+    getFocusSummary,
     formatTime
   };
 }

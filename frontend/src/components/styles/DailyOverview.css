@@ -11,7 +11,7 @@
     justify-content: space-between;
     gap: var(--spacing-lg);
     flex: 1;
-    transition: all var(--transition-base);
+    transition: background-color var(--transition-base), border-color var(--transition-base), color var(--transition-base), opacity var(--transition-base), transform var(--transition-base), box-shadow var(--transition-base);
 }
 
 .daily-overview-container:hover {

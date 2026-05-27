@@ -1,5 +1,5 @@
 import React, { useRef, useMemo, useEffect } from 'react';
-import { Canvas, useFrame, useThree } from '@react-three/fiber';
+import { Canvas, useFrame } from '@react-three/fiber';
 import { EffectComposer, Bloom, Noise } from '@react-three/postprocessing';
 import { Float } from '@react-three/drei';
 import * as THREE from 'three';
@@ -81,7 +81,7 @@ function FloatingOrbs({ mouse }) {
 
   useFrame((state) => {
     const time = state.clock.getElapsedTime();
-    const { x, y } = mouse.current;
+    const { x } = mouse.current;
 
     orbsRef.current.forEach((orb, i) => {
       if (!orb) return;
@@ -323,8 +323,6 @@ function LightRays() {
  * Main Scene - Mature, premium composition
  */
 function Scene({ mouse }) {
-  const { viewport } = useThree();
-
   return (
     <>
       {/* Lighting - Studio quality */}

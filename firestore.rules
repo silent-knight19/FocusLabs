@@ -1,44 +1,88 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Helper function to check if user is authenticated
     function isAuthenticated() {
       return request.auth != null;
     }
-    
-    // Helper function to check if user owns the resource
+
     function isOwner(userId) {
       return isAuthenticated() && request.auth.uid == userId;
     }
-    
-    // Users collection
+
+    function isValidDataCollection(name) {
+      // Note: 'completions' and 'custom_completions' are intentionally
+      // excluded here — they now live in dedicated shard subcollections
+      // (users/{uid}/completions/{YYYY-MM}), not in the flat /data/ path.
+      return name in [
+        'habits', 'subtasks', 'subtask_completions',
+        'custom_habits', 'custom_subtasks', 'custom_subtask_completions',
+        'daily_tasks', 'settings', 'stopwatch_history', 'notes', 'goals',
+        'study_sessions', 'productivity_sessions'
+      ];
+    }
+
+    function hasValidTopLevelShape(maxFields) {
+      // Firestore rules cannot compute serialized byte size reliably.
+      // Cloud Functions enforce the 500 KB payload cap after writes; this
+      // rule keeps document shapes bounded without blocking valid saves.
+      return request.resource.data.keys().size() <= maxFields;
+    }
+
+    function isValidMonthKey(monthKey) {
+      return monthKey.matches('^\\d{4}-\\d{2}$');
+    }
+
     match /users/{userId} {
-      // Users can only read/write their own data
-      allow read, write: if isOwner(userId);
-      
-      // Habits subcollection
-      match /habits/{habitId} {
-        allow read, write: if isOwner(userId);
-      }
-      
-      // Completions subcollection (if stored separately)
-      match /completions/{completionId} {
-        allow read, write: if isOwner(userId);
-      }
-      
-      // Devices subcollection for FCM tokens
-      match /devices/{deviceId} {
-        allow read, write: if isOwner(userId);
+      allow read: if isOwner(userId);
+
+      match /data/{collectionName} {
+        allow read: if isOwner(userId);
+        allow create, update: if isOwner(userId)
+          && isValidDataCollection(collectionName)
+          && hasValidTopLevelShape(3);
         allow delete: if isOwner(userId);
       }
-      
-      // Subtasks subcollection
-      match /subtasks/{subtaskId} {
-        allow read, write: if isOwner(userId);
+
+      match /completions/{monthKey} {
+        allow read: if isOwner(userId);
+        allow create, update: if isOwner(userId)
+          && isValidMonthKey(monthKey)
+          && hasValidTopLevelShape(4);
+        allow delete: if isOwner(userId);
       }
-      
-      // Subtask completions
-      match /subtask_completions/{completionId} {
+
+      match /custom_completions/{monthKey} {
+        allow read: if isOwner(userId);
+        allow create, update: if isOwner(userId)
+          && isValidMonthKey(monthKey)
+          && hasValidTopLevelShape(4);
+        allow delete: if isOwner(userId);
+      }
+
+      match /stopwatch/{monthKey} {
+        allow read: if isOwner(userId);
+        allow create, update: if isOwner(userId)
+          && isValidMonthKey(monthKey)
+          && hasValidTopLevelShape(4);
+        allow delete: if isOwner(userId);
+      }
+
+      match /daily_tasks/{monthKey} {
+        allow read: if isOwner(userId);
+        allow create, update: if isOwner(userId)
+          && isValidMonthKey(monthKey)
+          && hasValidTopLevelShape(4);
+        allow delete: if isOwner(userId);
+      }
+
+
+      match /devices/{deviceId} {
+        allow read, write, delete: if isOwner(userId);
+      }
+
+      // Rate-limiting metadata written by the validateImport Cloud Function
+      // (via the Admin SDK). These rules protect client-side access.
+      match /meta/{docId} {
         allow read, write: if isOwner(userId);
       }
     }

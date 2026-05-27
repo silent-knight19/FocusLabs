@@ -1,7 +1,6 @@
 import React, { useMemo } from 'react';
-import { useFirestore } from '../hooks/useFirestore';
-import { useAuth } from '../contexts/AuthContext';
-import './styles/StudyHeatmap.css';
+import { useStopwatchHistory } from '../contexts/StopwatchHistoryContext';
+import { isStudySession } from '../utils/focusSessionHelpers';
 import './styles/StudyHeatmap.css';
 
 /**
@@ -11,19 +10,17 @@ import './styles/StudyHeatmap.css';
 export function StudyHeatmap({ dataVersion = 0 }) {
   // Get lap history from localStorage
   // Get lap history from Firestore
-  const { user } = useAuth();
-  const userId = user?.uid;
-  const [history, , loading] = useFirestore(userId, 'stopwatch_history', []);
+  const { history: rawHistory, loading } = useStopwatchHistory();
 
-  const getLapHistory = () => {
-    if (loading || !history) return [];
+  const lapHistory = useMemo(() => {
+    if (loading || !rawHistory) return [];
     // Filter out laps less than 60 seconds
-    return history.filter(lap => (lap.time || 0) > 60000);
-  };
+    return rawHistory.filter(lap => (lap.time || 0) > 60000);
+  }, [loading, rawHistory]);
 
   // Generate heatmap data for the current year (Jan - Dec)
   const heatmapData = useMemo(() => {
-    const history = getLapHistory();
+    const _ = dataVersion; // Keep dependency
     const weeks = [];
     const today = new Date();
     const currentYear = today.getFullYear();
@@ -62,11 +59,11 @@ export function StudyHeatmap({ dataVersion = 0 }) {
         const dateKey = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(currentDate.getDate()).padStart(2, '0')}`;
         
         // Calculate Study Hours
-        const dayLaps = history.filter(lap => {
+        const dayLaps = lapHistory.filter(lap => {
           const lapDateObj = new Date(lap.date);
           // Use local date components to avoid timezone issues
           const lapDateLocal = `${lapDateObj.getFullYear()}-${String(lapDateObj.getMonth() + 1).padStart(2, '0')}-${String(lapDateObj.getDate()).padStart(2, '0')}`;
-          return lapDateLocal === dateKey && lap.category === 'study';
+          return lapDateLocal === dateKey && isStudySession(lap);
         });
         
         const totalMs = dayLaps.reduce((sum, lap) => sum + (lap.time || 0), 0);
@@ -84,7 +81,7 @@ export function StudyHeatmap({ dataVersion = 0 }) {
     }
     
     return weeks;
-  }, [dataVersion, history]);
+  }, [dataVersion, lapHistory]);
 
   // Calculate intensity level based on hours (minimum 2 hours for effect)
   const getIntensityLevel = (hours) => {
@@ -112,9 +109,9 @@ export function StudyHeatmap({ dataVersion = 0 }) {
 
   // Calculate statistics
   const stats = useMemo(() => {
-    const history = getLapHistory();
+    const _ = dataVersion; // Keep dependency
     // Filter relevant laps first
-    const relevantLaps = history.filter(lap => lap.category === 'study');
+    const relevantLaps = lapHistory.filter(isStudySession);
 
     // Group by date to calculate daily totals
     const dailyTotals = {};
@@ -137,7 +134,7 @@ export function StudyHeatmap({ dataVersion = 0 }) {
       max: maxHours.toFixed(1),
       average: daysWithActivity > 0 ? (totalHours / daysWithActivity).toFixed(1) : 0
     };
-  }, [dataVersion, history, loading]);
+  }, [dataVersion, lapHistory]);
 
   const monthLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   const dayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];

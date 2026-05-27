@@ -60,7 +60,6 @@ export function GoalCard({ goal, progress, onClick, onToggleSubGoal, index = 0 }
   const previewSubGoals = subGoals.slice(0, 3);
   const remainingCount = subGoals.length - 3;
 
-  const dashOffset = PROGRESS_CIRCUMFERENCE * (1 - progress / 100);
   const goalColor = goal.color || '#FF5A1F';
   const colorAlpha = hexToRgba(goalColor, 0.12);
 

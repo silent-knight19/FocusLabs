@@ -115,8 +115,10 @@ export const getMonthDates = (year, month) => {
     dates.push(new Date(year, month, i));
   }
   
-  // Add days from next month to fill last week (grid of 42 cells usually covers all months)
-  const remainingCells = 42 - dates.length;
+  // Add days from next month to fill last week
+  // Some months only need 35 cells (5 rows) instead of 42 (6 rows)
+  const totalCells = dates.length <= 35 ? 35 : 42;
+  const remainingCells = totalCells - dates.length;
   for (let i = 1; i <= remainingCells; i++) {
     dates.push(new Date(year, month + 1, i));
   }

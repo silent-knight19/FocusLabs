@@ -1,10 +1,10 @@
 import React, { useMemo, useState } from 'react';
-import { useFirestore } from '../hooks/useFirestore';
-import { useAuth } from '../contexts/AuthContext';
+import { useStopwatchHistory } from '../contexts/StopwatchHistoryContext';
 import { X, CheckCircle, Circle, Clock, TrendingUp, Target, ListTodo, ChevronDown, FileText } from 'lucide-react';
 import { useHabitNotes } from '../hooks/useHabitNotes';
 import { formatDateKey } from '../utils/dateHelpers';
 import { useLockBodyScroll } from '../hooks/useLockBodyScroll';
+import { normalizeFocusCategory } from '../utils/focusSessionHelpers';
 import './styles/DayHistoryModal.css';
 
 /**
@@ -33,9 +33,7 @@ export function DayHistoryModal({
   };
 
   // Get all lap data for this day
-  const { user } = useAuth();
-  const userId = user?.uid;
-  const [lapHistory] = useFirestore(userId, 'stopwatch_history', []);
+  const { history: lapHistory } = useStopwatchHistory();
 
   const dayData = useMemo(() => {
     try {
@@ -48,7 +46,7 @@ export function DayHistoryModal({
       // Group by category
       const categoryTime = {};
       dayLaps.forEach(lap => {
-        const category = lap.category || 'uncategorized';
+        const category = normalizeFocusCategory(lap.category, lap.label) || 'uncategorized';
         categoryTime[category] = (categoryTime[category] || 0) + (lap.time || 0);
       });
 
@@ -70,7 +68,7 @@ export function DayHistoryModal({
         lapCount: 0
       };
     }
-  }, [dateStr]);
+  }, [dateStr, lapHistory]);
 
   // Filter habits that were active on this date
   const activeHabits = useMemo(() => {
@@ -121,9 +119,7 @@ export function DayHistoryModal({
     'study': '#3b82f6',
     'prod': '#8b5cf6',
     'self': '#10b981',
-    'self growth': '#10b981',
-    'health': '#ef4444',
-    'uncategorized': '#6b7280'
+    'other': '#6b7280'
   };
 
   // Format date
@@ -313,7 +309,7 @@ export function DayHistoryModal({
                       const total = dayData.totalTime;
                       return Object.entries(dayData.categoryTime)
                         .sort((a, b) => b[1] - a[1])
-                        .map(([category, time], i) => {
+                        .map(([category, time]) => {
                           const percent = time / total;
                           const startX = Math.cos(2 * Math.PI * cumulativePercent) * 50 + 50;
                           const startY = Math.sin(2 * Math.PI * cumulativePercent) * 50 + 50;
@@ -410,18 +406,21 @@ export function DayHistoryModal({
             <div className="history-section">
               <h3 className="section-title">Sessions ({dayData.laps.length})</h3>
               <div className="sessions-list">
-                {dayData.laps.slice(0, 10).map((lap, idx) => (
+                {dayData.laps.slice(0, 10).map((lap, idx) => {
+                  const normalizedCat = normalizeFocusCategory(lap.category, lap.label);
+                  return (
                   <div key={idx} className="session-item">
                     <div className="session-info">
                       <span 
                         className="session-dot" 
-                        style={{ backgroundColor: categoryColors[lap.category] || '#6b7280' }}
+                        style={{ backgroundColor: categoryColors[normalizedCat] || '#6b7280' }}
                       />
-                      <span className="session-category">{lap.category || 'uncategorized'}</span>
+                      <span className="session-category">{normalizedCat}</span>
                     </div>
                     <span className="session-time">{formatTime(lap.time || 0)}</span>
                   </div>
-                ))}
+                  );
+                })}
                 {dayData.laps.length > 10 && (
                   <p className="more-sessions">+ {dayData.laps.length - 10} more sessions</p>
                 )}

@@ -1,19 +1,18 @@
 import React, { useMemo } from 'react';
-import { useFirestore } from '../hooks/useFirestore';
-import { useAuth } from '../contexts/AuthContext';
-import { formatTime12 } from '../utils/dateHelpers';
+import { useStopwatchHistory } from '../contexts/StopwatchHistoryContext';
+import { isStudySession } from '../utils/focusSessionHelpers';
 import './styles/AnalyticsView.css'; // Reuse analytics styles
 
 export function StudyView() {
-  const { user } = useAuth();
-  const userId = user?.uid;
-  const [history] = useFirestore(userId, 'stopwatch_history', []);
+  const { history } = useStopwatchHistory();
 
   const studyStats = useMemo(() => {
     if (!history) return { totalHours: '0.0', count: 0, chartData: [] };
     
-    // Filter laps labeled "study" (case insensitive)
-    const studyLaps = history.filter(l => l.label.toLowerCase().includes('study'));
+    // Filter laps that were recorded under the 'study' category.
+    // NOTE: labels default to "Session 1", "Session 2" etc., so we must filter
+    // by the category field, not by the label text.
+    const studyLaps = history.filter(isStudySession);
     
     const totalMs = studyLaps.reduce((acc, curr) => acc + curr.time, 0);
     const totalHours = (totalMs / 3600000).toFixed(1);
@@ -34,7 +33,7 @@ export function StudyView() {
       }));
 
     return { totalHours, count: studyLaps.length, chartData };
-  }, []);
+  }, [history]);
 
   return (
     <div className="analytics-view">

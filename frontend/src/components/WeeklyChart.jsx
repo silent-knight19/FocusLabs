@@ -6,24 +6,24 @@ import './styles/WeeklyChart.css';
 /**
  * Smooth area chart showing weekly completion percentage
  */
+const CustomTooltip = ({ active, payload, label }) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="custom-tooltip">
+        <p className="tooltip-label">{label}</p>
+        <p className="tooltip-value">{payload[0].value}% Completed</p>
+      </div>
+    );
+  }
+  return null;
+};
+
 export function WeeklyChart({ weekDates, completionData }) {
   const data = weekDates.map((date, index) => ({
     day: getDayName(date),
     value: completionData[index],
     fullDate: date.toLocaleDateString()
   }));
-
-  const CustomTooltip = ({ active, payload, label }) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="custom-tooltip">
-          <p className="tooltip-label">{label}</p>
-          <p className="tooltip-value">{payload[0].value}% Completed</p>
-        </div>
-      );
-    }
-    return null;
-  };
 
   return (
     <div className="weekly-chart-container">

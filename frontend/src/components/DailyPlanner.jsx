@@ -26,10 +26,8 @@ export function DailyPlanner({
   onAddHabit,
   // Custom habits props
   customHabits = [],
-  customCompletions = {},
   toggleCustomCompletion,
   getCustomCompletionStatus,
-  onAddCustomHabit,
   // Custom subtask props
   getCustomSubtasks,
   addCustomSubtask,
@@ -59,15 +57,6 @@ export function DailyPlanner({
     return formatDateKey(today) === formatDateKey(selectedDate);
   };
 
-  const formatDisplayDate = (date) => {
-    return date.toLocaleDateString('en-US', {
-      weekday: 'long',
-      month: 'long',
-      day: 'numeric',
-      year: 'numeric'
-    });
-  };
-
   // Filter custom habits that apply to selected date
   const dateKey = formatDateKey(selectedDate);
   const customHabitsForDate = customHabits.filter(habit => 
@@ -76,10 +65,6 @@ export function DailyPlanner({
 
   const dateCompletion = getDateCompletion(selectedDate);
   
-  // Calculate combined totals including custom habits
-  const customCompletedCount = customHabitsForDate.filter(
-    habit => customCompletions[habit.id]?.[dateKey] === 'completed'
-  ).length;
   const totalHabitsCount = habits.length + customHabitsForDate.length;
 
   return (

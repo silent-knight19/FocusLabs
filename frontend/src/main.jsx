@@ -1,39 +1,37 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import './index.css'
-import './styles/animations.css'
-import './styles/premium-animations.css'
-import App from './App.jsx'
-import ErrorBoundary from './components/ErrorBoundary.jsx'
-import { AuthProvider, useAuth } from './contexts/AuthContext.jsx'
-import { Login } from './components/Login.jsx'
+/* eslint-disable react-refresh/only-export-components */
+import { StrictMode, Suspense, lazy } from 'react';
+import { createRoot } from 'react-dom/client';
+import { BrowserRouter } from 'react-router-dom';
+import './index.css';
+import './styles/animations.css';
+import './styles/premium-animations.css';
+import ErrorBoundary from './components/ErrorBoundary.jsx';
+import { AuthProvider, useAuth } from './contexts/AuthContext.jsx';
+import { ToastProvider } from './contexts/ToastContext.jsx';
+import { StopwatchHistoryProvider } from './contexts/StopwatchHistoryContext.jsx';
+import { Login } from './components/Login.jsx';
+import { HabitGridSkeleton } from './components/HabitGridSkeleton.jsx';
+import { NetworkStatus } from './components/NetworkStatus.jsx';
+import { initMonitoring } from './config/monitoring.js';
+import './components/NetworkStatus.css';
 
-// Wrapper to handle auth state
+initMonitoring();
+
+const App = lazy(() => import('./App.jsx'));
+
+import { StopwatchProvider } from './contexts/StopwatchContext.jsx';
+import { HabitsProvider } from './contexts/HabitsContext.jsx';
+import { GoalsProvider } from './contexts/GoalsContext.jsx';
+import { DailyPlannerProvider } from './contexts/DailyPlannerContext.jsx';
+
 function AppWrapper() {
   const { user, loading } = useAuth();
 
   if (loading) {
     return (
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        height: '100vh',
-        backgroundColor: 'var(--bg-primary)',
-        color: 'var(--text-primary)'
-      }}>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{
-            width: '48px',
-            height: '48px',
-            border: '4px solid rgba(255, 107, 53, 0.2)',
-            borderTop: '4px solid #FF6B35',
-            borderRadius: '50%',
-            animation: 'spin 1s linear infinite',
-            margin: '0 auto 1rem'
-          }}></div>
-          <p>Loading...</p>
-        </div>
+      <div className="auth-loading-screen">
+        <div className="auth-loading-spinner" />
+        <p>Loading...</p>
       </div>
     );
   }
@@ -42,16 +40,34 @@ function AppWrapper() {
     return <Login />;
   }
 
-  return <App />;
+  return (
+    <StopwatchHistoryProvider>
+      <StopwatchProvider>
+        <HabitsProvider>
+          <GoalsProvider>
+            <DailyPlannerProvider>
+              <NetworkStatus />
+              <Suspense fallback={<HabitGridSkeleton />}>
+                <App />
+              </Suspense>
+            </DailyPlannerProvider>
+          </GoalsProvider>
+        </HabitsProvider>
+      </StopwatchProvider>
+    </StopwatchHistoryProvider>
+  );
 }
-
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <ErrorBoundary>
-      <AuthProvider>
-        <AppWrapper />
-      </AuthProvider>
+      <BrowserRouter>
+        <AuthProvider>
+          <ToastProvider>
+            <AppWrapper />
+          </ToastProvider>
+        </AuthProvider>
+      </BrowserRouter>
     </ErrorBoundary>
   </StrictMode>,
-)
+);

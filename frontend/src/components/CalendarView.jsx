@@ -1,6 +1,8 @@
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+/* eslint-disable no-unused-vars */
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Search, X, Trash2, Edit2, Check, ChevronDown, ChevronRight } from 'lucide-react';
-import { getMonthDates, getMonthName, isSameDay, getTwoYearsAgo, isWithinTwoYears, formatDateKey, isFutureDate } from '../utils/dateHelpers';
+import { getMonthDates, getMonthName, isSameDay, isWithinTwoYears, formatDateKey, isFutureDate } from '../utils/dateHelpers';
 import { ConfirmationModal } from './ConfirmationModal';
 import './styles/CalendarView.css';
 
@@ -78,7 +80,7 @@ const TaskItem = ({ task, onToggle, onDelete, onUpdate, disabled = false }) => {
   );
 };
 
-const HabitItem = ({ habit, isCompleted, subtasks, subtaskCompletions, dailyTasks, dateKey, onToggleTask, onDeleteTask, onUpdateTask, disabled = false }) => {
+const HabitItem = ({ habit, isCompleted, subtasks, subtaskCompletions, dailyTasks, dateKey, onToggleTask, onDeleteTask, onUpdateTask, disabled = false, setConfirmationModal }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
   return (
@@ -99,57 +101,67 @@ const HabitItem = ({ habit, isCompleted, subtasks, subtaskCompletions, dailyTask
         {isCompleted && <Check size={14} color={habit.color} />}
       </div>
 
-      {isExpanded && (
-        <div className="habit-details">
-          {/* Static Subtasks */}
-          {subtasks.length > 0 && (
-             <div className="habit-subtasks">
-              <div className="subtasks-header">Checklist</div>
-              {subtasks.map(st => {
-                const isStCompleted = subtaskCompletions[habit.id]?.[dateKey]?.[st.id] === true;
-                return (
-                  <div key={st.id} className="habit-subtask-item">
-                    <div className={`subtask-dot ${isStCompleted ? 'completed' : ''}`} />
-                    <span className={`subtask-text ${isStCompleted ? 'completed' : ''}`}>
-                      {st.title}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          )}
+      {/* Accordion animation using AnimatePresence */}
+      <AnimatePresence>
+        {isExpanded && (
+          <motion.div 
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            style={{ overflow: 'hidden' }}
+            className="habit-details"
+          >
+            {/* Static Subtasks */}
+            {subtasks.length > 0 && (
+               <div className="habit-subtasks">
+                <div className="subtasks-header">Checklist</div>
+                {subtasks.map(st => {
+                  const isStCompleted = subtaskCompletions[habit.id]?.[dateKey]?.[st.id] === true;
+                  return (
+                    <motion.div whileHover={{ x: 5 }} key={st.id} className="habit-subtask-item">
+                      <div className={`subtask-dot ${isStCompleted ? 'completed' : ''}`} />
+                      <span className={`subtask-text ${isStCompleted ? 'completed' : ''}`}>
+                        {st.title}
+                      </span>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            )}
 
-          {/* Daily Tasks for this Habit */}
-          {dailyTasks.length > 0 && (
-            <div className="habit-subtasks daily-tasks-group">
-              <div className="subtasks-header">Today's Tasks</div>
-              {dailyTasks.map(task => (
-                <TaskItem 
-                  key={task.id} 
-                  task={task} 
-                  onToggle={() => onToggleTask(task.id)}
-                  onDelete={() => {
-                    setConfirmationModal({
-                      isOpen: true,
-                      title: 'Delete Task',
-                      message: 'Are you sure you want to delete this task?',
-                      confirmText: 'Delete',
-                      type: 'danger',
-                      onConfirm: () => onDeleteTask(task.id)
-                    });
-                  }}
-                  onUpdate={(title) => onUpdateTask(task.id, { title })}
-                  disabled={disabled}
-                />
-              ))}
-            </div>
-          )}
+            {/* Daily Tasks for this Habit */}
+            {dailyTasks.length > 0 && (
+              <div className="habit-subtasks daily-tasks-group">
+                <div className="subtasks-header">Today's Tasks</div>
+                {dailyTasks.map(task => (
+                  <TaskItem 
+                    key={task.id} 
+                    task={task} 
+                    onToggle={() => onToggleTask(task.id)}
+                    onDelete={() => {
+                      setConfirmationModal({
+                        isOpen: true,
+                        title: 'Delete Task',
+                        message: 'Are you sure you want to delete this task?',
+                        confirmText: 'Delete',
+                        type: 'danger',
+                        onConfirm: () => onDeleteTask(task.id)
+                      });
+                    }}
+                    onUpdate={(title) => onUpdateTask(task.id, { title })}
+                    disabled={disabled}
+                  />
+                ))}
+              </div>
+            )}
 
-          {subtasks.length === 0 && dailyTasks.length === 0 && (
-            <div className="no-subtasks">No tasks for today</div>
-          )}
-        </div>
-      )}
+            {subtasks.length === 0 && dailyTasks.length === 0 && (
+              <div className="no-subtasks">No tasks for today</div>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
@@ -188,6 +200,10 @@ export function CalendarView({ habits, completions, subtasks = [], subtaskComple
   // Keyboard Navigation
   useEffect(() => {
     const handleKeyDown = (e) => {
+      // Don't intercept arrow keys when the user is typing in an input or textarea.
+      const activeTag = document.activeElement?.tagName;
+      if (activeTag === 'INPUT' || activeTag === 'TEXTAREA') return;
+
       if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
         e.preventDefault();
         const newDate = new Date(selectedDate);
@@ -374,15 +390,21 @@ export function CalendarView({ habits, completions, subtasks = [], subtaskComple
     setMatchingDates(matches);
     setSearchResults(results);
 
-    // Auto-navigate to the most recent matching month
+    // Auto-navigate to the most recent matching month.
+    // We read currentDate via a ref to avoid adding it to the deps array
+    // (doing so would trigger this effect on every month navigation, creating
+    // an extra render cycle each time the user searches and changes months).
     if (results.length > 0) {
       const mostRecentDate = new Date(results[0].date + 'T00:00:00');
-      if (
-        mostRecentDate.getMonth() !== currentDate.getMonth() ||
-        mostRecentDate.getFullYear() !== currentDate.getFullYear()
-      ) {
-        setCurrentDate(new Date(mostRecentDate.getFullYear(), mostRecentDate.getMonth(), 1));
-      }
+      setCurrentDate(prev => {
+        if (
+          mostRecentDate.getMonth() !== prev.getMonth() ||
+          mostRecentDate.getFullYear() !== prev.getFullYear()
+        ) {
+          return new Date(mostRecentDate.getFullYear(), mostRecentDate.getMonth(), 1);
+        }
+        return prev;
+      });
     }
   }, [searchTerm, completions, habits, subtasks, subtaskCompletions, dailyTasks]);
 
@@ -399,13 +421,6 @@ export function CalendarView({ habits, completions, subtasks = [], subtaskComple
     newDate.setMonth(newDate.getMonth() + 1);
     // Prevent going beyond current month + 1 year (optional limit)
     setCurrentDate(newDate);
-  };
-
-  const handleToday = () => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    setCurrentDate(today);
-    setSelectedDate(today);
   };
 
   const getDayCompletionStats = (date) => {
@@ -573,23 +588,27 @@ export function CalendarView({ habits, completions, subtasks = [], subtaskComple
 
         <div className="calendar-grid">
           {calendarDays
-            .filter(date => date.getMonth() === currentDate.getMonth())
             .map((date, index) => {
-              const stats = getDayCompletionStats(date);
+              const isOtherMonth = date.getMonth() !== currentDate.getMonth();
+              const stats = isOtherMonth ? { count: 0, total: 0 } : getDayCompletionStats(date);
               const isToday = isSameDay(date, new Date());
               const isSelected = isSameDay(date, selectedDate);
               const dateStr = formatDateKey(date);
               const isMatching = matchingDates.has(dateStr);
               
               return (
-                <div 
-                  key={index} 
-                  className={`calendar-day ${isToday ? 'today' : ''} ${isSelected ? 'selected' : ''} ${isMatching ? 'search-match' : ''}`}
-                  onClick={() => handleDateClick(date)}
-                  onDoubleClick={() => handleDateDoubleClick(date)}
+                <motion.div 
+                  key={index}
+                  whileHover={isOtherMonth ? {} : { scale: 1.05, zIndex: 1 }}
+                  whileTap={isOtherMonth ? {} : { scale: 0.95 }}
+                  transition={{ duration: 0.2 }}
+                  className={`calendar-day ${isToday ? 'today' : ''} ${isSelected ? 'selected' : ''} ${isMatching ? 'search-match' : ''} ${isOtherMonth ? 'other-month' : ''}`}
+                  onClick={() => !isOtherMonth && handleDateClick(date)}
+                  onDoubleClick={() => !isOtherMonth && handleDateDoubleClick(date)}
                 >
                   <div className="day-number">{date.getDate()}</div>
                   
+                  {!isOtherMonth && (
                   <div className="day-content">
                     {stats.total > 0 && (
                       <div className="event-dots">
@@ -597,7 +616,8 @@ export function CalendarView({ habits, completions, subtasks = [], subtaskComple
                           const isCompleted = completions[habit.id]?.[dateStr] === 'completed';
                           if (!isCompleted) return null;
                           return (
-                            <div 
+                            <motion.div 
+                              layoutId={`event-${habit.id}-${dateStr}`}
                               key={habit.id} 
                               className="event-dot"
                               style={{ backgroundColor: habit.color }}
@@ -608,7 +628,8 @@ export function CalendarView({ habits, completions, subtasks = [], subtaskComple
                       </div>
                     )}
                   </div>
-                </div>
+                  )}
+                </motion.div>
               );
             })}
         </div>
@@ -691,12 +712,14 @@ export function CalendarView({ habits, completions, subtasks = [], subtaskComple
                           habit={habit}
                           isCompleted={isCompleted}
                           subtasks={habitSubtasks}
+                          subtaskCompletions={subtaskCompletions}
                           dailyTasks={habitDailyTasks}
                           dateKey={habitDateKey}
                           onToggleTask={onToggleTask}
                           onUpdateTask={onUpdateTask}
                           onDeleteTask={onDeleteTask}
                           disabled={isFutureDate(selectedDate)}
+                          setConfirmationModal={setConfirmationModal}
                         />
                       );
                     })}

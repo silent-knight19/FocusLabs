@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/purity, no-unused-vars */
 import React, { useRef, useEffect, useState } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Float, Sparkles, Trail, Stars } from '@react-three/drei';

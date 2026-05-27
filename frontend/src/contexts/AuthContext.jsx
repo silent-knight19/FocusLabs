@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+/* eslint-disable react-refresh/only-export-components */
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import {
   signInWithPopup,
   createUserWithEmailAndPassword,
@@ -38,7 +39,7 @@ export function AuthProvider({ children }) {
     return unsubscribe;
   }, []);
 
-  const signInWithGoogle = async () => {
+  const signInWithGoogle = useCallback(async () => {
     try {
       setError(null);
       setLoading(true);
@@ -52,9 +53,9 @@ export function AuthProvider({ children }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const signOut = async () => {
+  const signOut = useCallback(async () => {
     try {
       setError(null);
       await firebaseSignOut(auth);
@@ -64,9 +65,9 @@ export function AuthProvider({ children }) {
       setError(err.message);
       throw err;
     }
-  };
+  }, []);
 
-  const signUp = async (email, password, displayName) => {
+  const signUp = useCallback(async (email, password, displayName) => {
     try {
       setError(null);
       setLoading(true);
@@ -86,9 +87,9 @@ export function AuthProvider({ children }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const signIn = async (email, password) => {
+  const signIn = useCallback(async (email, password) => {
     try {
       setError(null);
       setLoading(true);
@@ -102,9 +103,9 @@ export function AuthProvider({ children }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const value = {
+  const value = useMemo(() => ({
     user,
     loading,
     error,
@@ -112,7 +113,7 @@ export function AuthProvider({ children }) {
     signUp,
     signIn,
     signOut
-  };
+  }), [user, loading, error, signInWithGoogle, signUp, signIn, signOut]);
 
   return (
     <AuthContext.Provider value={value}>

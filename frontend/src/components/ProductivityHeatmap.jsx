@@ -1,29 +1,26 @@
 import React, { useMemo } from 'react';
-import { useFirestore } from '../hooks/useFirestore';
-import { useAuth } from '../contexts/AuthContext';
-import './styles/ProductivityHeatmap.css';
+import { useStopwatchHistory } from '../contexts/StopwatchHistoryContext';
+import { isProductiveSession } from '../utils/focusSessionHelpers';
 import './styles/ProductivityHeatmap.css';
 
 /**
  * GitHub-style contribution heatmap showing Productive & Self Growth hours
  * Combines 'prod' and 'self' categories
  */
-export function ProductivityHeatmap({ habits = [], completions = {}, dataVersion = 0 }) {
+export function ProductivityHeatmap({ dataVersion = 0 }) {
   // Get lap history from localStorage (where categories are stored)
   // Get lap history from Firestore
-  const { user } = useAuth();
-  const userId = user?.uid;
-  const [history, , loading] = useFirestore(userId, 'stopwatch_history', []);
+  const { history: rawHistory, loading } = useStopwatchHistory();
 
-  const getLapHistory = () => {
-    if (loading || !history) return [];
+  const lapHistory = useMemo(() => {
+    if (loading || !rawHistory) return [];
     // Filter out laps less than 60 seconds
-    return history.filter(lap => (lap.time || 0) > 60000);
-  };
+    return rawHistory.filter(lap => (lap.time || 0) > 60000);
+  }, [loading, rawHistory]);
 
   // Generate heatmap data for the current year (Jan - Dec)
   const heatmapData = useMemo(() => {
-    const history = getLapHistory();
+    const _ = dataVersion; // Keep dependency
     const weeks = [];
     const today = new Date();
     const currentYear = today.getFullYear();
@@ -62,11 +59,11 @@ export function ProductivityHeatmap({ habits = [], completions = {}, dataVersion
         const dateKey = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(currentDate.getDate()).padStart(2, '0')}`;
         
         // 1. Calculate Stopwatch Hours
-        const dayLaps = history.filter(lap => {
+        const dayLaps = lapHistory.filter(lap => {
           const lapDateObj = new Date(lap.date);
           // Use local date components to avoid timezone issues
           const lapDateLocal = `${lapDateObj.getFullYear()}-${String(lapDateObj.getMonth() + 1).padStart(2, '0')}-${String(lapDateObj.getDate()).padStart(2, '0')}`;
-          return lapDateLocal === dateKey && (lap.category === 'prod' || lap.category === 'self' || lap.category === 'self growth');
+          return lapDateLocal === dateKey && isProductiveSession(lap);
         });
         const stopwatchMs = dayLaps.reduce((sum, lap) => sum + (lap.time || 0), 0);
         let totalHours = stopwatchMs / (1000 * 60 * 60);
@@ -91,7 +88,7 @@ export function ProductivityHeatmap({ habits = [], completions = {}, dataVersion
     }
     
     return weeks;
-  }, [dataVersion, history, habits, completions]);
+  }, [dataVersion, lapHistory]);
 
   // Calculate intensity level based on hours (same logic as StudyHeatmap)
   const getIntensityLevel = (hours) => {
@@ -119,11 +116,9 @@ export function ProductivityHeatmap({ habits = [], completions = {}, dataVersion
 
   // Calculate statistics
   const stats = useMemo(() => {
-    const history = getLapHistory();
+    const _ = dataVersion; // Keep dependency
     // Filter relevant laps first
-    const relevantLaps = history.filter(lap => 
-      lap.category === 'prod' || lap.category === 'self' || lap.category === 'self growth'
-    );
+    const relevantLaps = lapHistory.filter(isProductiveSession);
 
     // Group by date to calculate daily totals
     const dailyTotals = {};
@@ -162,7 +157,7 @@ export function ProductivityHeatmap({ habits = [], completions = {}, dataVersion
       max: maxHours.toFixed(1),
       average: daysWithActivity > 0 ? (totalHours / daysWithActivity).toFixed(1) : 0
     };
-  }, [dataVersion, habits, completions]);
+  }, [dataVersion, lapHistory]);
 
   const monthLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   const dayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];

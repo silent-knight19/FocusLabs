@@ -74,14 +74,14 @@ export function GoalsCarousel({ goals, getGoalProgress, onOpenGoal, onViewAll })
   const touchDeltaX = useRef(0);
 
   const activeGoals = goals.filter(g => g.status === 'active');
-  if (activeGoals.length === 0) return null;
-
   const totalSlides = activeGoals.length;
 
   /** Navigate to a specific slide */
   const goToSlide = useCallback((index) => {
     setCurrentIndex(Math.max(0, Math.min(index, totalSlides - 1)));
   }, [totalSlides]);
+
+  if (activeGoals.length === 0) return null;
 
   const goNext = () => goToSlide(currentIndex + 1);
   const goPrev = () => goToSlide(currentIndex - 1);

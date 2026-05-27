@@ -1,174 +1,326 @@
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import {
   doc,
   setDoc,
   onSnapshot
 } from 'firebase/firestore';
 import { db } from '../config/firebase';
+import { showToast } from '../contexts/ToastContext';
 
-// Debug logging - only enabled in development
 const DEBUG = import.meta.env.DEV;
 const log = DEBUG ? console.log : () => {};
 const warn = DEBUG ? console.warn : () => {};
-const error = DEBUG ? console.error : () => {};
+const errorLog = DEBUG ? console.error : () => {};
 
-// Global circuit breaker state to persist across remounts
+const WRITE_LIMIT = 40;
+const WINDOW_MS = 60000;
+const DEBOUNCE_MS = 2000;
+const THROTTLE_MS = 3000;
+const MAX_RETRIES = 3;
+
 const globalCircuitBreaker = {
-  writes: {}, // Map of collectionName -> count
-  lastReset: {}, // Map of collectionName -> timestamp
-  broken: {} // Map of collectionName -> boolean
+  writes: {},
+  lastReset: {},
+  broken: {}
 };
+
+const queuedWrites = {};
+const pendingFlushes = new Map();
+
+function isDeepEqual(a, b) {
+  if (a === b) return true;
+  if (a == null || b == null) return false;
+  if (typeof a !== typeof b) return false;
+
+  if (typeof a === 'object') {
+    if (Array.isArray(a)) {
+      if (!Array.isArray(b) || a.length !== b.length) return false;
+      for (let i = 0; i < a.length; i++) {
+        if (!isDeepEqual(a[i], b[i])) return false;
+      }
+      return true;
+    }
+
+    if (Array.isArray(b)) return false;
+
+    const keysA = Object.keys(a);
+    const keysB = Object.keys(b);
+    if (keysA.length !== keysB.length) return false;
+
+    for (const key of keysA) {
+      if (!Object.prototype.hasOwnProperty.call(b, key)) return false;
+      if (!isDeepEqual(a[key], b[key])) return false;
+    }
+    return true;
+  }
+
+  return false;
+}
+
+function valuesEqual(a, b) {
+  return isDeepEqual(a, b);
+}
+
+function flushAllPending() {
+  pendingFlushes.forEach((flushFn) => {
+    try {
+      flushFn();
+    } catch (e) {
+      errorLog('[FIRESTORE] Flush error:', e);
+    }
+  });
+}
+
+if (typeof window !== 'undefined') {
+  const handlePageHide = () => flushAllPending();
+  window.addEventListener('pagehide', handlePageHide);
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') {
+      flushAllPending();
+    }
+  });
+}
+
+async function writeWithRetry(docRef, payload, collectionName, attempt = 0) {
+  try {
+    // Replace the app-managed payload so deleted nested keys do not survive
+    // Firestore's recursive merge semantics.
+    await setDoc(docRef, payload);
+    return true;
+  } catch (err) {
+    errorLog(`[FIRESTORE] Write failed for "${collectionName}" (attempt ${attempt + 1}):`, err);
+    if (attempt < MAX_RETRIES - 1) {
+      const delay = Math.pow(2, attempt) * 1000;
+      await new Promise((r) => setTimeout(r, delay));
+      return writeWithRetry(docRef, payload, collectionName, attempt + 1);
+    }
+    showToast('Failed to save changes. Please check your connection.', 'error', 8000);
+    return false;
+  }
+}
+
+function scheduleQueuedRetry(userId, collectionName, value, performWrite) {
+  const key = collectionName;
+  if (queuedWrites[key]) return;
+
+  queuedWrites[key] = true;
+  const retryAt = globalCircuitBreaker.lastReset[collectionName] + WINDOW_MS;
+
+  setTimeout(async () => {
+    delete queuedWrites[key];
+    if (globalCircuitBreaker.broken[collectionName]) {
+      globalCircuitBreaker.broken[collectionName] = false;
+      globalCircuitBreaker.writes[collectionName] = 0;
+    }
+    await performWrite(value);
+    showToast('Pending changes saved.', 'success', 3000);
+  }, Math.max(0, retryAt - Date.now()));
+}
 
 /**
  * Custom hook for syncing state with Firestore
- * RESTORED CLOUD PERSISTENCE with robust infinite loop protection
- * @param {string} userId - User ID for scoping data
- * @param {string} collectionName - Firestore collection name
- * @param {any} initialValue - default value if collection is empty
- * @returns {[any, Function, boolean]} - [value, setValue, loading] tuple
+ * @param {string} userId
+ * @param {string} collectionName
+ * @param {any} initialValue
+ * @returns {[any, Function, boolean]}
  */
 export function useFirestore(userId, collectionName, initialValue) {
-  // Use ref for initialValue to avoid dependency loops if it's an object/array
   const initialValueRef = useRef(initialValue);
-  
-  // State
+
   const [value, setValue] = useState(initialValue);
   const [loading, setLoading] = useState(true);
-  
-  // Ref to hold current value for comparison without triggering re-renders
-  // This is critical for the update function to access latest state without being a dependency
-  const valueRef = useRef(initialValue);
 
-  // Refs for throttling/debouncing
+  const valueRef = useRef(initialValue);
+  const versionRef = useRef(0);
+  const remoteVersionRef = useRef(0);
+
   const lastWriteRef = useRef(0);
   const pendingUpdateRef = useRef(null);
   const debounceTimerRef = useRef(null);
+  const pendingValueRef = useRef(null);
+  const userIdRef = useRef(userId);
+  const performWriteRef = useRef(null);
 
-  // 1. READ / SYNC EFFECT
+  useEffect(() => {
+    userIdRef.current = userId;
+  }, [userId]);
+
   useEffect(() => {
     if (!userId) {
       setValue(initialValueRef.current);
       valueRef.current = initialValueRef.current;
+      versionRef.current = 0;
       setLoading(false);
       return;
     }
 
-    // Reference to user's document
-    // We use the 'data' subcollection pattern: users/{userId}/data/{collectionName}
     const docRef = doc(db, 'users', userId, 'data', collectionName);
 
-    // Subscribe to real-time updates
     const unsubscribe = onSnapshot(
       docRef,
       (snapshot) => {
         if (snapshot.exists()) {
-          const data = snapshot.data().value;
-          // Deep compare to prevent unnecessary updates
-          // We use JSON.stringify for simple deep compare of primitive/nested data
-          if (JSON.stringify(data) !== JSON.stringify(valueRef.current)) {
+          const docData = snapshot.data();
+          const data = docData.value;
+          const remoteVersion = docData._v ?? 0;
+
+          if (remoteVersion !== remoteVersionRef.current || !valuesEqual(data, valueRef.current)) {
             setValue(data);
             valueRef.current = data;
+            remoteVersionRef.current = remoteVersion;
+            versionRef.current = remoteVersion;
           }
-        } else {
-          // Document doesn't exist yet, use initial value
-          if (JSON.stringify(initialValueRef.current) !== JSON.stringify(valueRef.current)) {
-            setValue(initialValueRef.current);
-            valueRef.current = initialValueRef.current;
-          }
+        } else if (!valuesEqual(initialValueRef.current, valueRef.current)) {
+          setValue(initialValueRef.current);
+          valueRef.current = initialValueRef.current;
+          remoteVersionRef.current = 0;
+          versionRef.current = 0;
         }
         setLoading(false);
       },
       (err) => {
-        error(`[FIRESTORE] Error loading "${collectionName}":`, err);
+        errorLog(`[FIRESTORE] Error loading "${collectionName}":`, err);
         setLoading(false);
       }
     );
 
     return () => unsubscribe();
-  }, [userId, collectionName]); // Only re-run if user or collection changes
+  }, [userId, collectionName]);
 
-  // 2. WRITE / UPDATE FUNCTION
-  // Memoized update function with enhanced throttling and debouncing
+  const performWrite = useCallback(async (val) => {
+    const uid = userIdRef.current;
+    if (!uid) return false;
+
+    if (globalCircuitBreaker.broken[collectionName]) {
+      scheduleQueuedRetry(uid, collectionName, val, performWriteRef.current);
+      return false;
+    }
+
+    const now = Date.now();
+
+    // Initialize lastReset on the very first performWrite call for this collection,
+    // preventing `now - undefined = NaN` which caused the reset block to never fire.
+    if (!globalCircuitBreaker.lastReset[collectionName]) {
+      globalCircuitBreaker.lastReset[collectionName] = now;
+      globalCircuitBreaker.writes[collectionName] = 0;
+      globalCircuitBreaker.broken[collectionName] = false;
+    }
+
+    if (now - globalCircuitBreaker.lastReset[collectionName] > WINDOW_MS) {
+      globalCircuitBreaker.writes[collectionName] = 0;
+      globalCircuitBreaker.lastReset[collectionName] = now;
+      globalCircuitBreaker.broken[collectionName] = false;
+    }
+
+    if (globalCircuitBreaker.writes[collectionName] >= WRITE_LIMIT) {
+      globalCircuitBreaker.broken[collectionName] = true;
+      showToast('Too many changes too fast. Please wait a moment — your changes will retry automatically.', 'warning', 8000);
+      scheduleQueuedRetry(uid, collectionName, val, performWriteRef.current);
+      return false;
+    }
+
+    const nextVersion = Math.max(versionRef.current, remoteVersionRef.current) + 1;
+    const docRef = doc(db, 'users', uid, 'data', collectionName);
+    const payload = { value: val, _v: nextVersion };
+
+    const ok = await writeWithRetry(docRef, payload, collectionName);
+    if (ok) {
+      globalCircuitBreaker.writes[collectionName]++;
+      lastWriteRef.current = Date.now();
+      versionRef.current = nextVersion;
+      remoteVersionRef.current = nextVersion;
+      pendingValueRef.current = null;
+      log(`[FIRESTORE] Saved "${collectionName}"`);
+    }
+    return ok;
+  }, [collectionName]);
+
+
+
+  useEffect(() => {
+    performWriteRef.current = performWrite;
+  }, [performWrite]);
+
+  const flushPendingWrite = useCallback(() => {
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+      debounceTimerRef.current = null;
+    }
+    if (pendingUpdateRef.current) {
+      clearTimeout(pendingUpdateRef.current);
+      pendingUpdateRef.current = null;
+    }
+    if (pendingValueRef.current !== null && userIdRef.current) {
+      const val = pendingValueRef.current;
+      pendingValueRef.current = null;
+      performWrite(val);
+    }
+  }, [performWrite]);
+
+  const flushKey = `${userId || 'anon'}:${collectionName}`;
+
+  useEffect(() => {
+    if (userId) {
+      pendingFlushes.set(flushKey, flushPendingWrite);
+    }
+    return () => {
+      pendingFlushes.delete(flushKey);
+      flushPendingWrite();
+    };
+  }, [userId, collectionName, flushPendingWrite, flushKey]);
+
   const updateValue = useCallback((newValue) => {
     if (!userId) {
       warn('[FIRESTORE] Cannot update: No user logged in');
       return;
     }
 
-    // Initialize global state for this collection if needed
     if (!globalCircuitBreaker.lastReset[collectionName]) {
       globalCircuitBreaker.lastReset[collectionName] = Date.now();
       globalCircuitBreaker.writes[collectionName] = 0;
       globalCircuitBreaker.broken[collectionName] = false;
     }
 
-    // Check circuit breaker - 60 second window
-    const now = Date.now();
-    if (now - globalCircuitBreaker.lastReset[collectionName] > 60000) {
-      // Reset counter every 60 seconds
-      globalCircuitBreaker.writes[collectionName] = 0;
-      globalCircuitBreaker.lastReset[collectionName] = now;
-      globalCircuitBreaker.broken[collectionName] = false;
-    }
-
-    if (globalCircuitBreaker.broken[collectionName]) {
-      warn(`[FIRESTORE] Circuit breaker active for "${collectionName}". Writes paused.`);
-      return;
-    }
-
-    // Limit: 20 writes per 60 seconds (Safe limit)
-    if (globalCircuitBreaker.writes[collectionName] >= 20) {
-      error(`[FIRESTORE] Circuit breaker TRIGGERED for "${collectionName}". Too many writes!`);
-      globalCircuitBreaker.broken[collectionName] = true;
-      return;
-    }
-
     try {
-      // Calculate new value based on current valueRef (not state, to avoid dependency)
       const valueToStore = newValue instanceof Function ? newValue(valueRef.current) : newValue;
 
-      // Deep comparison to prevent unnecessary writes
-      if (JSON.stringify(valueToStore) !== JSON.stringify(valueRef.current)) {
-        // Optimistic update - update local state immediately
-        setValue(valueToStore);
-        valueRef.current = valueToStore;
-
-        // Clear existing timers
-        if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
-        if (pendingUpdateRef.current) clearTimeout(pendingUpdateRef.current);
-
-        // DEBOUNCE: Wait 2 seconds after LAST update before writing
-        debounceTimerRef.current = setTimeout(() => {
-          const timeSinceLastWrite = Date.now() - lastWriteRef.current;
-
-          // THROTTLE: Ensure minimum 3 seconds between writes
-          if (timeSinceLastWrite < 3000) {
-            const delayNeeded = 3000 - timeSinceLastWrite;
-            pendingUpdateRef.current = setTimeout(() => performWrite(valueToStore), delayNeeded);
-          } else {
-            performWrite(valueToStore);
-          }
-        }, 2000);
+      if (valuesEqual(valueToStore, valueRef.current)) {
+        return;
       }
+
+      // Always update local state immediately so the UI stays responsive.
+      setValue(valueToStore);
+      valueRef.current = valueToStore;
+      pendingValueRef.current = valueToStore;
+
+      if (globalCircuitBreaker.broken[collectionName]) {
+        // Circuit breaker is active: skip the debounce/throttle machinery.
+        // performWrite will schedule a queued retry when the reset window expires.
+        warn(`[FIRESTORE] Circuit breaker active for "${collectionName}". Write will auto-retry.`);
+        performWrite(valueToStore);
+        return;
+      }
+
+      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+      if (pendingUpdateRef.current) clearTimeout(pendingUpdateRef.current);
+
+      debounceTimerRef.current = setTimeout(() => {
+        const timeSinceLastWrite = Date.now() - lastWriteRef.current;
+        const valToWrite = pendingValueRef.current;
+
+        if (timeSinceLastWrite < THROTTLE_MS) {
+          const delayNeeded = THROTTLE_MS - timeSinceLastWrite;
+          pendingUpdateRef.current = setTimeout(() => {
+            if (valToWrite !== null) performWrite(valToWrite);
+          }, delayNeeded);
+        } else if (valToWrite !== null) {
+          performWrite(valToWrite);
+        }
+      }, DEBOUNCE_MS);
     } catch (err) {
-      error(`[FIRESTORE] Error preparing update for "${collectionName}":`, err);
+      errorLog(`[FIRESTORE] Error preparing update for "${collectionName}":`, err);
     }
-
-    // Internal write function
-    const performWrite = async (val) => {
-      try {
-        const docRef = doc(db, 'users', userId, 'data', collectionName);
-        await setDoc(docRef, { value: val }, { merge: true });
-
-        globalCircuitBreaker.writes[collectionName]++;
-        lastWriteRef.current = Date.now();
-        log(`[FIRESTORE] Saved "${collectionName}"`);
-      } catch (err) {
-        error(`[FIRESTORE] Error saving "${collectionName}":`, err);
-      }
-    };
-
-  }, [userId, collectionName]); // Stable dependencies
+  }, [userId, collectionName, performWrite]);
 
   return [value, updateValue, loading];
 }

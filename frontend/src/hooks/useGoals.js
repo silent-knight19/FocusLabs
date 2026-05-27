@@ -1,17 +1,10 @@
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useFirestore } from './useFirestore';
 import { useAuth } from '../contexts/AuthContext';
+import { generateId as createId } from '../utils/idHelpers';
+import { formatDateKey } from '../utils/dateHelpers';
 
-const PRIORITY_ORDER = { high: 0, medium: 1, low: 2 };
-
-/**
- * Generate a unique ID with a given prefix
- * @param {string} prefix - ID prefix (e.g. 'goal', 'subgoal')
- * @returns {string} Unique identifier
- */
-const generateId = (prefix = 'goal') => {
-  return `${prefix}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-};
+const generateId = (prefix = 'goal') => createId(prefix);
 
 /**
  * Custom hook for managing goals and sub-goals
@@ -30,8 +23,10 @@ export function useGoals() {
    * @param {object} goalData - Goal information
    * @returns {object} Created goal
    */
-  const addGoal = (goalData) => {
-    const newGoal = {
+  const addGoal = useCallback((goalData) => {
+    // Build the base goal without order first so the returned object is always
+    // fully defined — avoids the race where the setGoals updater hasn't run yet.
+    const baseGoal = {
       id: generateId('goal'),
       title: goalData.title,
       description: goalData.description || '',
@@ -39,44 +34,48 @@ export function useGoals() {
       color: goalData.color || '#FF5A1F',
       priority: goalData.priority || 'medium',
       status: 'active',
-      startDate: goalData.startDate || new Date().toISOString().split('T')[0],
+      startDate: goalData.startDate || formatDateKey(new Date()),
       targetDate: goalData.targetDate,
       completedAt: null,
       createdAt: new Date().toISOString(),
-      order: goals.length,
       subGoals: goalData.subGoals || []
     };
 
-    setGoals(prev => [...prev, newGoal]);
+    // Derive order from the current goals snapshot (safe for the common case).
+    // The updater re-derives it from prev.length to handle concurrent adds.
+    const newGoal = { ...baseGoal, order: goals.length };
+
+    setGoals(prev => [...prev, { ...newGoal, order: prev.length }]);
+
     return newGoal;
-  };
+  }, [goals.length, setGoals]);
 
   /**
    * Update an existing goal
    * @param {string} goalId - Goal ID
    * @param {object} updates - Fields to update
    */
-  const updateGoal = (goalId, updates) => {
+  const updateGoal = useCallback((goalId, updates) => {
     setGoals(prev =>
       prev.map(goal =>
         goal.id === goalId ? { ...goal, ...updates } : goal
       )
     );
-  };
+  }, [setGoals]);
 
   /**
    * Delete a goal
    * @param {string} goalId - Goal ID
    */
-  const deleteGoal = (goalId) => {
+  const deleteGoal = useCallback((goalId) => {
     setGoals(prev => prev.filter(goal => goal.id !== goalId));
-  };
+  }, [setGoals]);
 
   /**
    * Mark a goal as completed
    * @param {string} goalId - Goal ID
    */
-  const completeGoal = (goalId) => {
+  const completeGoal = useCallback((goalId) => {
     setGoals(prev =>
       prev.map(goal =>
         goal.id === goalId
@@ -84,30 +83,31 @@ export function useGoals() {
           : goal
       )
     );
-  };
+  }, [setGoals]);
 
   /**
    * Archive a goal (hide from active view)
    * @param {string} goalId - Goal ID
    */
-  const archiveGoal = (goalId) => {
+  const archiveGoal = useCallback((goalId) => {
     setGoals(prev =>
       prev.map(goal =>
         goal.id === goalId ? { ...goal, status: 'archived' } : goal
       )
     );
-  };
+  }, [setGoals]);
 
   /**
    * Reorder goals based on a new ordered array of goal IDs
    * @param {string[]} newOrder - Array of goal IDs in desired order
    */
-  const reorderGoals = (newOrder) => {
-    const goalMap = {};
-    goals.forEach(g => { goalMap[g.id] = g; });
-    const reordered = newOrder.map((id, index) => ({ ...goalMap[id], order: index }));
-    setGoals(reordered);
-  };
+  const reorderGoals = useCallback((newOrder) => {
+    setGoals(prev => {
+      const goalMap = {};
+      prev.forEach(g => { goalMap[g.id] = g; });
+      return newOrder.map((id, index) => ({ ...goalMap[id], order: index }));
+    });
+  }, [setGoals]);
 
   // ========== SUB-GOAL METHODS ==========
 
@@ -117,7 +117,7 @@ export function useGoals() {
    * @param {object} subGoalData - Sub-goal information
    * @returns {object} Created sub-goal
    */
-  const addSubGoal = (goalId, subGoalData) => {
+  const addSubGoal = useCallback((goalId, subGoalData) => {
     const newSubGoal = {
       id: generateId('subgoal'),
       title: subGoalData.title,
@@ -138,7 +138,7 @@ export function useGoals() {
     );
 
     return newSubGoal;
-  };
+  }, [setGoals]);
 
   /**
    * Update a sub-goal
@@ -146,7 +146,7 @@ export function useGoals() {
    * @param {string} subGoalId - Sub-goal ID
    * @param {object} updates - Fields to update
    */
-  const updateSubGoal = (goalId, subGoalId, updates) => {
+  const updateSubGoal = useCallback((goalId, subGoalId, updates) => {
     setGoals(prev =>
       prev.map(goal => {
         if (goal.id !== goalId) return goal;
@@ -156,14 +156,14 @@ export function useGoals() {
         return { ...goal, subGoals: updatedSubGoals };
       })
     );
-  };
+  }, [setGoals]);
 
   /**
    * Delete a sub-goal
    * @param {string} goalId - Parent goal ID
    * @param {string} subGoalId - Sub-goal ID
    */
-  const deleteSubGoal = (goalId, subGoalId) => {
+  const deleteSubGoal = useCallback((goalId, subGoalId) => {
     setGoals(prev =>
       prev.map(goal => {
         if (goal.id !== goalId) return goal;
@@ -171,14 +171,14 @@ export function useGoals() {
         return { ...goal, subGoals: filtered };
       })
     );
-  };
+  }, [setGoals]);
 
   /**
    * Toggle a sub-goal's completion status
    * @param {string} goalId - Parent goal ID
    * @param {string} subGoalId - Sub-goal ID
    */
-  const toggleSubGoal = (goalId, subGoalId) => {
+  const toggleSubGoal = useCallback((goalId, subGoalId) => {
     setGoals(prev =>
       prev.map(goal => {
         if (goal.id !== goalId) return goal;
@@ -194,14 +194,14 @@ export function useGoals() {
         return { ...goal, subGoals: updatedSubGoals };
       })
     );
-  };
+  }, [setGoals]);
 
   /**
    * Reorder sub-goals within a goal
    * @param {string} goalId - Parent goal ID
    * @param {string[]} newOrder - Array of sub-goal IDs in desired order
    */
-  const reorderSubGoals = (goalId, newOrder) => {
+  const reorderSubGoals = useCallback((goalId, newOrder) => {
     setGoals(prev =>
       prev.map(goal => {
         if (goal.id !== goalId) return goal;
@@ -211,7 +211,7 @@ export function useGoals() {
         return { ...goal, subGoals: reordered };
       })
     );
-  };
+  }, [setGoals]);
 
   // ========== COMPUTED HELPERS ==========
 
@@ -256,7 +256,7 @@ export function useGoals() {
    * @returns {object[]} Overdue goals
    */
   const getOverdueGoals = useCallback(() => {
-    const today = new Date().toISOString().split('T')[0];
+    const today = formatDateKey(new Date());
     return goals.filter(g => g.status === 'active' && g.targetDate < today);
   }, [goals]);
 
@@ -269,8 +269,8 @@ export function useGoals() {
     const today = new Date();
     const future = new Date(today);
     future.setDate(today.getDate() + days);
-    const todayStr = today.toISOString().split('T')[0];
-    const futureStr = future.toISOString().split('T')[0];
+    const todayStr = formatDateKey(today);
+    const futureStr = formatDateKey(future);
 
     return goals.filter(g =>
       g.status === 'active' && g.targetDate >= todayStr && g.targetDate <= futureStr
@@ -282,7 +282,7 @@ export function useGoals() {
    * @returns {object} Stats object
    */
   const getGoalStats = useCallback(() => {
-    const today = new Date().toISOString().split('T')[0];
+    const today = formatDateKey(new Date());
     const active = goals.filter(g => g.status === 'active');
     const completed = goals.filter(g => g.status === 'completed');
     const overdue = active.filter(g => g.targetDate < today);
@@ -298,7 +298,7 @@ export function useGoals() {
     };
   }, [goals]);
 
-  return {
+  return useMemo(() => ({
     goals,
     goalsLoading,
     // Goal CRUD
@@ -321,5 +321,25 @@ export function useGoals() {
     getOverdueGoals,
     getUpcomingDeadlines,
     getGoalStats
-  };
+  }), [
+    goals,
+    goalsLoading,
+    addGoal,
+    updateGoal,
+    deleteGoal,
+    completeGoal,
+    archiveGoal,
+    reorderGoals,
+    addSubGoal,
+    updateSubGoal,
+    deleteSubGoal,
+    toggleSubGoal,
+    reorderSubGoals,
+    getGoalProgress,
+    getGoalsByStatus,
+    getGoalsByCategory,
+    getOverdueGoals,
+    getUpcomingDeadlines,
+    getGoalStats
+  ]);
 }

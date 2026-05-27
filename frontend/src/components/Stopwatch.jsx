@@ -6,6 +6,9 @@ import { useLockBodyScroll } from '../hooks/useLockBodyScroll';
 import './styles/Stopwatch.css';
 import './styles/StopwatchAlarmRedesign.css';
 
+const DEBUG = import.meta.env.DEV;
+const logError = DEBUG ? console.error : () => {};
+
 export function Stopwatch({ isOpen, onClose, onDataUpdate }) {
   useLockBodyScroll(isOpen);
   const {
@@ -17,12 +20,18 @@ export function Stopwatch({ isOpen, onClose, onDataUpdate }) {
     reset,
     lap,
     updateLapLabel,
-    updateLapCategory,
     formatTime
   } = useStopwatch();
 
   const [editingLapId, setEditingLapId] = useState(null);
-  const [selectedCategory, setSelectedCategory] = useState('other');
+  const [selectedCategory, setSelectedCategory] = useState(() => {
+    return localStorage.getItem('stopwatch_selected_category') || 'study';
+  });
+
+  useEffect(() => {
+    localStorage.setItem('stopwatch_selected_category', selectedCategory);
+  }, [selectedCategory]);
+
   const [hasAlarmTriggered, setHasAlarmTriggered] = useState(false);
   const [isAlarmRinging, setIsAlarmRinging] = useState(false);
   const [alarmDuration, setAlarmDuration] = useState(0); // in minutes, 0 means disabled
@@ -90,7 +99,7 @@ export function Stopwatch({ isOpen, onClose, onDataUpdate }) {
         }
       };
     } catch (e) {
-      console.error('Failed to play alarm sound:', e);
+      logError('Failed to play alarm sound:', e);
     }
   };
 
@@ -320,7 +329,9 @@ export function Stopwatch({ isOpen, onClose, onDataUpdate }) {
         
         <div className="stopwatch-display">
           {/* ... (display code) */}
-          {formatted.hours && (
+          {/* Only show hours if the stopwatch has reached 1 hour or more.
+              '00' is a truthy string, so we must check explicitly. */}
+          {formatted.hours !== '00' && (
             <>
               <span className="time-part">{formatted.hours}</span>
               <span className="time-separator">:</span>
@@ -377,7 +388,7 @@ export function Stopwatch({ isOpen, onClose, onDataUpdate }) {
         </div> {/* End stopwatch-center-layout */}
         
         <div className="laps-list">
-          {laps.map((lapItem, index) => {
+          {laps.map((lapItem) => {
             const lapFormatted = formatTime(lapItem.time);
             const isEditing = editingLapId === lapItem.id;
             

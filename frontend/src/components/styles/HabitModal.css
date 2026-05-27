@@ -36,6 +36,9 @@
 
 
 .modal-content {
+      will-change: transform, opacity;
+  transform: translateZ(0);
+
     background: var(--glass-bg-solid);
     backdrop-filter: blur(var(--glass-blur));
     -webkit-backdrop-filter: blur(var(--glass-blur));
@@ -72,7 +75,7 @@
     color: var(--text-secondary);
     cursor: pointer;
     border-radius: var(--radius-sm);
-    transition: all var(--transition-fast);
+    transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), opacity var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .modal-close:hover {
@@ -114,7 +117,7 @@ select {
     border-radius: var(--radius-sm);
     color: var(--text-primary);
     font-size: var(--font-size-base);
-    transition: all var(--transition-base);
+    transition: background-color var(--transition-base), border-color var(--transition-base), color var(--transition-base), opacity var(--transition-base), transform var(--transition-base), box-shadow var(--transition-base);
 }
 
 /* Fix time input visibility in dark mode */
@@ -181,7 +184,7 @@ select:focus {
     border-radius: var(--radius-sm);
     border: 2px solid transparent;
     cursor: pointer;
-    transition: all var(--transition-fast);
+    transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), opacity var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
     padding: 0;
     position: relative;
 }
@@ -235,7 +238,7 @@ select:focus {
     font-size: var(--font-size-sm);
     font-weight: 600;
     cursor: pointer;
-    transition: all var(--transition-fast);
+    transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), opacity var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
     text-transform: capitalize;
 }
 
@@ -348,6 +351,9 @@ select:focus {
 /* Mobile responsive */
 @media (max-width: 768px) {
     .modal-content {
+          will-change: transform, opacity;
+  transform: translateZ(0);
+
         max-height: 100vh;
         border-radius: 0;
         width: 100%;

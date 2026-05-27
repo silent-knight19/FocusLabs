@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/purity */
 import React, { useRef, useMemo, useEffect } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { Float, Trail, MeshDistortMaterial } from '@react-three/drei';
@@ -361,7 +362,6 @@ function Scene({ mouse }) {
  */
 export function TimeBackground3D() {
   const mouse = useRef({ x: 0, y: 0 });
-  const frameRef = useRef();
 
   useEffect(() => {
     let rafId;

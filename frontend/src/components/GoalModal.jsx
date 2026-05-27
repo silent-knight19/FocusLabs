@@ -1,5 +1,8 @@
+/* eslint-disable no-unused-vars */
 import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useLockBodyScroll } from '../hooks/useLockBodyScroll';
+import { formatDateKey } from '../utils/dateHelpers';
 import './styles/HabitModal.css';
 import './styles/GoalModal.css';
 
@@ -27,7 +30,7 @@ export function GoalModal({ isOpen, onClose, onSave, goal = null }) {
     category: 'personal',
     color: '#FF6B35',
     priority: 'medium',
-    startDate: new Date().toISOString().split('T')[0],
+    startDate: formatDateKey(new Date()),
     targetDate: ''
   });
 
@@ -46,7 +49,7 @@ export function GoalModal({ isOpen, onClose, onSave, goal = null }) {
         category: goal.category || 'personal',
         color: goal.color || '#FF6B35',
         priority: goal.priority || 'medium',
-        startDate: goal.startDate || new Date().toISOString().split('T')[0],
+        startDate: goal.startDate || formatDateKey(new Date()),
         targetDate: goal.targetDate || ''
       });
       setInitialSubGoals([]);
@@ -57,7 +60,7 @@ export function GoalModal({ isOpen, onClose, onSave, goal = null }) {
         category: 'personal',
         color: '#FF6B35',
         priority: 'medium',
-        startDate: new Date().toISOString().split('T')[0],
+        startDate: formatDateKey(new Date()),
         targetDate: ''
       });
       setInitialSubGoals([]);
@@ -147,12 +150,25 @@ export function GoalModal({ isOpen, onClose, onSave, goal = null }) {
     }
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="goal-modal-content" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-header">
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="modal-overlay" 
+          onClick={onClose}
+        >
+          <motion.div 
+            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.9, opacity: 0, y: 20 }}
+            transition={{ type: "spring", damping: 25, stiffness: 300 }}
+            className="goal-modal-content" 
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="modal-header">
           <h2>{goal ? 'Edit Goal' : 'New Goal'}</h2>
           <button
             type="button"
@@ -307,15 +323,16 @@ export function GoalModal({ isOpen, onClose, onSave, goal = null }) {
             </div>
           )}
 
-          {/* Actions */}
           <div className="modal-actions">
-            <button type="button" onClick={onClose}>Cancel</button>
-            <button type="submit" className="primary">
+            <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} type="button" onClick={onClose}>Cancel</motion.button>
+            <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} type="submit" className="primary">
               {goal ? 'Update' : 'Create'} Goal
-            </button>
+            </motion.button>
           </div>
         </form>
-      </div>
-    </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }

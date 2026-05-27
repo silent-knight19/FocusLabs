@@ -1,0 +1,29 @@
+.error-boundary-fallback {
+  padding: 2rem;
+  text-align: center;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.error-boundary-fallback details {
+  white-space: pre-wrap;
+  margin-top: 1rem;
+  text-align: left;
+  max-width: 800px;
+}
+
+.error-boundary-fallback button {
+  margin-top: 2rem;
+  padding: 0.75rem 1.5rem;
+  background: var(--primary-color, #FF6B35);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+}
