@@ -3,6 +3,8 @@ import React, { createContext, useContext, useMemo } from 'react';
 import { useMonthlyStopwatch } from '../hooks/useMonthlyStopwatch';
 import { useAuth } from './AuthContext';
 
+import { StopwatchProvider } from './StopwatchContext';
+
 const StopwatchHistoryContext = createContext(null);
 
 export function StopwatchHistoryProvider({ children }) {
@@ -17,7 +19,9 @@ export function StopwatchHistoryProvider({ children }) {
 
   return (
     <StopwatchHistoryContext.Provider value={value}>
-      {children}
+      <StopwatchProvider>
+        {children}
+      </StopwatchProvider>
     </StopwatchHistoryContext.Provider>
   );
 }
