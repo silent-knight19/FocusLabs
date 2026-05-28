@@ -14,7 +14,7 @@
     ],
     "headers": [
       {
-        "source": "**",
+        "source": "!(/__*)**",
         "headers": [
           {
             "key": "X-Frame-Options",

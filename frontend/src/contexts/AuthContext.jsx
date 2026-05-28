@@ -2,6 +2,8 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import {
   signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signOut as firebaseSignOut,
@@ -36,6 +38,18 @@ export function AuthProvider({ children }) {
       setLoading(false);
     });
 
+    // Check if user is returning from a redirect login flow
+    getRedirectResult(auth)
+      .then((result) => {
+        if (result?.user) {
+          setUser(result.user);
+        }
+      })
+      .catch((err) => {
+        logError('[Auth] Error from redirect login result:', err);
+        setError(err.message);
+      });
+
     return unsubscribe;
   }, []);
 
@@ -43,13 +57,22 @@ export function AuthProvider({ children }) {
     try {
       setError(null);
       setLoading(true);
+      
+      // Try signing in with popup first
       const result = await signInWithPopup(auth, googleProvider);
       setUser(result.user);
       return result.user;
     } catch (err) {
-      logError('[Auth] Error signing in with Google:', err);
-      setError(err.message);
-      throw err;
+      logError('[Auth] Error signing in with Google Popup, attempting Redirect fallback...', err);
+      
+      // Fall back to redirect if popup is blocked, closed, or fails
+      try {
+        await signInWithRedirect(auth, googleProvider);
+      } catch (redirectErr) {
+        logError('[Auth] Error signing in with Google Redirect:', redirectErr);
+        setError(redirectErr.message);
+        throw redirectErr;
+      }
     } finally {
       setLoading(false);
     }
