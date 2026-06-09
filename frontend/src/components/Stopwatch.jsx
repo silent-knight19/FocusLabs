@@ -9,7 +9,7 @@ import './styles/StopwatchAlarmRedesign.css';
 const DEBUG = import.meta.env.DEV;
 const logError = DEBUG ? console.error : () => {};
 
-export function Stopwatch({ isOpen, onClose, onDataUpdate }) {
+export function Stopwatch({ isOpen, onClose, onMinimizeToPiP, onDataUpdate }) {
   useLockBodyScroll(isOpen);
   const {
     time,
@@ -195,6 +195,15 @@ export function Stopwatch({ isOpen, onClose, onDataUpdate }) {
     };
   }, [isRunning]);
 
+  // Auto-PiP: when the modal closes while timer is running, always minimize to PiP
+  const wasOpenRef = useRef(isOpen);
+  useEffect(() => {
+    if (wasOpenRef.current && !isOpen && isRunning && onMinimizeToPiP) {
+      onMinimizeToPiP();
+    }
+    wasOpenRef.current = isOpen;
+  }, [isOpen, isRunning, onMinimizeToPiP]);
+
   // Alarm notification portal — renders to document.body so it appears on ANY page
   const alarmNotificationPortal = isAlarmRinging ? createPortal(
     <>
@@ -322,6 +331,11 @@ export function Stopwatch({ isOpen, onClose, onDataUpdate }) {
               </div>
             )}
           </div>
+          {isRunning && (
+            <button className="close-btn" onClick={onMinimizeToPiP} title="Minimize to PiP">
+              <ChevronDown size={24} />
+            </button>
+          )}
           <button className="close-btn" onClick={onClose} title="Close">
             <X size={24} />
           </button>

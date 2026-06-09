@@ -1,0 +1,225 @@
+.stopwatch-pip-wrapper {
+  position: fixed;
+  z-index: 3000;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.stopwatch-pip {
+  position: absolute;
+  pointer-events: auto;
+  background: rgba(18, 18, 28, 0.92);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.5),
+    0 2px 8px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+  min-width: 220px;
+  user-select: none;
+  cursor: default;
+  font-family: 'Inter', -apple-system, sans-serif;
+  display: flex;
+  flex-direction: column;
+}
+
+.stopwatch-pip-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  cursor: grab;
+  border-bottom: 1px solid var(--border-color);
+  min-height: 36px;
+}
+
+.stopwatch-pip-header:active {
+  cursor: grabbing;
+}
+
+.stopwatch-pip-timer {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+.stopwatch-pip-timer .pip-clock-icon {
+  color: var(--accent-primary);
+  opacity: 0.8;
+  flex-shrink: 0;
+}
+
+.stopwatch-pip-timer .pip-time-sep {
+  color: var(--accent-primary);
+  opacity: 0.5;
+}
+
+.stopwatch-pip-timer .pip-time-cs {
+  font-size: 0.8rem;
+  color: var(--text-tertiary);
+  font-weight: 600;
+}
+
+.stopwatch-pip-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.stopwatch-pip-btn {
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  padding: 0;
+}
+
+.stopwatch-pip-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.stopwatch-pip-btn.close:hover {
+  background: rgba(239, 68, 68, 0.15);
+  color: var(--accent-danger);
+}
+
+.stopwatch-pip-btn.expand-btn:hover {
+  background: rgba(99, 102, 241, 0.15);
+  color: var(--accent-primary);
+}
+
+.stopwatch-pip-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 10px 12px 12px;
+}
+
+.stopwatch-pip-control-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: none;
+  border-radius: 10px;
+  padding: 8px 14px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s, background 0.15s;
+  font-family: inherit;
+  white-space: nowrap;
+}
+
+.stopwatch-pip-control-btn:hover {
+  transform: translateY(-1px);
+}
+
+.stopwatch-pip-control-btn:active {
+  transform: translateY(0);
+}
+
+.stopwatch-pip-control-btn.play {
+  background: var(--gradient-primary);
+  color: white;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+}
+
+.stopwatch-pip-control-btn.play:hover {
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+}
+
+.stopwatch-pip-control-btn.stop {
+  background: linear-gradient(135deg, #EF4444, #DC2626);
+  color: white;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+}
+
+.stopwatch-pip-control-btn.stop:hover {
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+}
+
+.stopwatch-pip-control-btn.lap {
+  background: var(--bg-elevated);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+}
+
+.stopwatch-pip-control-btn.lap:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.stopwatch-pip.minimized .stopwatch-pip-header {
+  border-bottom: none;
+  padding: 6px 10px;
+  min-height: auto;
+}
+
+.stopwatch-pip.minimized .stopwatch-pip-timer {
+  font-size: 0.85rem;
+}
+
+.stopwatch-pip.minimized .stopwatch-pip-controls {
+  display: none;
+}
+
+.stopwatch-pip-running-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #10b981;
+  animation: pipPulse 2s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+@keyframes pipPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+@media (max-width: 480px) {
+  .stopwatch-pip {
+    min-width: 180px;
+    border-radius: 12px;
+  }
+
+  .stopwatch-pip-header {
+    padding: 6px 8px;
+  }
+
+  .stopwatch-pip-timer {
+    font-size: 0.85rem;
+  }
+
+  .stopwatch-pip-controls {
+    gap: 8px;
+    padding: 6px 8px 8px;
+  }
+
+  .stopwatch-pip-control-btn {
+    padding: 6px 10px;
+    font-size: 0.7rem;
+    border-radius: 8px;
+  }
+}

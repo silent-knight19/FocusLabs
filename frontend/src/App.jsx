@@ -10,6 +10,7 @@ import { ProgressSection } from './components/ProgressSection';
 import { DailyOverview } from './components/DailyOverview';
 import { ActiveHabitTracker } from './components/ActiveHabitTracker';
 import { Stopwatch } from './components/Stopwatch';
+import { StopwatchPiP } from './components/StopwatchPiP';
 import { StudyHeatmap } from './components/StudyHeatmap';
 import { ProductivityHeatmap } from './components/ProductivityHeatmap';
 import { ConfirmationModal } from './components/ConfirmationModal';
@@ -51,6 +52,8 @@ export function App() {
   const [isHabitModalOpen, setIsHabitModalOpen] = useState(false);
   const [isSettingsPanelOpen, setIsSettingsPanelOpen] = useState(false);
   const [isStopwatchOpen, setIsStopwatchOpen] = useState(false);
+  const [isPiPOpen, setIsPiPOpen] = useState(false);
+  const handleMinimizeToPiP = () => { setIsStopwatchOpen(false); setIsPiPOpen(true); };
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [isAnalyticsOpen, setIsAnalyticsOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState(null);
@@ -478,8 +481,25 @@ export function App() {
       <Stopwatch
         isOpen={isStopwatchOpen}
         onClose={() => setIsStopwatchOpen(false)}
+        onMinimizeToPiP={handleMinimizeToPiP}
         onDataUpdate={handleDataUpdate}
       />
+
+      <AnimatePresence>
+        {isPiPOpen && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            transition={{ duration: 0.2, ease: 'easeOut' }}
+          >
+            <StopwatchPiP
+              isOpen={isPiPOpen}
+              onClose={() => setIsPiPOpen(false)}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <Suspense fallback={null}>
         <AnalyticsModal
