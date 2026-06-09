@@ -41,8 +41,7 @@ export function StopwatchPiP({ isOpen, onClose }) {
 
   const [position, setPosition] = useState(loadPosition);
   const [isMinimized, setIsMinimized] = useState(false);
-  const [pipOpened, setPipOpened] = useState(false);
-  const isDocPip = supportsDocPip();
+  const [pipMode, setPipMode] = useState(() => supportsDocPip() ? null : 'portal');
 
   const dragState = useRef(null);
 
@@ -80,12 +79,11 @@ export function StopwatchPiP({ isOpen, onClose }) {
     }
     pipWindow.current = null;
     pipNodes.current = {};
-    setPipOpened(false);
   }, []);
 
   // --- Document PiP ---
   useEffect(() => {
-    if (!isOpen || !isDocPip || pipOpened) return;
+    if (!isOpen || pipMode !== null) return;
 
     let isActive = true;
     let animId = null;
@@ -213,7 +211,7 @@ export function StopwatchPiP({ isOpen, onClose }) {
       }
     }
 
-    setPipOpened(true);
+    setPipMode('document');
 
     window.documentPictureInPicture.requestWindow({ width: 300, height: 140 }).then(win => {
       if (!isActive) { try { win.close(); } catch { /* ignore */ } return; }
@@ -227,37 +225,65 @@ export function StopwatchPiP({ isOpen, onClose }) {
       win.addEventListener('pagehide', () => { cleanupPip(); onClose(); });
       function tick() { if (!pipWin || pipWin.closed) return; sync(); animId = requestAnimationFrame(tick); }
       animId = requestAnimationFrame(tick);
-    }).catch(() => { if (isActive) setPipOpened(false); });
+    }).catch(() => { if (isActive) setPipMode('portal'); });
 
     return () => { isActive = false; if (animId) cancelAnimationFrame(animId); if (pipWin && !pipWin.closed) try { pipWin.close(); } catch { /* ignore */ } };
-  }, [isOpen, isDocPip, pipOpened, pause, start, lap, selectedCategory, reset, onClose, formatTime, cleanupPip]);
+  }, [isOpen, pipMode, pause, start, lap, selectedCategory, reset, onClose, formatTime, cleanupPip]);
 
   // --- Portal ---
   const handleMouseDown = useCallback((e) => {
     if (e.button !== 0) return;
-    dragState.current = { startX: e.clientX, startY: e.clientY, origX: position.x, origY: position.y };
+    const startPos = position;
+    dragState.current = { startX: e.clientX, startY: e.clientY, origX: startPos.x, origY: startPos.y };
     const onMove = (ev) => {
       if (!dragState.current) return;
-      setPosition(clampToViewport({ x: dragState.current.origX + ev.clientX - dragState.current.startX, y: dragState.current.origY + ev.clientY - dragState.current.startY }));
+      const dx = ev.clientX - dragState.current.startX;
+      const dy = ev.clientY - dragState.current.startY;
+      dragState.current.lastDx = dx;
+      dragState.current.lastDy = dy;
+      setPosition(clampToViewport({ x: dragState.current.origX + dx, y: dragState.current.origY + dy }));
     };
-    const onUp = () => { if (dragState.current) savePosition(position); dragState.current = null; document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp); };
+    const onUp = () => {
+      if (dragState.current) {
+        const finalX = dragState.current.origX + (dragState.current.lastDx || 0);
+        const finalY = dragState.current.origY + (dragState.current.lastDy || 0);
+        savePosition(clampToViewport({ x: finalX, y: finalY }));
+      }
+      dragState.current = null;
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+    };
     document.addEventListener('mousemove', onMove); document.addEventListener('mouseup', onUp);
   }, [position, savePosition]);
 
   const handleTouchStart = useCallback((e) => {
     const t = e.touches[0];
-    dragState.current = { startX: t.clientX, startY: t.clientY, origX: position.x, origY: position.y };
+    const startPos = position;
+    dragState.current = { startX: t.clientX, startY: t.clientY, origX: startPos.x, origY: startPos.y };
     const onMove = (ev) => {
       if (!dragState.current) return;
       const touch = ev.touches[0];
-      setPosition(clampToViewport({ x: dragState.current.origX + touch.clientX - dragState.current.startX, y: dragState.current.origY + touch.clientY - dragState.current.startY }));
+      const dx = touch.clientX - dragState.current.startX;
+      const dy = touch.clientY - dragState.current.startY;
+      dragState.current.lastDx = dx;
+      dragState.current.lastDy = dy;
+      setPosition(clampToViewport({ x: dragState.current.origX + dx, y: dragState.current.origY + dy }));
     };
-    const onEnd = () => { if (dragState.current) savePosition(position); dragState.current = null; document.removeEventListener('touchmove', onMove); document.removeEventListener('touchend', onEnd); };
+    const onEnd = () => {
+      if (dragState.current) {
+        const finalX = dragState.current.origX + (dragState.current.lastDx || 0);
+        const finalY = dragState.current.origY + (dragState.current.lastDy || 0);
+        savePosition(clampToViewport({ x: finalX, y: finalY }));
+      }
+      dragState.current = null;
+      document.removeEventListener('touchmove', onMove);
+      document.removeEventListener('touchend', onEnd);
+    };
     document.addEventListener('touchmove', onMove, { passive: true }); document.addEventListener('touchend', onEnd);
   }, [position, savePosition]);
 
   // --- Render ---
-  if (isDocPip && pipOpened) return null;
+  if (pipMode !== 'portal') return null;
 
   // --- Portal ---
   if (!isOpen) return null;

@@ -1,7 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import {
-  signInWithPopup,
   signInWithRedirect,
   getRedirectResult,
   createUserWithEmailAndPassword,
@@ -32,50 +31,46 @@ export function AuthProvider({ children }) {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    // Listen for auth state changes
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUser(user);
-      setLoading(false);
-    });
+    let cancelled = false;
 
-    // Check if user is returning from a redirect login flow
+    // Check for pending redirect result FIRST, keeping loading true until resolved
     getRedirectResult(auth)
       .then((result) => {
+        if (cancelled) return;
         if (result?.user) {
           setUser(result.user);
         }
+        setLoading(false);
       })
       .catch((err) => {
         logError('[Auth] Error from redirect login result:', err);
-        setError(err.message);
+        if (!cancelled) {
+          setError(err.message);
+          setLoading(false);
+        }
       });
 
-    return unsubscribe;
+    // Fallback: listen for auth state changes (catches normal page loads)
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (!cancelled) {
+        setUser(user);
+        setLoading(false);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+      unsubscribe();
+    };
   }, []);
 
   const signInWithGoogle = useCallback(async () => {
-    try {
-      setError(null);
-      setLoading(true);
-      
-      // Try signing in with popup first
-      const result = await signInWithPopup(auth, googleProvider);
-      setUser(result.user);
-      return result.user;
-    } catch (err) {
-      logError('[Auth] Error signing in with Google Popup, attempting Redirect fallback...', err);
-      
-      // Fall back to redirect if popup is blocked, closed, or fails
-      try {
-        await signInWithRedirect(auth, googleProvider);
-      } catch (redirectErr) {
-        logError('[Auth] Error signing in with Google Redirect:', redirectErr);
-        setError(redirectErr.message);
-        throw redirectErr;
-      }
-    } finally {
-      setLoading(false);
-    }
+    setError(null);
+    setLoading(true);
+    // Redirect-based sign-in is reliable across all browsers (no popup blockers).
+    // The page navigates to Google, then returns with the auth result.
+    await signInWithRedirect(auth, googleProvider);
+    // No setLoading(false) here — the page redirects away before it runs.
   }, []);
 
   const signOut = useCallback(async () => {
