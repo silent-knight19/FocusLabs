@@ -93,26 +93,39 @@ export function ActiveHabitTracker({
     };
   }, []);
 
+  const checkHabitEndTime = useCallback(() => {
+    const prev = prevHabitRef.current;
+    if (!prev?.endTime) return;
+
+    const now = new Date();
+    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+    const [endHours, endMinutes] = prev.endTime.split(':').map(Number);
+    const endTimeMinutes = endHours * 60 + endMinutes;
+
+    if (currentMinutes >= endTimeMinutes && currentMinutes <= endTimeMinutes + 2) {
+      setFinishedHabit(prev);
+      alarmCleanup.current = playAlarmSound();
+      const timer = setTimeout(() => {
+        setFinishedHabit(null);
+        if (alarmCleanup.current) alarmCleanup.current();
+      }, 10000);
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
   useEffect(() => {
     if (prevHabitRef.current && (!activeHabit || activeHabit.id !== prevHabitRef.current.id)) {
-      const prev = prevHabitRef.current;
-      const now = new Date();
-      const currentMinutes = now.getHours() * 60 + now.getMinutes();
-      const [endHours, endMinutes] = prev.endTime.split(':').map(Number);
-      const endTimeMinutes = endHours * 60 + endMinutes;
-      
-      if (currentMinutes === endTimeMinutes || currentMinutes === endTimeMinutes + 1) {
-        setFinishedHabit(prev);
-        alarmCleanup.current = playAlarmSound();
-        const timer = setTimeout(() => {
-          setFinishedHabit(null);
-          if (alarmCleanup.current) alarmCleanup.current();
-        }, 10000);
-        return () => clearTimeout(timer);
-      }
+      const cleanup = checkHabitEndTime();
+      cleanup?.();
     }
     prevHabitRef.current = activeHabit;
-  }, [activeHabit]);
+  }, [activeHabit, checkHabitEndTime]);
+
+  useEffect(() => {
+    if (!activeHabit?.endTime) return;
+    const interval = setInterval(checkHabitEndTime, 30000);
+    return () => clearInterval(interval);
+  }, [activeHabit, checkHabitEndTime]);
 
   const handleDismiss = useCallback(() => {
     setFinishedHabit(null);

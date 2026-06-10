@@ -2,7 +2,7 @@
 node_modules
 .pnp
 .pnp.js
-package-lock.json
+/package-lock.json
 yarn.lock
 
 # Testing
@@ -20,6 +20,7 @@ out
 .firebase
 firebase-debug.log
 firebase-debug.*.log
+firestore-debug.log
 firebase-adminsdk-*.json
 
 # Environment variables

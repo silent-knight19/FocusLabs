@@ -1,5 +1,6 @@
 import { useStopwatchHistory } from '../contexts/StopwatchHistoryContext';
 import { formatDateKey } from '../utils/dateHelpers';
+import { getMonthKey } from '../utils/monthKeyHelpers';
 import { isStudySession, isProductiveSession, normalizeFocusCategory } from '../utils/focusSessionHelpers';
 
 /**
@@ -84,12 +85,12 @@ export function useAnalytics() {
       // Monthly grouping for year view
       for (let i = 11; i >= 0; i--) {
         const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
-        const monthKey = `${date.getFullYear()}-${date.getMonth()}`;
+        const monthKey = getMonthKey(date);
         const monthLabel = date.toLocaleDateString('en-US', { month: 'short' });
         
         const monthLaps = allLaps.filter(lap => {
           const lapDate = new Date(lap.date);
-          const lapMonthKey = `${lapDate.getFullYear()}-${lapDate.getMonth()}`;
+          const lapMonthKey = getMonthKey(lapDate);
           const matchesMonth = lapMonthKey === monthKey;
           const normalizedCategory = normalizeFocusCategory(lap.category, lap.label);
           const matchesCategory = !category || normalizedCategory === category;

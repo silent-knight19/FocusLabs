@@ -1,5 +1,5 @@
 /* eslint-disable no-unused-vars */
-import React, { useState, useEffect, lazy, Suspense } from 'react';
+import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
@@ -53,7 +53,31 @@ export function App() {
   const [isSettingsPanelOpen, setIsSettingsPanelOpen] = useState(false);
   const [isStopwatchOpen, setIsStopwatchOpen] = useState(false);
   const [isPiPOpen, setIsPiPOpen] = useState(false);
-  const handleMinimizeToPiP = () => { setIsStopwatchOpen(false); setIsPiPOpen(true); };
+  const pipWindowRef = useRef(null);
+
+  const handleMinimizeToPiP = async () => {
+    setIsStopwatchOpen(false);
+
+    let pipWin = null;
+    if ('documentPictureInPicture' in window) {
+      try {
+        pipWin = await window.documentPictureInPicture.requestWindow({ width: 300, height: 140 });
+      } catch {
+        /* Fall back to portal mode */
+      }
+    }
+
+    pipWindowRef.current = pipWin;
+    setIsPiPOpen(true);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (pipWindowRef.current && !pipWindowRef.current.closed) {
+        try { pipWindowRef.current.close(); } catch {}
+      }
+    };
+  }, []);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [isAnalyticsOpen, setIsAnalyticsOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState(null);
@@ -495,7 +519,14 @@ export function App() {
           >
             <StopwatchPiP
               isOpen={isPiPOpen}
-              onClose={() => setIsPiPOpen(false)}
+              pipWindow={pipWindowRef.current}
+              onClose={() => {
+                if (pipWindowRef.current && !pipWindowRef.current.closed) {
+                  try { pipWindowRef.current.close(); } catch {}
+                }
+                pipWindowRef.current = null;
+                setIsPiPOpen(false);
+              }}
             />
           </motion.div>
         )}

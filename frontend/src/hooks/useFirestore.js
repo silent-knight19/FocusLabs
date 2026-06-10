@@ -289,8 +289,8 @@ export function useFirestore(userId, collectionName, initialValue) {
       }
 
       // Always update local state immediately so the UI stays responsive.
-      setValue(valueToStore);
       valueRef.current = valueToStore;
+      setValue(valueToStore);
       pendingValueRef.current = valueToStore;
 
       if (globalCircuitBreaker.broken[collectionName]) {

@@ -75,7 +75,6 @@ export function StopwatchProvider({ children }) {
   const [accumulatedTime, setAccumulatedTime] = useState(initialAccumulatedTime);
   const [lastLapTime, setLastLapTime] = useState(initialLastLapTime);
   const [currentSessionLaps, setCurrentSessionLaps] = useState(initialLaps);
-  const [hasSynced, setHasSynced] = useState(false);
 
   // Derived current displayed time (ms)
   const [time, setTime] = useState(() => {
@@ -290,21 +289,14 @@ export function StopwatchProvider({ children }) {
 
   // Sync laps list with Firestore after it loads to prevent duplicates
   useEffect(() => {
-    if (hasSynced) return;
+    if (allHistory.length === 0) return;
+    if (sessionLapIds.size === 0) return;
 
-    if (allHistory.length === 0 && sessionLapIds.size === 0) {
-      setHasSynced(true);
-      return;
-    }
-
-    if (sessionLapIds.size > 0) {
-      const firestoreLapIds = new Set(allHistory.map(l => l.id));
-      const validSessionLaps = initialLaps.filter(l => firestoreLapIds.has(l.id));
-      setCurrentSessionLaps(validSessionLaps);
-    }
-
-    setHasSynced(true);
-  }, [allHistory, sessionLapIds, initialLaps, hasSynced]);
+    const firestoreLapIds = new Set(allHistory.map(l => l.id));
+    setCurrentSessionLaps(prev =>
+      prev.filter(l => firestoreLapIds.has(l.id))
+    );
+  }, [allHistory, sessionLapIds]);
 
   // Safe pageunload active state saver
   useEffect(() => {

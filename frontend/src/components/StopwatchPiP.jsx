@@ -28,22 +28,16 @@ function clampToViewport(pos) {
   };
 }
 
-function supportsDocPip() {
-  return 'documentPictureInPicture' in window;
-}
-
-
-
-export function StopwatchPiP({ isOpen, onClose }) {
+export function StopwatchPiP({ isOpen, onClose, pipWindow }) {
   const {
     time, isRunning, start, pause, reset, lap, formatTime
   } = useStopwatch();
 
   const [position, setPosition] = useState(loadPosition);
   const [isMinimized, setIsMinimized] = useState(false);
-  const [pipMode, setPipMode] = useState(() => supportsDocPip() ? null : 'portal');
 
   const dragState = useRef(null);
+  const pipNodesRef = useRef({});
 
   const formatted = formatTime(time);
   const selectedCategory = localStorage.getItem('stopwatch_selected_category') || 'study';
@@ -55,14 +49,14 @@ export function StopwatchPiP({ isOpen, onClose }) {
   const isMinimizedRef = useRef(isMinimized);
   useEffect(() => { isMinimizedRef.current = isMinimized; }, [isMinimized]);
 
-  const pipWindow = useRef(null);
-  const pipNodes = useRef({});
+  const onCloseRef = useRef(onClose);
+  useEffect(() => { onCloseRef.current = onClose; }, [onClose]);
 
   useEffect(() => {
     if (time === 0 && !isRunning && isOpen) {
-      onClose();
+      onCloseRef.current();
     }
-  }, [time, isRunning, isOpen, onClose]);
+  }, [time, isRunning, isOpen]);
 
   const savePosition = useCallback((pos) => {
     try {
@@ -72,50 +66,40 @@ export function StopwatchPiP({ isOpen, onClose }) {
     }
   }, []);
 
-  const cleanupPip = useCallback(() => {
-    const pip = pipWindow.current;
-    if (pip && !pip.closed) {
-      try { pip.close(); } catch { /* ignore */ }
-    }
-    pipWindow.current = null;
-    pipNodes.current = {};
-  }, []);
-
-  // --- Document PiP ---
+  // --- Document PiP (native floating window) ---
   useEffect(() => {
-    if (!isOpen || pipMode !== null) return;
+    if (!isOpen || !pipWindow) return;
 
-    let isActive = true;
+    const win = pipWindow;
     let animId = null;
-    let pipWin = null;
     let pipData = null;
 
-    function build(win) {
-      const container = win.document.createElement('div');
+    function build(w) {
+      const container = w.document.createElement('div');
       container.className = 'stopwatch-pip';
 
-      const header = win.document.createElement('div');
+      const header = w.document.createElement('div');
       header.className = 'stopwatch-pip-header';
-      const timerRow = win.document.createElement('div');
+      const timerRow = w.document.createElement('div');
       timerRow.className = 'stopwatch-pip-timer';
-      const ts = win.document.createElement('span'); ts.id = 'pip-timer-text'; ts.textContent = '00:00'; timerRow.appendChild(ts);
-      const sep = win.document.createElement('span'); sep.className = 'pip-time-sep'; sep.textContent = '.'; timerRow.appendChild(sep);
-      const cs = win.document.createElement('span'); cs.className = 'pip-time-cs'; cs.id = 'pip-timer-cs'; cs.textContent = '00'; timerRow.appendChild(cs);
-      const dot = win.document.createElement('span'); dot.className = 'stopwatch-pip-running-dot'; dot.id = 'pip-dot-elm'; dot.style.display = 'none'; timerRow.appendChild(dot);
+      const ts = w.document.createElement('span'); ts.id = 'pip-timer-text'; ts.textContent = '00:00'; timerRow.appendChild(ts);
+      const sep = w.document.createElement('span'); sep.className = 'pip-time-sep'; sep.textContent = '.'; timerRow.appendChild(sep);
+      const cs = w.document.createElement('span'); cs.className = 'pip-time-cs'; cs.id = 'pip-timer-cs'; cs.textContent = '00'; timerRow.appendChild(cs);
+      const dot = w.document.createElement('span'); dot.className = 'stopwatch-pip-running-dot'; dot.id = 'pip-dot-elm'; dot.style.display = 'none'; timerRow.appendChild(dot);
       header.appendChild(timerRow);
 
-      const actions = win.document.createElement('div');
+      const actions = w.document.createElement('div');
       actions.className = 'stopwatch-pip-header-actions';
-      const tog = win.document.createElement('button'); tog.className = 'stopwatch-pip-btn'; tog.id = 'pip-toggle-btn';
+      const tog = w.document.createElement('button'); tog.className = 'stopwatch-pip-btn'; tog.id = 'pip-toggle-btn';
       tog.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>'; actions.appendChild(tog);
-      const clo = win.document.createElement('button'); clo.className = 'stopwatch-pip-btn close'; clo.id = 'pip-close-btn';
+      const clo = w.document.createElement('button'); clo.className = 'stopwatch-pip-btn close'; clo.id = 'pip-close-btn';
       clo.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>'; actions.appendChild(clo);
       header.appendChild(actions);
       container.appendChild(header);
 
-      const ctrl = win.document.createElement('div');
+      const ctrl = w.document.createElement('div');
       ctrl.className = 'stopwatch-pip-controls'; ctrl.id = 'pip-controls-elm';
-      const pb = win.document.createElement('button'); pb.className = 'stopwatch-pip-control-btn play'; pb.id = 'pip-play-btn';
+      const pb = w.document.createElement('button'); pb.className = 'stopwatch-pip-control-btn play'; pb.id = 'pip-play-btn';
       const playSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
       playSvg.setAttribute('width', '14'); playSvg.setAttribute('height', '14'); playSvg.setAttribute('viewBox', '0 0 24 24');
       playSvg.setAttribute('fill', 'white'); playSvg.setAttribute('stroke', 'currentColor'); playSvg.setAttribute('stroke-width', '2');
@@ -126,42 +110,42 @@ export function StopwatchPiP({ isOpen, onClose }) {
       pauseSvg.style.display = 'none';
       const r1 = document.createElementNS('http://www.w3.org/2000/svg', 'rect'); r1.setAttribute('x', '6'); r1.setAttribute('y', '4'); r1.setAttribute('width', '4'); r1.setAttribute('height', '16'); pauseSvg.appendChild(r1);
       const r2 = document.createElementNS('http://www.w3.org/2000/svg', 'rect'); r2.setAttribute('x', '14'); r2.setAttribute('y', '4'); r2.setAttribute('width', '4'); r2.setAttribute('height', '16'); pauseSvg.appendChild(r2);
-      const pl = win.document.createElement('span'); pl.id = 'pip-play-label'; pl.textContent = 'Start';
+      const pl = w.document.createElement('span'); pl.id = 'pip-play-label'; pl.textContent = 'Start';
       pb.append(playSvg, pauseSvg, pl); ctrl.appendChild(pb);
 
-      const lb = win.document.createElement('button'); lb.className = 'stopwatch-pip-control-btn lap'; lb.id = 'pip-lap-btn';
+      const lb = w.document.createElement('button'); lb.className = 'stopwatch-pip-control-btn lap'; lb.id = 'pip-lap-btn';
       lb.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg><span>Lap</span>'; ctrl.appendChild(lb);
-      const sb = win.document.createElement('button'); sb.className = 'stopwatch-pip-control-btn stop'; sb.id = 'pip-stop-btn';
+      const sb = w.document.createElement('button'); sb.className = 'stopwatch-pip-control-btn stop'; sb.id = 'pip-stop-btn';
       sb.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/></svg><span>Stop</span>'; ctrl.appendChild(sb);
       container.appendChild(ctrl);
-      win.document.body.appendChild(container);
+      w.document.body.appendChild(container);
 
       pipData = { container, timerText: ts, timerCs: cs, runningDot: dot, playSvg, pauseSvg, playLabel: pl, controls: ctrl };
-      pipNodes.current = pipData;
+      pipNodesRef.current = pipData;
     }
 
-    function copyStyles(win) {
-      const root = win.document.documentElement;
+    function copyStyles(w) {
+      const root = w.document.documentElement;
       const computed = getComputedStyle(document.documentElement);
       root.style.colorScheme = computed.getPropertyValue('color-scheme');
       ['--bg-primary','--bg-elevated','--bg-card','--bg-hover','--text-primary','--text-secondary','--text-tertiary','--border-color','--border-hover','--accent-primary','--accent-primary-light','--accent-danger','--accent-success','--gradient-primary','--shadow-md','--glow-primary','--font-family'].forEach(v => {
         const val = computed.getPropertyValue(v);
         if (val) root.style.setProperty(v, val);
       });
-      win.document.title = 'FocusLabs Stopwatch';
-      const b = win.document.body;
+      w.document.title = 'FocusLabs Stopwatch';
+      const b = w.document.body;
       b.style.margin = '0'; b.style.padding = '0'; b.style.overflow = 'hidden'; b.style.display = 'flex';
       b.style.fontFamily = computed.getPropertyValue('--font-family') || "'Inter', -apple-system, sans-serif";
 
       [...document.styleSheets].forEach(ss => {
         try {
           if (ss.href && ss.href.includes('StopwatchPiP.css')) return;
-          if (ss.cssRules && ss.href) { const l = win.document.createElement('link'); l.rel='stylesheet'; l.type='text/css'; l.href=ss.href; win.document.head.appendChild(l); }
-          else if (ss.cssRules) { const t=[...ss.cssRules].map(r=>r.cssText).join('\n'); const s=win.document.createElement('style'); s.textContent=t; win.document.head.appendChild(s); }
-        } catch { if (ss.href && !ss.href.includes('StopwatchPiP.css')) { const l=win.document.createElement('link'); l.rel='stylesheet'; l.type='text/css'; l.href=ss.href; win.document.head.appendChild(l); } }
+          if (ss.cssRules && ss.href) { const l = w.document.createElement('link'); l.rel='stylesheet'; l.type='text/css'; l.href=ss.href; w.document.head.appendChild(l); }
+          else if (ss.cssRules) { const t=[...ss.cssRules].map(r=>r.cssText).join('\n'); const s=w.document.createElement('style'); s.textContent=t; w.document.head.appendChild(s); }
+        } catch { if (ss.href && !ss.href.includes('StopwatchPiP.css')) { const l=w.document.createElement('link'); l.rel='stylesheet'; l.type='text/css'; l.href=ss.href; w.document.head.appendChild(l); } }
       });
 
-      const pipCSS = win.document.createElement('style');
+      const pipCSS = w.document.createElement('style');
       pipCSS.textContent = `
         body{margin:0;padding:0;overflow:hidden;display:flex;width:100vw;height:100vh}
         .stopwatch-pip{width:100%!important;height:100%!important;display:flex;flex-direction:column;min-width:unset!important;background:rgba(18,18,28,0.95)!important;backdrop-filter:blur(24px)!important;border:1px solid var(--border-color)!important;border-radius:0!important;box-shadow:none!important}
@@ -187,7 +171,7 @@ export function StopwatchPiP({ isOpen, onClose }) {
         .stopwatch-pip-running-dot{display:inline-block;border-radius:50%;width:clamp(4px,0.8vw,10px)!important;height:clamp(4px,0.8vw,10px)!important;background:#10b981;flex-shrink:0;animation:pipPulse 2s ease-in-out infinite}
         @keyframes pipPulse{0%,100%{opacity:1}50%{opacity:0.4}}
       `;
-      win.document.head.appendChild(pipCSS);
+      w.document.head.appendChild(pipCSS);
     }
 
     function sync() {
@@ -211,26 +195,32 @@ export function StopwatchPiP({ isOpen, onClose }) {
       }
     }
 
-    setPipMode('document');
+    copyStyles(win);
+    build(win);
+    sync();
 
-    window.documentPictureInPicture.requestWindow({ width: 300, height: 140 }).then(win => {
-      if (!isActive) { try { win.close(); } catch { /* ignore */ } return; }
-      pipWin = win; pipWindow.current = win;
-      copyStyles(win); build(win); sync();
-      win.document.getElementById('pip-toggle-btn').onclick = () => setIsMinimized(p => !p);
-      win.document.getElementById('pip-close-btn').onclick = () => { cleanupPip(); onClose(); };
-      win.document.getElementById('pip-play-btn').onclick = () => { if (isRunningRef.current) pause(); else start(); };
-      win.document.getElementById('pip-lap-btn').onclick = () => lap(selectedCategory);
-      win.document.getElementById('pip-stop-btn').onclick = () => reset();
-      win.addEventListener('pagehide', () => { cleanupPip(); onClose(); });
-      function tick() { if (!pipWin || pipWin.closed) return; sync(); animId = requestAnimationFrame(tick); }
+    win.document.getElementById('pip-toggle-btn').onclick = () => setIsMinimized(p => !p);
+    win.document.getElementById('pip-close-btn').onclick = () => {
+      if (!win.closed) win.close();
+    };
+    win.document.getElementById('pip-play-btn').onclick = () => { if (isRunningRef.current) pause(); else start(); };
+    win.document.getElementById('pip-lap-btn').onclick = () => lap(selectedCategory);
+    win.document.getElementById('pip-stop-btn').onclick = () => reset();
+    win.addEventListener('pagehide', () => onCloseRef.current());
+
+    function tick() {
+      if (win.closed) return;
+      sync();
       animId = requestAnimationFrame(tick);
-    }).catch(() => { if (isActive) setPipMode('portal'); });
+    }
+    animId = requestAnimationFrame(tick);
 
-    return () => { isActive = false; if (animId) cancelAnimationFrame(animId); if (pipWin && !pipWin.closed) try { pipWin.close(); } catch { /* ignore */ } };
-  }, [isOpen, pipMode, pause, start, lap, selectedCategory, reset, onClose, formatTime, cleanupPip]);
+    return () => {
+      if (animId) cancelAnimationFrame(animId);
+    };
+  }, [isOpen, pipWindow, pause, start, lap, selectedCategory, reset, formatTime]);
 
-  // --- Portal ---
+  // --- Portal fallback ---
   const handleMouseDown = useCallback((e) => {
     if (e.button !== 0) return;
     const startPos = position;
@@ -282,10 +272,8 @@ export function StopwatchPiP({ isOpen, onClose }) {
     document.addEventListener('touchmove', onMove, { passive: true }); document.addEventListener('touchend', onEnd);
   }, [position, savePosition]);
 
-  // --- Render ---
-  if (pipMode !== 'portal') return null;
+  if (pipWindow) return null;
 
-  // --- Portal ---
   if (!isOpen) return null;
 
   const timeString = formatted.hours !== '00' ? `${formatted.hours}:${formatted.minutes}:${formatted.seconds}` : `${formatted.minutes}:${formatted.seconds}`;

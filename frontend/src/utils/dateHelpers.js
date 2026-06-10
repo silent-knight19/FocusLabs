@@ -203,8 +203,9 @@ export function isFutureDate(date) {
  * @returns {string} - "2:30 PM"
  */
 export function formatTime12(timeStr) {
-  if (!timeStr) return '';
+  if (!timeStr || !/^\d{1,2}:\d{2}$/.test(timeStr)) return '';
   const [hours, minutes] = timeStr.split(':').map(Number);
+  if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59) return '';
   const period = hours >= 12 ? 'PM' : 'AM';
   const hours12 = hours % 12 || 12;
   return `${hours12}:${String(minutes).padStart(2, '0')} ${period}`;

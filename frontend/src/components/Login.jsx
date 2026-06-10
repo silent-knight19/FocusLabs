@@ -7,23 +7,18 @@ const logError = DEBUG ? console.error : () => {};
 
 export function Login() {
   const { signInWithGoogle, error: authError } = useAuth();
-  const [loading, setLoading] = useState(false);
-  const [redirecting, setRedirecting] = useState(false);
+  const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
 
   const handleGoogleSignIn = async () => {
     try {
-      setLoading(true);
       setError(null);
+      setBusy(true);
       await signInWithGoogle();
-      // If signInWithRedirect throws, we catch it below.
-      // Otherwise the page navigates to Google, and this line never runs.
-      setRedirecting(true);
     } catch (err) {
       setError('Failed to sign in with Google. Please try again.');
       logError('[Login] Sign in error:', err);
-    } finally {
-      setLoading(false);
+      setBusy(false);
     }
   };
 
@@ -50,18 +45,13 @@ export function Login() {
             <div className="login-actions">
               <button
                 onClick={handleGoogleSignIn}
-                disabled={loading || redirecting}
+                disabled={busy}
                 className="btn-google"
               >
-                {redirecting ? (
+                {busy ? (
                   <span className="btn-content">
                     <span className="spinner" />
-                    <span>Redirecting to Google...</span>
-                  </span>
-                ) : loading ? (
-                  <span className="btn-content">
-                    <span className="spinner" />
-                    <span>Signing in...</span>
+                    <span>Signing in with Google...</span>
                   </span>
                 ) : (
                   <span className="btn-content">
