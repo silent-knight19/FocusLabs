@@ -171,7 +171,6 @@ export function StopwatchProvider({ children }) {
     lastLapTimeRef.current = 0;
     setTime(0);
     setCurrentSessionLaps([]);
-    setHasSynced(false);
 
     try {
       localStorage.removeItem('stopwatch_current_session_laps');

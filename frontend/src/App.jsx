@@ -53,6 +53,7 @@ export function App() {
   const [isSettingsPanelOpen, setIsSettingsPanelOpen] = useState(false);
   const [isStopwatchOpen, setIsStopwatchOpen] = useState(false);
   const [isPiPOpen, setIsPiPOpen] = useState(false);
+  const [pipWindow, setPipWindow] = useState(null);
   const pipWindowRef = useRef(null);
 
   const handleMinimizeToPiP = async () => {
@@ -63,18 +64,19 @@ export function App() {
       try {
         pipWin = await window.documentPictureInPicture.requestWindow({ width: 300, height: 140 });
       } catch {
-        /* Fall back to portal mode */
+        /* empty */
       }
     }
 
     pipWindowRef.current = pipWin;
+    setPipWindow(pipWin);
     setIsPiPOpen(true);
   };
 
   useEffect(() => {
     return () => {
       if (pipWindowRef.current && !pipWindowRef.current.closed) {
-        try { pipWindowRef.current.close(); } catch {}
+        try { pipWindowRef.current.close(); } catch { /* empty */ }
       }
     };
   }, []);
@@ -519,12 +521,13 @@ export function App() {
           >
             <StopwatchPiP
               isOpen={isPiPOpen}
-              pipWindow={pipWindowRef.current}
+              pipWindow={pipWindow}
               onClose={() => {
                 if (pipWindowRef.current && !pipWindowRef.current.closed) {
-                  try { pipWindowRef.current.close(); } catch {}
+                  try { pipWindowRef.current.close(); } catch { /* empty */ }
                 }
                 pipWindowRef.current = null;
+                setPipWindow(null);
                 setIsPiPOpen(false);
               }}
             />
